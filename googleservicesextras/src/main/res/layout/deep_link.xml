@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+    <TextView
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_horizontal"
+        android:textSize="@dimen/title_text_size"
+        android:text="@string/msg_invitation_received"
+        android:layout_marginBottom="@dimen/space_large"
+        android:drawableLeft="@drawable/ic_group_add_black_24dp"
+        android:drawableStart="@drawable/ic_group_add_black_24dp"
+        android:drawablePadding="@dimen/space_small"
+        android:singleLine="true"
+        style="@style/ColorTextViewAppTheme"/>
+    <TextView
+        android:id="@+id/deep_link_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/deep_link_default"
+        android:textSize="@dimen/subtitle_text_size_large"
+        android:layout_marginBottom="@dimen/space_large"
+        />
+
+    <TextView
+        android:id="@+id/invitation_id_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:singleLine="true"
+        android:ellipsize="end"
+        android:text="@string/invitation_id_default"
+        android:textSize="@dimen/subtitle_text_size"
+        android:layout_marginBottom="@dimen/space_large"
+        />
+
+    <Button
+        android:id="@+id/deep_link_ok_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="end"
+        android:text="@android:string/ok"
+        style="@style/ButtonAppTheme"/>
+</LinearLayout>

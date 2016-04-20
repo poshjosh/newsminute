@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    style="@style/ViewGroupAppTheme">
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content">
+
+        <include layout="@layout/welcomeprocess_navigation"/>
+
+        <TextView
+            android:id="@+id/signup_title"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:text="@string/msg_signup"
+            style="@style/TextViewAppTheme"/>
+        <TextView
+            android:id="@+id/signup_reason"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:text="@string/msg_signup_reason"
+            android:textColor="@color/level_2"
+            style="@style/TextViewAppTheme"/>
+        <EditText
+            android:id="@+id/signup_email"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/space_small"
+            android:hint="@string/msg_enter_email"
+            android:layout_gravity="top"
+            android:inputType="textEmailAddress"/>
+        <EditText
+            android:id="@+id/signup_username"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/space_small"
+            android:hint="@string/msg_enter_username"
+            android:layout_gravity="top"
+            android:inputType="textPersonName"/>
+        <EditText
+            android:id="@+id/signup_password"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/space_small"
+            android:hint="@string/msg_enter_password"
+            android:layout_gravity="top"
+            android:inputType="textPassword"/>
+        <Button
+            android:id="@+id/signup_okbutton"
+            android:layout_gravity="center_horizontal"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/msg_signup"
+            android:layout_marginBottom="@dimen/space_small"
+            />
+        <Button
+            android:id="@+id/signup_skipbutton"
+            android:layout_gravity="center_horizontal"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/msg_skip"/>
+    </LinearLayout>
+</ScrollView>
+

@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <color name="background">@color/color_0</color>
+    <color name="background_dark">@color/color_1</color>
+    <color name="background_pressed">@color/color_1</color>
+    <color name="background_activated">@color/color_1</color>
+    <color name="textColor">@color/white</color>
+
+    <color name="background_plain">@color/color_light</color>
+    <color name="background_plain_dark">@color/color_5</color>
+    <color name="background_plain_pressed">@color/color_5</color>
+    <color name="background_plain_activated">@color/color_5</color>
+
+    <color name="color_light">@color/white</color>
+    <color name="color_dark">@color/black</color>
+    <color name="color_0">#f56600</color>
+    <color name="color_0_old">#e63</color>
+    <color name="color_1">#e21</color>
+    <color name="color_2">#edffde</color>
+    <color name="color_3">#ace</color>
+    <color name="color_4">#79a</color>
+    <color name="color_5">#dceecd</color>
+
+    <color name="level_0">#111</color>
+    <color name="level_1">#333</color>
+    <color name="level_2">#555</color>
+    <color name="level_3">#777</color>
+
+    <color name="cyan_500">#00BCD4</color>
+    <color name="black">#000000</color>
+    <color name="white">#FFFFFF</color>
+    <color name="red">#FF0000</color>
+    <color name="green">#008000</color>
+    <color name="blue">#0000FF</color>
+    <color name="yellow">#FFFF00</color>
+    <color name="skyblue">#87CEEB</color>
+    <color name="navyblue">#000080</color>
+    <color name="navy">#000080</color>
+    <color name="orange">#FFA500</color>
+</resources>

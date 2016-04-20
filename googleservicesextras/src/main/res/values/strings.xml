@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_label">AppInvite Library</string>
+    <string name="ad_unit_id_interstitial_before_displayfeeds">MODULES USING THIS LIBRARY SHOULD PROVIDE THIS VALUE</string>
+    <string name="ad_unit_id_interstitial_before_displayfeeds_test">ca-app-pub-3940256099942544/1033173712</string>
+    <string name="ad_unit_id_banner_before_displayfeeds">MODULES USING THIS LIBRARY SHOULD PROVIDE THIS VALUE</string>
+    <string name="ad_unit_id_banner_before_displayfeeds_test">ca-app-pub-3940256099942544/6300978111</string>
+</resources>

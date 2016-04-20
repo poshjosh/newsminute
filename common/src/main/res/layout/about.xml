@@ -1,0 +1,38 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    style="@style/ViewGroupAppTheme">
+<TextView
+    android:id="@+id/about_appname"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="@dimen/space_medium"
+    android:textSize="@dimen/subtitle_text_size_large"
+    android:gravity="center_horizontal"
+    style="@style/ColorTextViewAppTheme"
+    android:text="@string/app_label"/>
+    <TextView
+        android:id="@+id/about_text1"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="@dimen/space_medium"
+        style="@style/ColorTextViewAppTheme"
+        android:scrollbars="vertical"
+        android:text="@string/app_longdescription"/>
+    <ScrollView
+        android:id="@+id/about_scrollview"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:scrollbars="vertical"
+        android:fillViewport="true">
+        <TextView
+            android:id="@+id/about_text2"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            style="@style/ColorTextViewAppTheme"
+            android:scrollbars="vertical"
+            android:text="@string/app_reason"/>
+    </ScrollView>
+</LinearLayout>
+

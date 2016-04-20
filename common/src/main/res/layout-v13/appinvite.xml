@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+    <TextView
+        android:textSize="@dimen/title_text_size"
+        android:gravity="left"
+        android:layout_gravity="left"
+        android:id="@+id/welcome_text"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/msg_invite"
+        android:singleLine="true"
+        android:drawableLeft="@drawable/ic_group_add_black_24dp"
+        android:drawablePadding="@dimen/space_small"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:drawableStart="@drawable/ic_group_add_black_24dp"
+        style="@style/ColorTextViewAppTheme"/>
+    <Button
+        android:id="@+id/invite_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="75dp"
+        android:text="@string/msg_invite"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        style="@style/ButtonAppTheme" />
+</RelativeLayout>

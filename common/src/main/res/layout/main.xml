@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:id="@+id/main_root_linearlayout"
+    android:background="@color/color_light"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+    <include android:id="@+id/main_toolbar" layout="@layout/my_toolbar" />
+    <include android:id="@+id/main_tabs" layout="@layout/tabs" />
+    <include android:id="@+id/main_fragment_singlepane" layout="@layout/fragment_singlepane" />
+</LinearLayout>

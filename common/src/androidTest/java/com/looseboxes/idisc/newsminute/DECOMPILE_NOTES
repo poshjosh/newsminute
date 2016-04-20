@@ -1,0 +1,6 @@
+// I added this.getSelectedData()
+.common.fragments.DisplayCommentFragment {
+    protected Comment createComment() {
+        return new CommentWithReplies(this.getSelectedData()); // I added this.getSelectedData()
+    }
+}

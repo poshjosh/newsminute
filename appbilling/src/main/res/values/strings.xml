@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_label">Appbilling Library</string>
+    <string name="msg_subscriptionmonths_d">You have %1$d months subscription</string>
+    <string name="msg_activatingsubscription_s">Activating %1$s</string>
+    <string name="err_alreadysubscribed_s">You are already subscribed to %1$s</string>
+    <string name="err_subscription">Subscription error</string>
+</resources>

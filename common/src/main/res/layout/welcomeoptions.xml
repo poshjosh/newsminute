@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:background="@color/black">
+
+    <include layout="@layout/welcomeprocess_navigation"/>
+
+    <ImageView
+            android:id="@+id/welomeoptions_banner"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:src="@drawable/background_top"
+            android:contentDescription="@string/app_welcomemsg"/>
+        <TextView
+            android:id="@+id/welomeoptions_textview0"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:textColor="@color/color_2"
+            android:textSize="@dimen/subtitle_text_size"
+            android:padding="@dimen/space_small"
+            android:gravity="center_horizontal"
+            android:text="@string/pref_autosearch_title"
+            android:scrollHorizontally="false"/>
+        <EditText
+            android:id="@+id/welomeoptions_autosearch"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/white"
+            android:textColor="@color/black"
+            android:layout_marginBottom="@dimen/space_small"
+            android:text="@string/pref_autosearch_defaultvalue"
+            android:hint="@string/pref_autosearch_title"
+            android:inputType="textMultiLine"
+            android:scrollbars="vertical"
+            android:singleLine="false"
+            android:lines="2"
+            android:minLines="1"
+            android:maxLines="3"
+            android:layout_gravity="top"/>
+        <TextView
+            android:id="@+id/welomeoptions_textview1"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:textColor="@color/color_2"
+            android:textSize="@dimen/text_size_large"
+            android:padding="@dimen/space_small"
+            android:gravity="center_horizontal"
+            android:text="@string/pref_autosearch_summary"
+            android:scrollHorizontally="false"
+            />
+        <Button
+            android:id="@+id/welcomeoptions_okbutton"
+            android:layout_gravity="center_horizontal"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/msg_ok"/>
+        <ImageView
+            android:id="@+id/welomeoptions_earth"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:src="@drawable/background_bottom"
+            android:contentDescription="@string/app_welcomemsg"
+            android:layout_margin="@dimen/space_medium"
+            />
+</LinearLayout>
+

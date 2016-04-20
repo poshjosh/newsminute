@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_label">News Minute</string>
+    <string name="ad_unit_id_interstitial_before_displayfeeds">ca-app-pub-6291628549192975/1299942382</string>
+    <string name="ad_unit_id_banner_before_displayfeeds">ca-app-pub-6291628549192975/8014127183</string>
+</resources>

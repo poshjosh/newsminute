@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:id="@+id/feedview_root_linearlayout"
+    android:background="@color/color_light"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <include layout="@layout/urlbar" />
+
+    <include layout="@layout/contentoptions" />
+
+    <ScrollView
+        android:id="@+id/feedview_display_scrollview"
+        android:scrollbars="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:fillViewport="true" android:layout_weight="1.0">
+
+        <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <WebView
+                android:id="@+id/feedview_display"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="@dimen/space_xxsmall"
+                android:text="@string/msg_nofeed"
+                style="@style/WebViewAppTheme"/>
+
+            <LinearLayout
+                android:orientation="horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/space_xxxlarge"
+                android:layout_marginBottom="@dimen/space_xxsmall">
+                <ProgressBar
+                    android:id="@+id/downloadcommentsProgressBar"
+                    android:layout_width="wrap_content"
+                    android:layout_height="@dimen/space_xxxlarge" />
+                <TextView
+                    android:id="@+id/downloadcommentsProgressText"
+                    android:textColor="@color/level_2"
+                    android:padding="@dimen/space_small"
+                    android:layout_width="wrap_content"
+                    android:layout_height="@dimen/space_xxxlarge"
+                    android:text="@string/msg_loadingcomments"
+                    style="@style/TextViewAppTheme" />
+            </LinearLayout>
+            <EditText
+                android:id="@+id/feedview_commentinput"
+                android:scrollbars="vertical"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="@dimen/space_xxsmall"
+                android:hint="@string/msg_entercomment"
+                android:maxLines="4"
+                android:lines="3"
+                android:minLines="1"
+                android:singleLine="false"
+                android:inputType="textWebEditText" />
+            <LinearLayout
+                android:orientation="horizontal"
+                android:gravity="center"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="@dimen/space_xxsmall">
+                <Button
+                    android:id="@+id/feedview_sendcomment"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="@dimen/space_xxsmall"
+                    android:layout_marginRight="@dimen/space_xxsmall"
+                    android:text="@string/msg_send" />
+                <Button
+                    android:id="@+id/feedview_clearcomment"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="@dimen/space_xxsmall"
+                    android:layout_marginRight="@dimen/space_xxsmall"
+                    android:text="@string/msg_clear" />
+            </LinearLayout>
+            <ListView
+                android:id="@+id/feedview_comments"
+                android:scrollbars="vertical"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="@dimen/space_xxsmall"
+                android:scrollHorizontally="false" />
+        </LinearLayout>
+    </ScrollView>
+</LinearLayout>

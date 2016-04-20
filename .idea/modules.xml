@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/appbilling/appbilling.iml" filepath="$PROJECT_DIR$/appbilling/appbilling.iml" />
+      <module fileurl="file://$PROJECT_DIR$/common/common.iml" filepath="$PROJECT_DIR$/common/common.iml" />
+      <module fileurl="file://$PROJECT_DIR$/googleservicesextras/googleservicesextras.iml" filepath="$PROJECT_DIR$/googleservicesextras/googleservicesextras.iml" />
+      <module fileurl="file://$PROJECT_DIR$/newsminute.iml" filepath="$PROJECT_DIR$/newsminute.iml" />
+      <module fileurl="file://$PROJECT_DIR$/newsminutefree/newsminutefree.iml" filepath="$PROJECT_DIR$/newsminutefree/newsminutefree.iml" />
+      <module fileurl="file://$PROJECT_DIR$/newsminuteplus/newsminuteplus.iml" filepath="$PROJECT_DIR$/newsminuteplus/newsminuteplus.iml" />
+    </modules>
+  </component>
+</project>

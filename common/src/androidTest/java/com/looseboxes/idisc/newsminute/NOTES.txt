@@ -1,0 +1,40 @@
+Icon Sizes and Densities
+=========================
+36x36 (0.75x) for low-density
+48x48 (1.0x baseline) for medium-density
+72x72 (1.5x) for high-density
+96x96 (2.0x) for extra-high-density
+180x180 (3.0x) for extra-extra-high-density
+192x192 (4.0x) for extra-extra-extra-high-density (launcher icon only; see note above)
+
+ldpi (low) ~120dpi
+mdpi (medium) ~160dpi
+hdpi (high) ~240dpi
+xhdpi (extra-high) ~320dpi
+xxhdpi (extra-extra-high) ~480dpi
+xxxhdpi (extra-extra-extra-high) ~640dpi
+
+NewsMinute Logo - Colors
+========================
+orange - #F56600
+blue - #135DC4
+gray - #AEA9B0
+
+SEARCH BAR NOT TRIGGERING SEARCH ACTIVITY
+=========================================
+http://stackoverflow.com/questions/11987937/search-widget-on-action-bar-doesnt-trigger-my-search-activity
+---------------------------------------------------------------------------------------------------------
+Search widget on action bar doesn't trigger my search activity
+* The tutorial seems to missing one important part: <meta-data android:name="android.app.default_searchable"
+ android:value=".MySearchActivityName" /> has to be added inside <application> tags in manifest to get the
+ search widget working correctly.
+* Also a hint to solving a problem when the actionbar search is not triggered on data posting (no error
+given whatsoever and documentations hasn't got a word about this limitation): in searchable.xml file
+android:hint and android:label attributes MUST be references to strings in strings.xml
+
+http://stackoverflow.com/questions/27567796/android-assisted-search-the-search-button-does-not-invoke-the-searchable-activi
+---------------------------------------------------------------------------------------------------------------------------
+I've had problems with the default_searchable meta-tag, when using flavors. It seemed to only work when
+using the full path (skipping the flavor) to the search activity e.g.:
+<meta-data android:name="android.app.default_searchable" android:value="com.example.SearchActivity"/>
+Instead of .SearchActivity use com.example.SearchActivity

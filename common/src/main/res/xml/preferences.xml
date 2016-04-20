@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <EditTextPreference
+        android:key="@string/pref_autosearch_id"
+        android:title="@string/pref_autosearch_title"
+        android:summary="@string/pref_autosearch_summary"
+        android:dialogTitle="@string/pref_autosearch_dialogtitle"
+        android:defaultValue="@string/pref_autosearch_defaultvalue"/>
+    <ListPreference
+        android:key="@string/pref_syncinterval_id"
+        android:title="@string/pref_syncinterval_title"
+        android:summary="@string/pref_syncinterval_summary"
+        android:dialogTitle="@string/pref_syncinterval_dialogtitle"
+        android:entries="@array/pref_syncinterval_entries"
+        android:entryValues="@array/pref_syncinterval_values"
+        android:defaultValue="@string/pref_syncinterval_defaultvalue"/>
+    <CheckBoxPreference
+       android:key="@string/pref_disablevibration_id"
+       android:title="@string/pref_disablevibration_title"
+       android:summary="@string/pref_disablevibration_summary"
+       android:defaultValue="false"/>
+</PreferenceScreen>

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <EditText
+            android:id="@+id/urlbar_urlinput"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:hint="@string/msg_enter_url"
+            android:layout_weight="1.0"
+            android:inputType="textUri"/>
+        <Button
+            android:id="@+id/urlbar_button1"
+            android:textSize="@dimen/subtitle_text_size"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/msg_go"/>
+    </LinearLayout>
+    <ProgressBar
+        android:id="@+id/urlbar_progressbar"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/space_medium"
+        android:max="100"
+        android:indeterminate="false"
+        style="@style/ProgressBarAppTheme" />
+</LinearLayout>

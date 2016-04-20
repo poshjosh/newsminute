@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.looseboxes.idisc.common">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+
+    <application
+        android:theme="@style/AppTheme"
+        android:allowBackup="true"
+        android:label="@string/app_label"
+        android:icon="@mipmap/ic_launcher">
+
+        <meta-data
+            android:name="android.app.default_searchable"
+            android:value="com.looseboxes.idisc.common.activities.SearchableActivity" />
+        <activity
+            android:name=".activities.MainActivity"
+            android:label="@string/app_label"
+            android:launchMode="singleTop">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name=".activities.SearchableActivity"
+            android:label="@string/msg_searchresults"
+            android:launchMode="singleTop">
+            <intent-filter>
+                <action android:name="android.intent.action.SEARCH" />
+            </intent-filter>
+            <meta-data
+                android:name="android.app.searchable"
+                android:resource="@xml/searchable"/>
+        </activity>
+        <activity
+            android:name=".activities.DisplayFeedActivity"
+            android:label="@string/msg_highlights"
+            android:launchMode="singleTop"
+            android:windowSoftInputMode="stateHidden">
+        </activity>
+        <activity
+            android:name=".activities.DisplayCommentActivity"
+            android:label="@string/msg_comments"
+            android:launchMode="singleTop"
+            android:windowSoftInputMode="stateHidden">
+         </activity>
+        <activity
+            android:label="@string/msg_comments"
+            android:name=".activities.DisplayCommentsActivity"
+            android:launchMode="singleTop"
+            android:windowSoftInputMode="stateHidden">
+        </activity>
+        <activity
+            android:name=".activities.DisplayAdvertActivity"
+            android:label="@string/msg_advert"
+            android:noHistory="true"
+            android:launchMode="singleTop">
+        </activity>
+        <activity
+            android:name=".activities.WelcomeActivity"
+            android:label=" 1 of 3"
+            android:noHistory="true"
+            android:launchMode="singleTop">
+        </activity>
+        <activity
+            android:name=".activities.WelcomeOptionsActivity"
+            android:label=" 2 of 3"
+            android:noHistory="true"
+            android:launchMode="singleTop"
+            android:windowSoftInputMode="stateHidden">
+        </activity>
+        <activity
+            android:name=".activities.SignupActivity"
+            android:label="@string/msg_signup"
+            android:launchMode="singleTop"
+            android:windowSoftInputMode="stateHidden">
+        </activity>
+        <activity
+            android:name=".activities.LoginActivity"
+            android:label="@string/msg_login"
+            android:launchMode="singleTop">
+        </activity>
+        <activity
+            android:name=".activities.ForgotPasswordActivity"
+            android:label="@string/msg_forgotpassword"
+            android:launchMode="singleTop">
+        </activity>
+        <activity
+            android:name=".activities.HeadlinesActivity"
+            android:label="@string/app_label"
+            android:launchMode="singleTop" >
+        </activity>
+        <activity
+            android:name=".activities.SelectCategoriesActivity"
+            android:label="@string/msg_selectcategories"
+            android:launchMode="singleTop" >
+        </activity>
+        <activity
+            android:name=".activities.CategoriesActivity"
+            android:label="@string/app_label"
+            android:launchMode="singleTop" >
+        </activity>
+        <activity
+            android:name=".activities.SelectSourcesActivity"
+            android:label="@string/msg_selectsources"
+            android:launchMode="singleTop" >
+        </activity>
+        <activity
+            android:name=".activities.SourcesActivity"
+            android:label="@string/app_label"
+            android:launchMode="singleTop" >
+        </activity>
+        <activity
+            android:name=".activities.BookmarksActivity"
+            android:label="@string/msg_bookmarks"
+            android:launchMode="singleTop" >
+        </activity>
+        <activity
+            android:name=".activities.FavoritesActivity"
+            android:label="@string/msg_favorites"
+            android:launchMode="singleTop" >
+        </activity>
+        <activity
+            android:name=".activities.SelectInfoActivity"
+            android:label="@string/msg_selectinfo"
+            android:launchMode="singleTop" >
+        </activity>
+        <activity
+            android:name=".activities.InfoActivity"
+            android:label="@string/msg_info"
+            android:launchMode="singleTop" >
+        </activity>
+        <activity
+            android:name=".activities.SettingsActivity"
+            android:label="@string/msg_settings"
+            android:launchMode="singleTop">
+        </activity>
+        <activity
+            android:name=".activities.AboutUsActivity"
+            android:label="@string/msg_about"
+            android:launchMode="singleTop">
+        </activity>
+        <activity
+            android:name=".activities.DisplayLinkActivity"
+            android:label="@string/app_label"
+            android:launchMode="singleTop"
+            android:windowSoftInputMode="stateHidden">
+        </activity>
+        <activity
+            android:name=".activities.LinkHandlingActivity"
+            android:label="@string/app_label"
+            android:noHistory="true"
+            android:launchMode="singleTop">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data android:host="www.looseboxes.com" android:scheme="http" />
+                <data android:host="www.looseboxes.com" android:scheme="https" />
+            </intent-filter>
+        </activity>
+
+        <!--
+                    Because android:exported is set to "false",
+                    the service is only available to this app.
+        -->
+        <service
+            android:name=".service.DownloadService"
+            android:exported="false"/>
+
+        <receiver android:name=".service.BootCompleteBroadcastReceiver" >
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
+        <receiver android:name=".service.StartFeedLoadServiceReceiver" >
+        </receiver>
+        <receiver android:name=".service.NetworkChangeReceiver" >
+            <intent-filter>
+                <action android:name="android.net.conn.CONNECTIVITY_CHANGE" />
+            </intent-filter>
+        </receiver>
+
+        <activity
+            android:name=".activities.DeveloperActivity"
+            android:label="Developer Activity" >
+        </activity>
+        <activity
+            android:name=".activities.SelectLogLevelActivity"
+            android:label="Select Log Level" >
+        </activity>
+        <activity
+            android:name=".activities.LaunchActivityActivity"
+            android:label="Launch Activity" >
+        </activity>
+        <activity
+            android:name=".activities.ViewLogFilesActivity"
+            android:label="Select Log File to View">
+        </activity>
+    </application>
+
+</manifest>

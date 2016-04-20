@@ -1,0 +1,11 @@
+Version 1.0.2
+============
+Self hiding dialogs are now centered only horizontally as against both horizontally and vertically previously
+
+Version 1.0.1
+===========
+Reduced size of app to below 3MB
+Added feeds to be displayed in the event the app is installed when there is no internet available
+Fixed buggy notification display interval
+Added standard notification icon (white on transparent) for android api version 21+
+Fixed buggy display of adverts

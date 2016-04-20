@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:android="http://schemas.android.com/apk/res/android">
+
+<!--
+Since our theme is light, avoid setting textColor to anything light
+i.e light theme requires dark textColor and vice versa
+-->
+    <style name="AppTheme.ActionBar" parent="@style/ThemeOverlay.AppCompat.ActionBar">
+        <item name="android:actionBarStyle">@style/ActionBarAppTheme</item>
+        <item name="android:colorPrimary">@color/background</item>
+        <item name="android:colorPrimaryDark">@color/background_dark</item>
+        <!--item name="android:textColorPrimary">@color/textColor</item-->
+    </style>
+
+    <style name="AppTheme" parent="@style/_AppTheme">
+        <item name="android:colorPrimary">@color/background</item>
+        <item name="android:colorPrimaryDark">@color/background_dark</item>
+        <!--item name="android:textColorPrimary">@color/textColor</item-->
+<!-- @see https://guides.codepath.com/android/Migrating-to-the-AppCompat-Library -->
+        <item name="android:windowActionBar">false</item>
+        <item name="android:windowNoTitle">true</item>
+    </style>
+
+</resources>

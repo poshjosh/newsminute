@@ -1,0 +1,19 @@
+TO DO
+-----
+when content options button clicked there should be indication
+replace all 'null == null' and 'null != null'
+Test Dual Pane Mode
+When WebContentFragment loads from url, the content loaded from the url should be used
+to update getContentToDisplay
+
+Send and Clear buttons shouldn't be so far down in Feed Display
+    /* JADX WARNING: inconsistent code. */
+    /* Code decompiled incorrectly, please refer to instructions dump. */
+
+replace all CompletionEvent.STATUS_CONFLICT
+
+replace all BuildConfig.FLAVOR with ""
+replace all "" with Util.EMPTY_STRING;
+
+Add properties from PropertiesManagr to server json
+

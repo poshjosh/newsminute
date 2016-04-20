@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content">
+
+    <TextView
+        android:id="@+id/contentoptions_usage_share"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="@dimen/space_medium"
+        android:text="@string/msg_share"
+        android:textSize="@dimen/subtitle_text_size_large"
+        android:gravity="left"
+        android:drawablePadding="@dimen/space_large"
+        android:drawableLeft="@drawable/ic_share_black_24dp"/>
+
+    <TextView
+        android:id="@+id/contentoptions_usage_browsefullstory"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="@dimen/space_medium"
+        android:text="@string/msg_browsefullstory"
+        android:textSize="@dimen/subtitle_text_size_large"
+        android:gravity="left"
+        android:drawablePadding="@dimen/space_large"
+        android:drawableLeft="@drawable/ic_language_black_24dp"/>
+
+    <TextView
+        android:id="@+id/contentoptions_usage_bookmark"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="@dimen/space_medium"
+        android:text="@string/msg_readlater"
+        android:textSize="@dimen/subtitle_text_size_large"
+        android:gravity="left"
+        android:drawablePadding="@dimen/space_large"
+        android:drawableLeft="@drawable/ic_bookmark_border_black_24dp"/>
+</LinearLayout>

@@ -1,0 +1,9 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.looseboxes.idisc.newsminutefree">
+
+    <uses-permission android:name="com.android.vending.BILLING" />
+
+    <application android:name=".NewsMinuteFreeApplication">
+    </application>
+
+</manifest>

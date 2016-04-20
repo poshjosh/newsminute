@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<HorizontalScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/tabs_scrolls"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:fillViewport="true"
+    android:scrollbars="none">
+    <LinearLayout
+        android:id="@+id/tabs_scrolls_viewport"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+        <include
+            android:id="@+id/tabs_all"
+            layout="@layout/apptheme_tab_indicator_holo"/>
+        <include
+            android:id="@+id/tabs_headlines"
+            layout="@layout/apptheme_tab_indicator_holo"/>
+        <include
+            android:id="@+id/tabs_categories"
+            layout="@layout/apptheme_tab_indicator_holo"/>
+        <include
+            android:id="@+id/tabs_sources"
+            layout="@layout/apptheme_tab_indicator_holo"/>
+        <include
+            android:id="@+id/tabs_bookmarks"
+            layout="@layout/apptheme_tab_indicator_holo"/>
+        <include
+            android:id="@+id/tabs_favorites"
+            layout="@layout/apptheme_tab_indicator_holo"/>
+        <include
+            android:id="@+id/tabs_info"
+            android:visibility="gone"
+            layout="@layout/apptheme_tab_indicator_holo"/>
+    </LinearLayout>
+</HorizontalScrollView>

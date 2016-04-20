@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_label">NewsMinute Plus</string>
+    <string name="ad_unit_id_interstitial_before_displayfeeds">ca-app-pub-6291628549192975/1967593584</string>
+    <string name="ad_unit_id_banner_before_displayfeeds">ca-app-pub-6291628549192975/3444326788</string>
+</resources>

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView  xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/infoview_display_scrollview"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:scrollbars="vertical"
+    android:fillViewport="true"
+    style="@style/ViewGroupAppTheme">
+    <WebView
+        android:id="@+id/infoview_display"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/msg_nofeed"
+        style="@style/WebViewAppTheme"/>
+</ScrollView>
+

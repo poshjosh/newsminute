@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout 
+    xmlns:android="http://schemas.android.com/apk/res/android"    
+    android:layout_width="fill_parent"    
+    android:layout_height="fill_parent"
+    android:orientation="vertical"
+    style="@style/ViewGroupAppTheme">
+    <Spinner 
+        android:id="@+id/viewlogfiles_spinner"        
+        android:layout_gravity="top"
+        android:layout_weight="1"
+        android:layout_width="fill_parent"        
+        android:layout_height="0dp"        
+        android:padding="@dimen/space_medium"
+        android:layout_margin="@dimen/space_medium"/>
+    <Button
+        android:id="@+id/viewlogfiles_okbutton"
+        android:layout_gravity="top"
+        android:layout_weight="1"
+        android:layout_width="fill_parent"
+        android:layout_height="0dp"
+        android:layout_marginBottom="@dimen/space_small"
+        android:text="@string/msg_ok"/>
+    <ScrollView
+        android:id="@+id/viewlogfiles_scrollview"
+        android:layout_gravity="top"
+        android:layout_weight="7"
+        android:layout_width="fill_parent"
+        android:layout_height="0dp"
+        android:scrollbars="vertical"
+        android:fillViewport="true">
+        <TextView
+            android:id="@+id/viewlogfiles_textview"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:textSize="@dimen/text_size_large"
+            style="@style/TextViewAppTheme"/>
+    </ScrollView>    
+</LinearLayout>

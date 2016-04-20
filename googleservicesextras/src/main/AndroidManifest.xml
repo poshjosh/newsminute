@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.looseboxes.idisc.googleservicesextras" >
+    <application>
+        <meta-data
+            android:name="com.google.android.gms.version"
+            android:value="@integer/google_play_services_version" />
+<!-- These Activities extend AppCompatActivity and thus require this theme -->
+        <activity
+            android:name=".AppInviteActivity"
+            android:label="@string/msg_invite">
+        </activity>
+        <activity
+            android:name=".DeepLinkActivity"
+            android:label="@string/app_label">
+        </activity>
+    </application>
+
+</manifest>
+
