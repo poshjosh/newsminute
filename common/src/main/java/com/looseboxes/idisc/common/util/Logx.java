@@ -17,12 +17,12 @@ import org.json.simple.JSONObject;
 
 public final class Logx {
 
-    public static final String TEST_DEVICE_ID = "F681499FE32F2F73FDC6386B0DEA7BCE";
+//    public static final String GIONEE_P4 = "6C86837707C64E24C7ADCF5EB2AD1E6D";
+    public static final String SAMSUNG_GALAXY_S5 = "F681499FE32F2F73FDC6386B0DEA7BCE";
+//    public static final String SAMSUNG_GALAXY_S7_EDGE = "7A17EB9F1ACA121443B8D8CFAD52619A";
+    public static final String TEST_DEVICE_ID = SAMSUNG_GALAXY_S5;
 
-    private static boolean productionMode;
-    static {
-        productionMode = false;
-    }
+    private static boolean productionMode = true;
 
     private static final int defaultPopupsDevelopmentMode = 0;
 
@@ -104,11 +104,11 @@ public final class Logx {
     }
 
     public static void debug(Class aClass, Object msg) {
-        log(3, aClass, msg);
+        log(Log.DEBUG, aClass, msg);
     }
 
     public static void log(Class aClass, Throwable t) {
-        log(5, aClass, t);
+        log(Log.WARN, aClass, t);
     }
 
     public static void log(int priority, Class aClass, String msg, Object... args) {

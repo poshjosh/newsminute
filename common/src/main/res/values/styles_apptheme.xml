@@ -8,6 +8,7 @@
         <item name="android:windowNoTitle">true</item>
     </style>
 
+    <!--style name="ActionBarAppTheme" parent="@android:style/Widget.Holo.Light.ActionBar"-->
     <style name="ActionBarAppTheme" parent="@style/Widget.AppCompat.Light.ActionBar.Solid">
         <item name="backgroundStacked">@color/background</item>
         <item name="backgroundSplit">@color/background</item>

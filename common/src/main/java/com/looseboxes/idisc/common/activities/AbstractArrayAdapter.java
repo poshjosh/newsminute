@@ -1,7 +1,10 @@
 package com.looseboxes.idisc.common.activities;
 
+import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.res.Resources;
+import android.graphics.drawable.Drawable;
+import android.view.ContextThemeWrapper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -31,6 +34,8 @@ public abstract class AbstractArrayAdapter extends ArrayAdapter<JSONObject> {
     private final int len_short;
     private final int len_xshort;
 
+    private Drawable imageViewPlaceholder;
+
     static class ViewHolder {
         ImageView imageView;
         TextView infoView;
@@ -52,10 +57,12 @@ public abstract class AbstractArrayAdapter extends ArrayAdapter<JSONObject> {
 
     protected abstract String getUrl(JSONObject jSONObject);
 
+    @TargetApi(21)
     public AbstractArrayAdapter(Context context) {
         this(context, new ArrayList());
     }
 
+    @TargetApi(21)
     public AbstractArrayAdapter(Context context, List<JSONObject> arr) {
         super(context, R.layout.listrow, R.id.listrow_text, arr);
         this.feedDisplayArray = arr;
@@ -68,6 +75,15 @@ public abstract class AbstractArrayAdapter extends ArrayAdapter<JSONObject> {
         PropertiesManager pm = App.getPropertiesManager(context);
         this.len_xshort = pm.getInt(PropertyName.textLengthXShort);
         this.len_short = pm.getInt(PropertyName.textLengthShort);
+        try {
+            if (App.isAcceptableVersion(context, 21)) {
+                imageViewPlaceholder = context.getResources().getDrawable(R.drawable.placeholder, this.getContext().getTheme());
+            } else {
+                imageViewPlaceholder = context.getResources().getDrawable(R.drawable.placeholder);
+            }
+        }catch (Exception e) {
+            Logx.log(this.getClass(), e);
+        }
     }
 
     public long getItemId(int position) {
@@ -75,11 +91,16 @@ public abstract class AbstractArrayAdapter extends ArrayAdapter<JSONObject> {
         return feedId == null ? -1 : feedId.longValue();
     }
 
+    @TargetApi(16)
     public View getView(int position, View convertView, ViewGroup parent) {
+
         ViewHolder holder;
         String authorFavicon;
+
+        final Context context = this.getContext();
+
         if (convertView == null) {
-            convertView = ((LayoutInflater) getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(R.layout.listrow, parent, false);
+            convertView = ((LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(R.layout.listrow, parent, false);
             holder = new ViewHolder();
             holder.imageView = (ImageView) convertView.findViewById(R.id.listrow_icon);
             holder.textView = (TextView) convertView.findViewById(R.id.listrow_text);
@@ -88,18 +109,27 @@ public abstract class AbstractArrayAdapter extends ArrayAdapter<JSONObject> {
         } else {
             holder = (ViewHolder) convertView.getTag();
         }
+
         holder.imageView.setMinimumWidth(this.feedListIconWidth);
         holder.imageView.setMinimumHeight(this.feedListIconHeight);
+
         JSONObject jsonData = (JSONObject) getItem(position);
+
         holder.textView.setText(getHeading(jsonData));
         holder.infoView.setText(getInfo(jsonData));
+
         if ("iganta".equalsIgnoreCase(getAuthor(jsonData))) {
             authorFavicon = getAuthorFile("favicon.ico", jsonData);
         } else {
             authorFavicon = null;
         }
+
         String imageUrl = getImageUrl(jsonData);
+
         if (holder.imageView != null) {
+
+            holder.imageView.setImageDrawable(imageViewPlaceholder);
+
             RequestCreator rc = null;
             ImageManager im = getImageManager();
             if (!(authorFavicon == null || authorFavicon.isEmpty())) {

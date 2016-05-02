@@ -12,7 +12,6 @@ import com.looseboxes.idisc.common.App;
 import com.looseboxes.idisc.common.R;
 import com.looseboxes.idisc.common.activities.CommentListAdapter;
 import com.looseboxes.idisc.common.activities.DisplayFeedActivity;
-import com.looseboxes.idisc.common.asynctasks.AsyncReadTask.ProgressStatus;
 import com.looseboxes.idisc.common.asynctasks.CommentDownloadTask;
 import com.looseboxes.idisc.common.asynctasks.FeedDownloadManager;
 import com.looseboxes.idisc.common.jsonview.Feed;
@@ -33,13 +32,12 @@ public class DisplayFeedFragment extends AbstractDisplayFeedFragment implements 
     private Pattern bodyStartPattern;
     private CommentDownloadTask commentDownloadTask;
 
-    /* renamed from: com.looseboxes.idisc.common.fragments.DisplayFeedFragment.1 */
-    class AnonymousClass1 extends CommentDownloadTask {
+    class CommentDownloadTaskAsync extends CommentDownloadTask {
         private int displayed;
         final /* synthetic */ ProgressBar val$progressBar;
         final /* synthetic */ TextView val$progressText;
 
-        AnonymousClass1(Object x0, int x1, int x2, ProgressBar progressBar, TextView textView) {
+        CommentDownloadTaskAsync(Object x0, int x1, int x2, ProgressBar progressBar, TextView textView) {
             super(x0, x1, x2);
             this.val$progressBar = progressBar;
             this.val$progressText = textView;
@@ -140,6 +138,7 @@ public class DisplayFeedFragment extends AbstractDisplayFeedFragment implements 
         return R.id.feedview_display;
     }
 
+    @Override
     public boolean isSupported(int buttonId) {
         return true;
     }
@@ -191,7 +190,7 @@ public class DisplayFeedFragment extends AbstractDisplayFeedFragment implements 
         if (this.commentDownloadTask != null) {
             Util.cancel(this.commentDownloadTask);
         }
-        this.commentDownloadTask = new AnonymousClass1(getSelectedFeed().getFeedid(), 0, 10, progressBar, progressText);
+        this.commentDownloadTask = new CommentDownloadTaskAsync(getSelectedFeed().getFeedid(), 0, 10, progressBar, progressText);
         this.commentDownloadTask.execute();
     }
 

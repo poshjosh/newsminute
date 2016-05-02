@@ -23,6 +23,7 @@ public abstract class BrowserFragment extends WebContentFragment implements OnCl
         return R.id.urlbar_button1;
     }
 
+    @Override
     public boolean isSupported(int buttonId) {
         return R.id.contentoptions_browse == buttonId || R.id.contentoptions_copy == buttonId || R.id.contentoptions_share == buttonId;
     }

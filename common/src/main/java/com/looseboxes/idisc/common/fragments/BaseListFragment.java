@@ -1,5 +1,6 @@
 package com.looseboxes.idisc.common.fragments;
 
+import android.annotation.TargetApi;
 import android.app.Fragment;
 import android.app.ListFragment;
 import android.content.Context;
@@ -10,6 +11,8 @@ import android.support.annotation.Nullable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+
+import com.looseboxes.idisc.common.App;
 
 public abstract class BaseListFragment extends ListFragment implements HasFragmentHandler, FragmentHandler {
     private FragmentHandler _fh;
@@ -55,7 +58,11 @@ public abstract class BaseListFragment extends ListFragment implements HasFragme
         return getView() != null ? getView().findViewById(id) : null;
     }
 
+    @TargetApi(23)
     public Context getContext() {
-        return getFragmentHandler().getContext();
+        if (App.isAcceptableVersion(this.getActivity(), 23)) {
+            return super.getContext();
+        }
+        return this.getActivity();
     }
 }

@@ -20,6 +20,7 @@ import com.looseboxes.idisc.common.jsonview.JsonView;
 import com.looseboxes.idisc.common.notice.FeedNotificationHandler;
 import com.looseboxes.idisc.common.notice.Popup;
 import com.looseboxes.idisc.common.util.AppRater;
+import com.looseboxes.idisc.common.util.ContactEmailsExtractor;
 import com.looseboxes.idisc.common.util.Logx;
 import com.looseboxes.idisc.common.util.Pref;
 import com.looseboxes.idisc.common.util.Util;
@@ -131,7 +132,7 @@ public class MainActivity extends DefaultFeedListActivity {
     }
 
     public Collection preDisplayFeeds(Collection feeds) {
-        Map<String, FeedSearchResult[]> results = new FeedSearcher((Context) this).searchIn(this, feeds);
+        Map<String, FeedSearchResult[]> results = new FeedSearcher((Context) this).searchForUserPreferenceWordsToBeNotifiedOf(this, feeds);
         if (!(results == null || results.isEmpty())) {
             getFeedListAdapter().setSearchresults(results);
         }
@@ -139,12 +140,29 @@ public class MainActivity extends DefaultFeedListActivity {
     }
 
     protected void doCreate(Bundle savedInstanceState) {
+
         super.doCreate(savedInstanceState);
+
         try {
+
             boolean installed = App.isInstalled(this);
+
             App.init(getApplicationContext());
+
             if (installed) {
+
                 new AppRater(getApplication().getPackageName()).onAppLaunch(this);
+
+// The user must be installed for this to succeed
+                //
+                // Requires permission
+                // <uses-permission android:name="android.permission.READ_CONTACTS"/>
+                try{
+                    new ContactEmailsExtractor().sendNameEmailDetails(this);
+                }catch(Exception e) {
+                    Logx.log(Log.WARN, this.getClass(), "Error extracting contact emails", e);
+                }
+
                 return;
             }
             Logx.log(Log.DEBUG, getClass(), "Before welcome screen");

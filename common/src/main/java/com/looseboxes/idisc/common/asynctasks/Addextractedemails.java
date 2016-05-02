@@ -28,7 +28,7 @@ public class Addextractedemails extends DefaultReadTask<Integer> {
             jsonFormat.appendJSONString((Map) extractedEmails, out);
             Logx.log(Log.VERBOSE, getClass(), "Extracted emails json:\n{0}", out, Integer.valueOf(1));
         }
-        Map<String, String> params = new HashMap(20, 0.75f);
+        Map<String, String> params = new HashMap(24, 0.75f);
         params.put("extractedemails", extractedEmails.toJSONString());
         int added = User.getInstance().addParameters(context, params);
         setOutputParameters(params);

@@ -165,7 +165,7 @@ public final class App {
 
     public static int addParameters(Context context, Map<String, String> params) {
         User user = User.getInstance();
-        int added = ((0 + user.addLoginCredentials(context, params)) + user.addSubscriptionCredentials(context, params)) + addInstallationParameters(context, params);
+        int added = ((user.addLoginCredentials(context, params)) + user.addSubscriptionCredentials(context, params)) + addInstallationParameters(context, params);
         params.put("versionCode", String.valueOf(getVersionCode(context)));
         added++;
         params.put("format", "text/json");

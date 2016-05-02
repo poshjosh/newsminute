@@ -7,6 +7,8 @@ import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
+import android.widget.TextView;
+
 import com.looseboxes.idisc.common.R;
 import com.looseboxes.idisc.common.handlers.ButtonGroupHandler;
 import com.looseboxes.idisc.common.util.Pref;
@@ -119,13 +121,20 @@ public abstract class AbstractSelectOptions extends AbstractSingleTopActivity {
     }
 
     protected void doCreate(Bundle icicle) {
+
         super.doCreate(icicle);
+
         ((Button) findViewById(R.id.selectcategories_ok)).setOnClickListener(new OkButtonListener());
+
         List<CheckBox> btns = getButtonGroupHandler().initButtons();
-        Set<String> selectedCategories = Pref.getStringSet(getApplicationContext(), getPreferenceKeyForStoredUserSelection(), null);
-        if (selectedCategories != null && !selectedCategories.isEmpty()) {
+
+        Set<String> storedUserSelectedCategories = Pref.getStringSet(getApplicationContext(), getPreferenceKeyForStoredUserSelection(), null);
+
+        if (storedUserSelectedCategories != null && !storedUserSelectedCategories.isEmpty()) {
+
             for (CheckBox btn : btns) {
-                btn.setChecked(selectedCategories.contains(btn.getText()));
+
+                btn.setChecked(storedUserSelectedCategories.contains(btn.getText()));
             }
         }
     }

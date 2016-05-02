@@ -29,40 +29,63 @@ import java.util.Map;
 import java.util.Set;
 
 public class FeedDownloadManager extends FeedDownloadTask {
+
+    private static final Serializable downloadLock = new Serializable() { };
+
+    private static int removedCount;
+    private static int updateCount;
+
     private static transient JsonListIO<JSONObject> _accessViaGetter;
     private static transient JsonListIO<Map<String, Object>> _cn;
     private static CloseableSet<Long> _iam_accessViaGetter;
-    private static Serializable downloadLock;
-    private static int removedCount;
-    private static int updateCount;
     private Map _dsc;
 
-    /* renamed from: com.looseboxes.idisc.common.asynctasks.FeedDownloadManager.2 */
-    class AnonymousClass2 extends AsyncTask {
-        final /* synthetic */ List val$downloaded;
+    class HandleDownloadedAsync extends AsyncTask {
 
-        AnonymousClass2(List list) {
-            this.val$downloaded = list;
+        final List val$downloaded;
+
+        HandleDownloadedAsync(List downloaded) {
+            this.val$downloaded = downloaded;
         }
 
         protected Object doInBackground(Object[] params) {
+
             long tb4 = System.currentTimeMillis();
+
             try {
-                FeedDownloadManager.this.doOnSuccess(this.val$downloaded);
-                Logx.log(Log.DEBUG, getClass(), "Time spent updating downloads: {0}", Long.valueOf(System.currentTimeMillis() - tb4));
+
+                Integer downloadSize = val$downloaded == null ? null : Integer.valueOf(val$downloaded.size());
+
+                Logx.log(Log.DEBUG, this.getClass(), "Downloaded {0} feeds", downloadSize);
+                Logx.logLatest(getClass(), "update", val$downloaded);
+                Logx.logCategories("Before update", getClass(), val$downloaded, "statuses");
+
+                final Context context = getContext();
+
+                setLastDownloadTime(context, System.currentTimeMillis());
+
+                List<Map<String, Object>> commentNotifications = updateCommentNotifications(context, val$downloaded);
+
+                Feed feedView = new Feed();
+
+                List updatedDownloadedFeeds = updateFeeds(context, feedView, val$downloaded);
+
+                onPostSuccess(updatedDownloadedFeeds);
+
+                FeedNotificationHandler notificationHandler = new FeedNotificationHandler(context);
+
+                notificationHandler.showCommentNotice(commentNotifications);
+
+                notificationHandler.showFeedNotice(feedView, updatedDownloadedFeeds);
+
             } catch (Exception e) {
                 Logx.log(getClass(), e);
-                Logx.log(Log.DEBUG, getClass(), "Time spent updating downloads: {0}", Long.valueOf(System.currentTimeMillis() - tb4));
-            } catch (Throwable th) {
+            }finally{
+                if(Logx.isLoggable(Log.DEBUG))
                 Logx.log(Log.DEBUG, getClass(), "Time spent updating downloads: {0}", Long.valueOf(System.currentTimeMillis() - tb4));
             }
             return null;
         }
-    }
-
-    static {
-        downloadLock = new Serializable() {
-        };
     }
 
     public FeedDownloadManager(Context context) {
@@ -73,8 +96,7 @@ public class FeedDownloadManager extends FeedDownloadTask {
         super(context, lastDownloadTime);
     }
 
-    public void onPostSuccess(List<JSONObject> list) {
-    }
+    public void onPostSuccess(List<JSONObject> list) { }
 
     /**
      * This method is final. This is because we want all downloads handled by
@@ -84,27 +106,7 @@ public class FeedDownloadManager extends FeedDownloadTask {
      * @param downloaded The downloaded feeds
      */
     public final void onSuccess(List<JSONObject> downloaded) {
-        new AnonymousClass2(downloaded).execute(new Object[0]);
-    }
-
-    private void doOnSuccess(List<JSONObject> downloaded) {
-        Class cls = FeedDownloadManager.class;
-        String str = "Downloaded {0} feeds";
-        Object[] objArr = new Object[1];
-        objArr[0] = downloaded == null ? null : Integer.valueOf(downloaded.size());
-        Logx.log(Log.DEBUG, cls, str, objArr);
-        Logx.logLatest(getClass(), "update", downloaded);
-        Logx.logCategories("Before update", getClass(), downloaded, "statuses");
-        Context context = getContext();
-        setLastDownloadTime(context, System.currentTimeMillis());
-        List<Map<String, Object>> commentNotifications = updateCommentNotifications(context, downloaded);
-        Feed feedView = new Feed();
-        List downloaded2 = updateFeeds(context, feedView, downloaded);
-        onPostSuccess(downloaded2);
-        FeedNotificationHandler notificationHandler = new FeedNotificationHandler(context);
-        notificationHandler.showCommentNotice(commentNotifications);
-        notificationHandler.showFeedNotice(feedView, downloaded2);
-        Logx.log(Log.VERBOSE, getClass(), "Exiting method #onSuccess(java.util.List)");
+        new HandleDownloadedAsync(downloaded).execute(new Object[0]);
     }
 
     private List<Map<String, Object>> updateCommentNotifications(Context context, List<JSONObject> downloaded) {

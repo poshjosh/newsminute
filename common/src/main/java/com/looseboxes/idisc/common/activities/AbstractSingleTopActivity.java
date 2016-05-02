@@ -4,6 +4,9 @@ import android.annotation.TargetApi;
 import android.app.ActionBar;
 import android.app.Activity;
 import android.content.Intent;
+import android.content.res.Resources;
+import android.graphics.drawable.ColorDrawable;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.SearchView.OnQueryTextListener;
@@ -13,6 +16,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.SearchView;
+
 import com.looseboxes.idisc.common.App;
 import com.looseboxes.idisc.common.DefaultApplication;
 import com.looseboxes.idisc.common.R;
@@ -87,13 +91,24 @@ public abstract class AbstractSingleTopActivity extends AppCompatActivity implem
         try {
             View v = findViewById(R.id.my_toolbar);
             if (v instanceof Toolbar) {
-                setSupportActionBar((Toolbar) v);
+                Toolbar toolbar = (Toolbar)v;
+//                toolbar.setTitle(R.string.app_label);
+                setSupportActionBar(toolbar);
                 ActionBar actionBar = getActionBar();
                 if (actionBar != null) {
                     actionBar.hide();
                 }
             } else if (App.isAcceptableVersion(this, 21) && (v instanceof android.widget.Toolbar)) {
-                setActionBar((android.widget.Toolbar) v);
+                android.widget.Toolbar toolbar = (android.widget.Toolbar) v;
+//                toolbar.setTitle(R.string.app_label);
+                setActionBar(toolbar);
+                ActionBar actionBar = getActionBar();
+                if (actionBar != null) {
+                    actionBar.hide();
+                }
+            }else{
+                Logx.log(Log.INFO, this.getClass(), " JESUS IS LORD ======================================================================");
+                this.setActionBarBackground(this);
             }
         } catch (Exception bug) {
             this.toolbarBug = true;
@@ -120,6 +135,28 @@ public abstract class AbstractSingleTopActivity extends AppCompatActivity implem
         ActionBar actionBar = activity.getActionBar();
         if (actionBar != null) {
             actionBar.hide();
+        }
+    }
+
+    @TargetApi(23)
+    private void setActionBarBackground(Activity activity) {
+        final int color;
+        if(App.isAcceptableVersion(activity, 23)) {
+            color = this.getResources().getColor(R.color.background, activity.getTheme());
+        }else{
+            color = this.getResources().getColor(R.color.background);
+//            color = this.getColor(R.color.background); //  throws java.lang.NoSuchMethodError: com.looseboxes.idisc.common.activities.XXXActivity.getColor
+        }
+        Drawable drawable = new ColorDrawable(color);
+        if (activity instanceof AppCompatActivity) {
+            android.support.v7.app.ActionBar appCompatActionBar = ((AppCompatActivity) activity).getSupportActionBar();
+            if (appCompatActionBar != null) {
+                appCompatActionBar.setBackgroundDrawable(drawable);
+            }
+        }
+        ActionBar actionBar = activity.getActionBar();
+        if (actionBar != null) {
+            actionBar.setBackgroundDrawable(drawable);
         }
     }
 

@@ -10,7 +10,7 @@
         android:layout_height="wrap_content"
         android:padding="@dimen/space_medium"
         android:text="@string/msg_share"
-        android:textSize="@dimen/subtitle_text_size_large"
+        android:textSize="@dimen/subtitle_text_size"
         android:gravity="left"
         android:drawablePadding="@dimen/space_large"
         android:drawableLeft="@drawable/ic_share_black_24dp"/>
@@ -21,7 +21,7 @@
         android:layout_height="wrap_content"
         android:padding="@dimen/space_medium"
         android:text="@string/msg_browsefullstory"
-        android:textSize="@dimen/subtitle_text_size_large"
+        android:textSize="@dimen/subtitle_text_size"
         android:gravity="left"
         android:drawablePadding="@dimen/space_large"
         android:drawableLeft="@drawable/ic_language_black_24dp"/>
@@ -32,7 +32,7 @@
         android:layout_height="wrap_content"
         android:padding="@dimen/space_medium"
         android:text="@string/msg_readlater"
-        android:textSize="@dimen/subtitle_text_size_large"
+        android:textSize="@dimen/subtitle_text_size"
         android:gravity="left"
         android:drawablePadding="@dimen/space_large"
         android:drawableLeft="@drawable/ic_bookmark_border_black_24dp"/>

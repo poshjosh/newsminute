@@ -13,12 +13,13 @@ i.e light theme requires dark textColor and vice versa
     </style>
 
     <style name="AppTheme" parent="@style/_AppTheme">
+        <item name="android:actionBarStyle">@style/ActionBarAppTheme</item>
         <item name="android:colorPrimary">@color/background</item>
         <item name="android:colorPrimaryDark">@color/background_dark</item>
         <!--item name="android:textColorPrimary">@color/textColor</item-->
 <!-- @see https://guides.codepath.com/android/Migrating-to-the-AppCompat-Library -->
-        <item name="android:windowActionBar">false</item>
-        <item name="android:windowNoTitle">true</item>
+        <!--item name="android:windowActionBar">false</item-->
+        <!--item name="android:windowNoTitle">true</item-->
     </style>
 
 </resources>

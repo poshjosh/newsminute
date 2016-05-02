@@ -38,17 +38,19 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 public class FeedNotificationHandler extends NotificationHandler {
-    public static final String EXTRA_JSON_STRING_NOTIFIED_FEED;
+
+    public static final String EXTRA_JSON_STRING_NOTIFIED_FEED = FeedNotificationHandler.class.getPackage().getName() + ".NotifiedFeedJSON";
+
+    final boolean useSourceName = false;
+    private int textLengthLong;
+    private int textLengthShort;
+
     private static CachedSet<Long> _iam_accessViaGetter;
     private String _al;
     private FeedSearcher _fs;
     private Date _ma;
     private int _siri;
     private ImageManager _t_accessViaGetter;
-    private int textLengthLong;
-    private int textLengthShort;
-
-    /* renamed from: com.looseboxes.idisc.common.notice.FeedNotificationHandler.2 */
 
     class AsyncBitmapLoader implements ImageManager.OnPostBitmapLoadListener {
         final Feed val$feed;
@@ -60,10 +62,6 @@ public class FeedNotificationHandler extends NotificationHandler {
         public void onPostLoad(Bitmap bitmap) {
             FeedNotificationHandler.this.fireFeedNotice(this.val$feed, this.val$result, bitmap);
         }
-    }
-
-    static {
-        EXTRA_JSON_STRING_NOTIFIED_FEED = FeedNotificationHandler.class.getPackage().getName() + ".NotifiedFeedJSON";
     }
 
     public FeedNotificationHandler(Context context) {
@@ -155,19 +153,40 @@ public class FeedNotificationHandler extends NotificationHandler {
     }
 
     public boolean showFeedNotice(Feed feedView, List downloaded) {
+
         if (!isCompatibleAndroidVersion() || downloaded == null || downloaded.isEmpty()) {
             return false;
         }
+
         FeedSearchResult toDisplay = getResultForDisplay(feedView, downloaded, this.textLengthLong);
-        if (toDisplay == null) {
-            Date maxage = getMaxAge();
-            if (maxage != null) {
-                toDisplay = getMostViewedAfter(feedView, downloaded, this.textLengthLong, maxage);
+
+        final String lastFeedNoticeTimePrefKey = FileIO.getLastFeedNotificationTimeFilename();
+
+        if(toDisplay == null) {
+
+            final long lastFeedNoticeTime = Pref.getLong(this.getContext(), lastFeedNoticeTimePrefKey, -1L);
+
+            final int longestSyncIntervalOption = Pref.getLastSyncIntervalOption(this.getContext(), 240);
+
+            if (lastFeedNoticeTime != -1L &&
+                    (System.currentTimeMillis() - lastFeedNoticeTime) > TimeUnit.MINUTES.toMillis(longestSyncIntervalOption)) {
+
+                Date maxage = getMaxAge();
+
+                if (maxage != null) {
+
+                    toDisplay = getMostViewedAfter(feedView, downloaded, this.textLengthLong, maxage);
+                }
             }
         }
+
         if (toDisplay != null) {
+
+            Pref.setLong(this.getContext(), lastFeedNoticeTimePrefKey, System.currentTimeMillis());
+
             return showFeedNotice(feedView, toDisplay);
         }
+
         return false;
     }
 
@@ -196,22 +215,32 @@ public class FeedNotificationHandler extends NotificationHandler {
 
     @TargetApi(16)
     public boolean fireFeedNotice(Feed feed, FeedSearchResult result, Bitmap image) {
+
         String summary;
         Style style;
+
         feed.setJsonData(result.getSearchedFeed());
-        String sourceName = feed.getSourceName(getContext());
-        String heading = feed.getHeading(null, this.textLengthShort);
-        String title = getTitle();
-        if (sourceName != null) {
+
+        final String sourceName = feed.getSourceName(getContext());
+
+        final String heading = feed.getHeading(null, this.textLengthShort);
+
+        final String title = getTitle();
+
+        if (useSourceName && sourceName != null) {
             summary = sourceName + " - " + heading;
         } else {
             summary = heading;
         }
-        String text = result.getText().contains("<") ? sourceName != null ? heading : null : result.getText();
+
+        String text = result.getText().contains("<") ? useSourceName && sourceName != null ? heading : null : result.getText();
+
         if (text == null) {
             summary = heading;
         }
+
         Logx.debug(getClass(), "Title: {0}, summary: {1}, bigText: {2}", title, summary, text);
+
         Builder builder = getBuilder(getSmallIconResourceId(), image, title, summary);
         if (text != null) {
             style = getBigTextStyle(title, summary, text);
@@ -226,8 +255,13 @@ public class FeedNotificationHandler extends NotificationHandler {
         if (style != null && isCompatibleAndroidVersion()) {
             builder.setStyle(style);
         }
-        boolean shown = fireDefaultNotification(builder, MainActivity.class, EXTRA_JSON_STRING_NOTIFIED_FEED, result.getSearchedFeed().toJSONString());
+
+        boolean shown = fireDefaultNotification(
+                builder, MainActivity.class,
+                EXTRA_JSON_STRING_NOTIFIED_FEED, result.getSearchedFeed().toJSONString());
+
         setLastNotifiedFeedId(getContext(), result.getFeedId().longValue());
+
         return shown;
     }
 
@@ -261,16 +295,23 @@ public class FeedNotificationHandler extends NotificationHandler {
     }
 
     protected FeedSearchResult getResultForDisplay(Feed feed, List download, int displayLen) {
+
         download = feed.getFeedsAfter(acceptNonDisplayed(feed, download), getMaxAge());
+
         if (download == null || download.isEmpty()) {
             return null;
         }
+
         FeedSearcher searcher = new FeedSearcher(getContext());
-        Map<String, FeedSearchResult[]> found = searcher.searchIn(getContext(), download, displayLen);
+
+        Map<String, FeedSearchResult[]> found = searcher.searchForUserPreferenceWordsToBeNotifiedOf(getContext(), download, displayLen);
+
         if (found == null || found.isEmpty()) {
             return null;
         }
+
         FeedSearchResult[] mostcommon = searcher.getMostCommon(found);
+
         if (mostcommon == null || mostcommon.length <= 0) {
             return null;
         }

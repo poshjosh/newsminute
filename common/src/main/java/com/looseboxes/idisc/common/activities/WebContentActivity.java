@@ -6,6 +6,7 @@ import com.looseboxes.idisc.common.DefaultApplication;
 import com.looseboxes.idisc.common.fragments.WebContentFragment;
 
 public abstract class WebContentActivity<K extends WebContentFragment> extends AdsActivity {
+
     public static final String EXTRA_STRING_CONTENT_CHARSET;
     public static final String EXTRA_STRING_CONTENT_TO_DISPLAY;
     public static final String EXTRA_STRING_CONTENT_TYPE;
@@ -19,6 +20,11 @@ public abstract class WebContentActivity<K extends WebContentFragment> extends A
         EXTRA_STRING_CONTENT_TO_DISPLAY = WebContentActivity.class.getName() + ".contentToDisplay";
         EXTRA_STRING_CONTENT_TYPE = WebContentActivity.class.getName() + ".contentType";
         EXTRA_STRING_CONTENT_CHARSET = WebContentActivity.class.getName() + ".contentCharset";
+    }
+
+    @Override
+    public String getShareText() {
+        return this.getFragment(true).getShareText();
     }
 
     protected void handleIntent(Intent intent) {

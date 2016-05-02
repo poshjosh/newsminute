@@ -20,12 +20,10 @@ import com.looseboxes.idisc.common.notice.FeedNotificationHandler;
 import com.looseboxes.idisc.common.notice.Popup;
 import com.looseboxes.idisc.common.service.DownloadService;
 import com.looseboxes.idisc.common.util.AliasesManager;
-import com.looseboxes.idisc.common.util.AliasesManager.AliasType;
 import com.looseboxes.idisc.common.util.Logx;
 import com.looseboxes.idisc.common.util.Logx.LogSettings;
 import com.looseboxes.idisc.common.util.PreferenceFeedsManager;
 import com.looseboxes.idisc.common.util.PreferenceFeedsManager.PreferenceType;
-import com.looseboxes.idisc.common.util.PropertiesManager;
 import com.looseboxes.idisc.common.util.StaticResourceManager;
 import java.io.IOException;
 import java.io.InputStream;
@@ -33,13 +31,14 @@ import java.util.Arrays;
 import java.util.List;
 
 public class DeveloperActivity extends Activity {
+
     private ButtonGroupHandler<Button> _bh;
 
-    /* renamed from: com.looseboxes.idisc.common.activities.DeveloperActivity.11 */
-    class AnonymousClass11 implements OnClickListener {
+    class IncreasePopupRepeatsOnClickListener implements OnClickListener {
+
         final /* synthetic */ TextView val$textView;
 
-        AnonymousClass11(TextView textView) {
+        IncreasePopupRepeatsOnClickListener(TextView textView) {
             this.val$textView = textView;
         }
 
@@ -53,11 +52,10 @@ public class DeveloperActivity extends Activity {
         }
     }
 
-    /* renamed from: com.looseboxes.idisc.common.activities.DeveloperActivity.12 */
-    class AnonymousClass12 implements OnClickListener {
-        final /* synthetic */ TextView val$textView;
+    class DecreasePopupRepeatsOnClickListener implements OnClickListener {
 
-        AnonymousClass12(TextView textView) {
+        final /* synthetic */ TextView val$textView;
+        DecreasePopupRepeatsOnClickListener(TextView textView) {
             this.val$textView = textView;
         }
 
@@ -336,11 +334,11 @@ public class DeveloperActivity extends Activity {
     }
 
     private OnClickListener getIncreaseDeveloperPopupOnclickListener(TextView textView) {
-        return new AnonymousClass11(textView);
+        return new IncreasePopupRepeatsOnClickListener(textView);
     }
 
     private OnClickListener getDecreaseDeveloperPopupOnclickListener(TextView textView) {
-        return new AnonymousClass12(textView);
+        return new DecreasePopupRepeatsOnClickListener(textView);
     }
 
     private void doStaticResOnclick(View v) {

@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <!--style name="ActionBarAppTheme" parent="@android:style/Widget.Holo.Light.ActionBar"-->
     <style name="ActionBarAppTheme" parent="@style/Widget.AppCompat.Light.ActionBar.Solid">
         <item name="android:backgroundStacked">@color/background</item>
         <item name="android:backgroundSplit">@color/background</item>

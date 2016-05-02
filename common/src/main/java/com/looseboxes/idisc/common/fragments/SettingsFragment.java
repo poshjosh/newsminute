@@ -13,6 +13,7 @@ import com.looseboxes.idisc.common.asynctasks.FeedDownloadManager;
 import com.looseboxes.idisc.common.service.ServiceScheduler;
 import com.looseboxes.idisc.common.service.StartFeedLoadServiceReceiver;
 import com.looseboxes.idisc.common.util.Logx;
+import com.looseboxes.idisc.common.util.Pref;
 import com.looseboxes.idisc.common.util.PropertiesManager.PropertyName;
 import java.util.Map;
 import java.util.Set;
@@ -112,6 +113,7 @@ public class SettingsFragment extends PreferenceFragment implements OnPreference
             }
             ServiceScheduler.scheduleDefault(StartFeedLoadServiceReceiver.class, context, (int) delay);
         }
+
         return true;
     }
 

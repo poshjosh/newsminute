@@ -68,12 +68,23 @@ public class LaunchActivityActivity extends Activity {
     }
 
     private void initLogTagSpinner(Spinner spinner) {
+
         Object[] values = new Object[]{DisplayLinkActivity.class, InfoActivity.class, WelcomeActivity.class, WelcomeOptionsActivity.class, LoginActivity.class, SignupActivity.class, ForgotPasswordActivity.class};
-        initSpinner(spinner, values, values);
+
+        String[] entries = new String[values.length];
+
+        int i = 0;
+        for(Object value:values) {
+            entries[i++] = value.toString();
+        }
+
+        initSpinner(spinner, entries);
+
         spinner.setOnItemSelectedListener(getLogTagSpinnerListener(values));
     }
 
-    private void initSpinner(Spinner spinner, Object[] entries, Object[] values) {
+    private void initSpinner(Spinner spinner, String[] entries) {
+
         List list = Arrays.asList(entries);
 
         ArrayAdapter<String> dataAdapter = new ArrayAdapter<>(

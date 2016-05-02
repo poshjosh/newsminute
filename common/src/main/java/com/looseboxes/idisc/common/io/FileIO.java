@@ -328,6 +328,10 @@ public class FileIO {
         return "com.looseboxes.idisc.common.FeedLoadService.lastDownloadTime.long";
     }
 
+    public static String getLastFeedNotificationTimeFilename() {
+        return "com.looseboxes.idisc.common.FeedLoadService.lastNotificationTime.long";
+    }
+
     public static String getLastDownloadTimePreferenceName(Class aClass, AliasType aliasType) {
         if(aliasType == null) {
             throw new NullPointerException();

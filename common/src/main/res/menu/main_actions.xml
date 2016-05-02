@@ -24,7 +24,7 @@ button did not open search box
     <item android:id="@+id/main_actions_search"
           android:icon="@drawable/ic_search_black_24dp"
           android:title="@string/msg_searchnews"
-          appcompat:showAsAction="ifRoom|collapseActionView"
+          appcompat:showAsAction="always|collapseActionView"
           appcompat:actionViewClass="android.support.v7.widget.SearchView"
           android:orderInCategory="100"/>
     <item android:id="@+id/main_actions_settings"

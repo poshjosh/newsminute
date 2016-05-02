@@ -132,11 +132,11 @@ public class FeedSearcher extends Feed {
         return output;
     }
 
-    public Map<String, FeedSearchResult[]> searchIn(Context context, Collection target) {
-        return searchIn(context, target, this.outputSize);
+    public Map<String, FeedSearchResult[]> searchForUserPreferenceWordsToBeNotifiedOf(Context context, Collection target) {
+        return searchForUserPreferenceWordsToBeNotifiedOf(context, target, this.outputSize);
     }
 
-    public Map<String, FeedSearchResult[]> searchIn(Context context, Collection target, int displayLen) {
+    public Map<String, FeedSearchResult[]> searchForUserPreferenceWordsToBeNotifiedOf(Context context, Collection target, int displayLen) {
         this.outputSize = displayLen;
         String autosearchText = Pref.getAutoSearchText(context);
         if (autosearchText == null || autosearchText.isEmpty()) {

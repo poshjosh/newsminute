@@ -6,7 +6,6 @@ import android.content.Intent;
 import android.os.Bundle;
 
 public interface FragmentHandler {
-    Context getContext();
 
     Fragment getFragment();
 

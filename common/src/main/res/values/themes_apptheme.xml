@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<!-- Generated with http://android-holo-colors.com -->
+<!-- c -->
 <resources xmlns:android="http://schemas.android.com/apk/res/android">
 
     <style name="AppTheme" parent="@style/_AppTheme"/>
@@ -11,13 +11,16 @@
         <item name="colorPrimaryDark">@color/background_dark</item>
     </style>
 
+    <style name="_AppTheme" parent="Theme.AppCompat.Light">
     <!--style name="_AppTheme" parent="android:Theme.Holo.Light"-->
-    <style name="_AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
+<!-- @see https://guides.codepath.com/android/Migrating-to-the-AppCompat-Library -->
+    <!-- style name="_AppTheme" parent="Theme.AppCompat.Light.NoActionBar"-->
 
 <!-- @see https://guides.codepath.com/android/Migrating-to-the-AppCompat-Library -->
-        <item name="windowActionBar">false</item>
-        <item name="windowNoTitle">true</item>
+        <!--item name="windowActionBar">false</item-->
+        <!--item name="windowNoTitle">true</item-->
 
+        <item name="android:actionBarStyle">@style/ActionBarAppTheme</item>
         <item name="colorPrimary">@color/background</item>
         <item name="colorPrimaryDark">@color/background_dark</item>
 

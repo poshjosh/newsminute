@@ -14,6 +14,7 @@ import com.looseboxes.idisc.common.util.PropertiesManager.PropertyName;
 import com.looseboxes.idisc.common.util.Util;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
@@ -287,13 +288,37 @@ public class Feed extends JsonView {
         return (String) getJsonData().get(FeedNames.author);
     }
 
+    public String getSiteIconurl() {
+
+        Map siteData = this.getSite();
+
+        if(siteData == null) {
+            return null;
+        }
+
+        return (String)siteData.get("iconurl");
+    }
+
     public long getSiteid() {
+
+        Map siteData = this.getSite();
+
+        if(siteData == null) {
+            return getSiteid_v1_0_1(siteData.toString());
+        }
+
+        Long lval = (Long)siteData.get(FeedNames.siteid);
+
+        return lval == null ? 0 : lval.longValue();
+    }
+
+    public Map getSite() {
         Object data = getJsonData().get(FeedNames.siteid);
         if (!(data instanceof Map)) {
-            return getSiteid_v1_0_1(data.toString());
+            return null;
+        }else{
+            return (Map)data;
         }
-        Long l = (Long) ((Map) data).get(FeedNames.siteid);
-        return l == null ? 0 : l.longValue();
     }
 
     public long getSiteid_v1_0_1(String sitedata) {

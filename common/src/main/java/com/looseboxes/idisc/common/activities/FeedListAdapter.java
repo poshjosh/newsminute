@@ -17,8 +17,10 @@ import java.util.Map;
 import org.json.simple.JSONObject;
 
 public class FeedListAdapter extends AbstractArrayAdapter {
+
     private View emphasisView;
     private final Feed output;
+
     private Map<String, FeedSearchResult[]> searchresults;
 
     public FeedListAdapter(Context context) {
@@ -55,7 +57,11 @@ public class FeedListAdapter extends AbstractArrayAdapter {
 
     protected String getImageUrl(JSONObject jsonData) {
         this.output.setJsonData(jsonData);
-        return this.output.getImageUrl();
+        String imageurl = this.output.getImageUrl();
+        if(imageurl == null) {
+            imageurl = this.output.getSiteIconurl();
+        }
+        return imageurl;
     }
 
     protected String getUrl(JSONObject jsonData) {

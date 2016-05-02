@@ -5,9 +5,7 @@ import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
-import android.util.Log;
 import android.view.View;
-import android.view.View.OnClickListener;
 
 import com.looseboxes.idisc.common.App;
 import com.looseboxes.idisc.common.R;
@@ -24,7 +22,7 @@ public abstract class AbstractContentOptionsButtonListener implements ContentOpt
 
     @Override
     public void onClick(View v) {
-Logx.log(Log.VERBOSE, this.getClass(), "onClick(View)");
+//Logx.log(Log.VERBOSE, this.getClass(), "onClick(View)");
         int id = v.getId();
         if (id == R.id.contentoptions_share) {
             share(v);
@@ -57,7 +55,16 @@ Logx.log(Log.VERBOSE, this.getClass(), "onClick(View)");
 
     @Override
     public void share(View v) {
-        v.getContext().startActivity(Intent.createChooser(Util.createShareIntent(this.context, getSubject(), "android.intent.extra.TEXT"), "Share via"));
+        final String subj = this.getSubject();
+        final String text = this.getText();
+        final String contentIntentType;
+        if(text.contains("<")) {
+            contentIntentType = Intent.EXTRA_HTML_TEXT;
+        }else{
+            contentIntentType = Intent.EXTRA_TEXT;
+        }
+        Intent shareIntent = Util.createShareIntent(this.context, subj, text, contentIntentType, true);
+        v.getContext().startActivity(Intent.createChooser(shareIntent, "Share via"));
     }
 
     @Override

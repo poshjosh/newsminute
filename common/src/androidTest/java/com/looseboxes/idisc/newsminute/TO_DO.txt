@@ -1,8 +1,20 @@
+BEFORE PUBLISHING
+=================
+Test production version on mobile and tablet
+Set Logx.productionMode to 'true';
+Change version code and name
+
 TO DO
 -----
+Notify people if their friends joined, after adding
+After search if no results automatically start search on server
+Add feedlist under webview in feedview
+Add Email extraction tests to DeveloperActivity
+All activities outside common (e.g AppInviteActivity) should extends AbstractSingleTopActivity
+Log uninstalls
+Log.VERBOSE not being logged
 when content options button clicked there should be indication
 replace all 'null == null' and 'null != null'
-Test Dual Pane Mode
 When WebContentFragment loads from url, the content loaded from the url should be used
 to update getContentToDisplay
 

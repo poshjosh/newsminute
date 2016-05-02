@@ -180,20 +180,42 @@ public abstract class WebContentFragment extends BaseFragment {
         return loadData(this.getWebView());
     }
 
-    protected void initButtons() {
+    private void initButtons() {
+
+        final Class cls = this.getClass();
+
         int[] optionsButtonIds = getContentOptionButtonIds();
+
+        final int logLevel = Log.VERBOSE;
+
+        Logx.log(logLevel, cls, "{0} options buttons", optionsButtonIds == null ? null : optionsButtonIds.length);
+
         if (optionsButtonIds != null && optionsButtonIds.length != 0) {
-            com.looseboxes.idisc.common.listeners.ContentOptionsButtonListener listener = null;
+
+            View.OnClickListener listener = null;
+
             for (int buttonId : optionsButtonIds) {
-                Button v = (Button) findViewById(buttonId);
-                if (v != null) {
-                    if (isSupported(buttonId)) {
+
+                Button contentOptionButton = (Button) findViewById(buttonId);
+
+                if (contentOptionButton != null) {
+
+                    final CharSequence buttonText = contentOptionButton.getText();
+
+                    final boolean isSupported = isSupported(buttonId);
+
+                    if(Logx.isLoggable(logLevel))
+                    Logx.log(logLevel, cls, "Button({0}) is supported: {1}", buttonText, isSupported);
+
+
+                    if (isSupported) {
                         if (listener == null) {
                             listener = getContentOptionsButtonListener();
                         }
-                        v.setOnClickListener(listener);
+                        Logx.log(logLevel, cls, "Setting listener for Button: ({0})", buttonText);
+                        contentOptionButton.setOnClickListener(listener);
                     } else {
-                        v.setVisibility(View.GONE);
+                        contentOptionButton.setVisibility(View.GONE);
                     }
                 }
             }

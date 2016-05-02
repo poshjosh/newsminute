@@ -1,8 +1,6 @@
 package com.looseboxes.idisc.common.fragments;
 
 import android.annotation.TargetApi;
-import android.content.Intent;
-import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -23,6 +21,7 @@ import com.looseboxes.idisc.common.notice.Popup;
 import com.looseboxes.idisc.common.util.Logx;
 import com.looseboxes.idisc.common.util.PropertiesManager;
 import com.looseboxes.idisc.common.util.PropertiesManager.PropertyName;
+import com.looseboxes.idisc.common.util.Util;
 
 import org.apache.harmony.awt.datatransfer.DataProvider;
 import org.json.simple.JSONObject;
@@ -37,17 +36,26 @@ public abstract class AbstractDisplayFeedFragment extends BrowserFragment {
     private class ContentOptionsButtonListenerImpl extends AbstractFeedContentOptionsButtonListener {
         private ContentOptionsButtonListenerImpl() {
             super(AbstractDisplayFeedFragment.this.getContext());
+            Logx.log(Log.VERBOSE, this.getClass(), "Successfully created");
+        }
+        @Override
+        public String getSubject() {
+            return Util.getDefaultSubjectForMessages(this.getContext());
+        }
+        @Override
+        public String getText() {
+            return AbstractDisplayFeedFragment.this.getShareText();
         }
         @Override
         public void onClick(View v) {
-            Logx.log(Log.DEBUG, this.getClass(), "onClick(View)");
+//            Logx.log(Log.VERBOSE, this.getClass(), "onClick(View)");
             this.updateButtonState(v, true);
             super.onClick(v);
         }
 
         @TargetApi(14)
         private void updateButtonState(View v, boolean selected) {
-            Logx.log(Log.DEBUG, this.getClass(), "updateButtonState(View, boolean)");
+            Logx.log(Log.VERBOSE, this.getClass(), "updateButtonState(View, boolean)");
             v.setActivated(selected);
             if (App.isAcceptableVersion(this.getContext(), 14)) {
                 v.setHovered(selected);
@@ -91,6 +99,7 @@ public abstract class AbstractDisplayFeedFragment extends BrowserFragment {
         return null;
     }
 
+    @Override
     public String getShareText() {
         Feed selectedFeed = getSelectedFeed();
         PropertiesManager pm = App.getPropertiesManager(getContext());
@@ -174,7 +183,9 @@ public abstract class AbstractDisplayFeedFragment extends BrowserFragment {
         }
     }
 
+    @Override
     public ContentOptionsButtonListener getContentOptionsButtonListener() {
+        Logx.log(Log.DEBUG, this.getClass(), "getContentOptionsButtonListener");
         if (this._cobl == null) {
             this._cobl = new ContentOptionsButtonListenerImpl();
         }

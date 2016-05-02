@@ -12,6 +12,23 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 public class Pref {
+
+    public static int getLastSyncIntervalOption(Context context, int defaultValue) {
+        try{
+            String [] syncIntervalOptions = Pref.getSyncIntervalOptions(context);
+            return syncIntervalOptions == null || syncIntervalOptions.length == 0 ?
+                    defaultValue : Integer.parseInt(syncIntervalOptions[syncIntervalOptions.length - 1]);
+        }catch(Exception e) {
+            Logx.log(Pref.class, e);
+            return defaultValue;
+        }
+    }
+
+    public static String [] getSyncIntervalOptions(Context context) {
+        final String [] syncIntervalOptions = context.getResources().getStringArray(R.array.pref_syncinterval_values);
+        return syncIntervalOptions == null ? new String[0] : syncIntervalOptions;
+    }
+
     public static String getGender(Context ctx, String defaultValue) {
         return getString(ctx, Pref.class.getName() + ".user.gender.preferenceKey", defaultValue);
     }

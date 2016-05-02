@@ -29,10 +29,12 @@ public abstract class AbstractFeedContentOptionsButtonListener extends AbstractC
         return getFeed().getUrl();
     }
 
+    @Override
     public String getSubject() {
         return getFeed().getHeading(getContext().getString(R.string.err));
     }
 
+    @Override
     public String getText() {
         return getFeed().getText(getContext().getString(R.string.err));
     }
