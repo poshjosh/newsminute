@@ -1,63 +1,59 @@
 package com.looseboxes.idisc.common.notice;
 
 import android.annotation.TargetApi;
+import android.app.Activity;
 import android.app.Notification.Builder;
-import android.app.Notification.InboxStyle;
 import android.app.Notification.Style;
-import android.app.NotificationManager;
 import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
+import android.util.Log;
 
+import com.bc.android.core.io.image.PicassoImageManager;
+import com.bc.android.core.io.image.PicassoImageManagerImpl;
+import com.bc.android.core.util.IntArrayLimitedSize;
+import com.bc.android.core.util.IntArrayLimitedSizeWithLocalCache;
+import com.bc.android.core.util.Logx;
+import com.bc.android.core.util.Util;
+import com.bc.util.IntegerArray;
 import com.looseboxes.idisc.common.App;
 import com.looseboxes.idisc.common.R;
-import com.looseboxes.idisc.common.activities.DisplayCommentActivity;
-import com.looseboxes.idisc.common.activities.DisplayCommentsActivity;
 import com.looseboxes.idisc.common.activities.MainActivity;
 import com.looseboxes.idisc.common.asynctasks.FeedDownloadManager;
-import com.looseboxes.idisc.common.io.FileIO;
-import com.looseboxes.idisc.common.io.image.ImageManager;
-import com.looseboxes.idisc.common.io.image.PicassoImageManager;
 import com.looseboxes.idisc.common.jsonview.Feed;
-import com.looseboxes.idisc.common.jsonview.FeedSearcher;
-import com.looseboxes.idisc.common.jsonview.FeedSearcher.FeedSearchResult;
-import com.looseboxes.idisc.common.jsonview.InstallationNames;
-import com.looseboxes.idisc.common.util.CachedSet;
-import com.looseboxes.idisc.common.util.Logx;
+import com.looseboxes.idisc.common.jsonview.FeedNames;
+import com.looseboxes.idisc.common.search.FeedSearchResult;
+import com.looseboxes.idisc.common.search.FeedSearcherSearchResult.SearchResult;
+import com.looseboxes.idisc.common.util.NewsminuteUtil;
 import com.looseboxes.idisc.common.util.Pref;
 import com.looseboxes.idisc.common.util.PropertiesManager;
 import com.looseboxes.idisc.common.util.PropertiesManager.PropertyName;
-import com.looseboxes.idisc.common.util.Util;
 
 import org.json.simple.JSONObject;
 
-import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
-public class FeedNotificationHandler extends NotificationHandler {
+public class FeedNotificationHandler extends NotificationHandlerImpl {
 
     public static final String EXTRA_JSON_STRING_NOTIFIED_FEED = FeedNotificationHandler.class.getPackage().getName() + ".NotifiedFeedJSON";
 
-    final boolean useSourceName = false;
-    private int textLengthLong;
-    private int textLengthShort;
+    private static final int MAX_CONCURRENT_NOTIFICATIONS = 3;
 
-    private static CachedSet<Long> _iam_accessViaGetter;
-    private String _al;
-    private FeedSearcher _fs;
-    private Date _ma;
-    private int _siri;
-    private ImageManager _t_accessViaGetter;
+    private final boolean useSourceName = false;
 
-    class AsyncBitmapLoader implements ImageManager.OnPostBitmapLoadListener {
+    private final int textLengthLong;
+    private final int textLengthShort;
+
+    private IntArrayLimitedSize viewedNoticeFeedids;
+
+    private IntArrayLimitedSize activeNoticeFeedids;
+
+    class AsyncBitmapLoader implements PicassoImageManager.OnPostBitmapLoadListener {
         final Feed val$feed;
-        final FeedSearchResult val$result;
-        AsyncBitmapLoader(Feed feed, FeedSearchResult feedSearchResult) {
+        final SearchResult<JSONObject> val$result;
+        AsyncBitmapLoader(Feed feed, SearchResult<JSONObject> searchResult) {
             this.val$feed = feed;
-            this.val$result = feedSearchResult;
+            this.val$result = searchResult;
         }
         public void onPostLoad(Bitmap bitmap) {
             FeedNotificationHandler.this.fireFeedNotice(this.val$feed, this.val$result, bitmap);
@@ -69,159 +65,70 @@ public class FeedNotificationHandler extends NotificationHandler {
         PropertiesManager pm = App.getPropertiesManager(context);
         this.textLengthShort = pm.getInt(PropertyName.textLengthShort);
         this.textLengthLong = pm.getInt(PropertyName.textLengthLong);
+        final int size = App.getMemoryLimitedInt(context, PropertyName.displayedFeedidsBufferSize, 10);
+        this.viewedNoticeFeedids = new IntArrayLimitedSizeWithLocalCache(5, size, context, getDisplayedFeedidsFilename(), true);
+        this.activeNoticeFeedids = new IntArrayLimitedSizeWithLocalCache(
+                MAX_CONCURRENT_NOTIFICATIONS, MAX_CONCURRENT_NOTIFICATIONS, context, getActiveFeedidsFilename(), true);
     }
 
-    public void showFeedNotice() {
-        showFeedNotice(new Feed(), FeedDownloadManager.getDownload(getContext()));
-    }
-
-    public boolean showFeedNotice(List downloaded) {
-        if (isCompatibleAndroidVersion()) {
-            return showFeedNotice(new Feed(), downloaded);
-        }
-        return false;
-    }
-
-    @TargetApi(16)
-    public boolean showCommentNotice(List<Map<String, Object>> notices) {
-        if (!isCompatibleAndroidVersion()) {
-            return false;
-        }
-        if (notices == null || notices.isEmpty()) {
-            return false;
-        }
-        try {
-            String summary;
-            int noticesCount = notices.size();
-            int smallIconResId = getSmallIconResourceId();
-            String title = getTitle();
-            if (noticesCount == 1) {
-                summary = getSummary((Map) notices.get(0));
-            } else {
-                summary = getGroupSummary(notices);
-            }
-            Builder builder = getBuilder(smallIconResId, null, title, summary);
-            if (noticesCount > 1) {
-                InboxStyle inboxStyle = new InboxStyle();
-                int i = 0;
-                int repliesCount = 0;
-                for (Map<String, Object> notice : notices) {
-                    int n = getRepliesCount(notice);
-                    inboxStyle.addLine(getSummary(repliesCount, getReplierScreenName(notice, 0)));
-                    repliesCount += n;
-                    i++;
-                    if (i == 5) {
-                        break;
+    public int refreshActiveNotifications() {
+        synchronized (this.activeNoticeFeedids) {
+            int refreshed = 0;
+            if(!this.activeNoticeFeedids.isEmpty()) {
+                final int [] arr = this.activeNoticeFeedids.toArray();
+                List<JSONObject> cachedFeedData = FeedDownloadManager.getDownload(getContext());
+                Feed feed = new Feed();
+                for(int e : arr) {
+                    for(JSONObject json : cachedFeedData) {
+                        feed.setJsonData(json);
+                        if(feed.getFeedid() != null && feed.getFeedid().intValue() == e) {
+                            this.showFeedNotice(feed, new FeedSearchResult(feed, json));
+                            ++refreshed;
+                        }
                     }
                 }
-                inboxStyle.setSummaryText(getContext().getString(R.string.msg_d_repliestoyourcomment, new Object[]{Integer.valueOf(repliesCount)}));
-                builder.setStyle(inboxStyle);
             }
-            return showNotification(2, builder, noticesCount == 1 ? DisplayCommentActivity.class : DisplayCommentsActivity.class, null, null);
-        } catch (Exception e) {
-            Logx.log(getClass(), e);
-            return false;
+            Logx.getInstance().debug(this.getClass(), "Refreshed {0} notifications", refreshed);
+            return refreshed;
         }
     }
 
-    private String getSummary(Map<String, Object> notice) {
-        return getSummary(getRepliesCount(notice), getReplierScreenName(notice, 0));
-    }
+    public boolean showFeedNotice(Feed feed, SearchResult<JSONObject> result) {
 
-    private String getSummary(int repliesCount, String replierScreenname) {
-        if (repliesCount == 1) {
-            return getContext().getString(R.string.msg_s_replied, new Object[]{replierScreenname});
-        }
-        return getContext().getString(R.string.msg_s_and_d_othersreplied, new Object[]{replierScreenname, Integer.valueOf(repliesCount - 1)});
-    }
-
-    private int getRepliesCount(Map<String, Object> notice) {
-        return ((List) notice.get("replies")).size();
-    }
-
-    private String getGroupSummary(List<Map<String, Object>> notices) {
-        int commentCount = notices.size();
-        int totalReplies = 0;
-        for (Map<String, Object> notice : notices) {
-            totalReplies += getRepliesCount(notice);
-        }
-        return getContext().getString(R.string.msg_d_repliesto_d_ofyourcomments, new Object[]{Integer.valueOf(totalReplies), Integer.valueOf(commentCount)});
-    }
-
-    private String getReplierScreenName(Map<String, Object> notice, int index) {
-        return (String) ((Map) ((Map) ((List) notice.get("replies")).get(index)).get(InstallationNames.installationid)).get(InstallationNames.screenname);
-    }
-
-    public boolean showFeedNotice(Feed feedView, List downloaded) {
-
-        if (!isCompatibleAndroidVersion() || downloaded == null || downloaded.isEmpty()) {
-            return false;
-        }
-
-        FeedSearchResult toDisplay = getResultForDisplay(feedView, downloaded, this.textLengthLong);
-
-        final String lastFeedNoticeTimePrefKey = FileIO.getLastFeedNotificationTimeFilename();
-
-        if(toDisplay == null) {
-
-            final long lastFeedNoticeTime = Pref.getLong(this.getContext(), lastFeedNoticeTimePrefKey, -1L);
-
-            final int longestSyncIntervalOption = Pref.getLastSyncIntervalOption(this.getContext(), 240);
-
-            if (lastFeedNoticeTime != -1L &&
-                    (System.currentTimeMillis() - lastFeedNoticeTime) > TimeUnit.MINUTES.toMillis(longestSyncIntervalOption)) {
-
-                Date maxage = getMaxAge();
-
-                if (maxage != null) {
-
-                    toDisplay = getMostViewedAfter(feedView, downloaded, this.textLengthLong, maxage);
-                }
-            }
-        }
-
-        if (toDisplay != null) {
-
-            Pref.setLong(this.getContext(), lastFeedNoticeTimePrefKey, System.currentTimeMillis());
-
-            return showFeedNotice(feedView, toDisplay);
-        }
-
-        return false;
-    }
-
-    public boolean showFeedNotice(Feed feed, FeedSearchResult result) {
         if (!isCompatibleAndroidVersion()) {
             return false;
         }
-        boolean hasNoImageUrl;
-        String imageUrl = feed.getImageUrl();
-        if (imageUrl == null || imageUrl.isEmpty()) {
-            hasNoImageUrl = true;
-        } else {
-            hasNoImageUrl = false;
-        }
+
+        final String imageUrl = feed.getImageUrl();
+        final boolean hasNoImageUrl = imageUrl == null || imageUrl.isEmpty();
         if (hasNoImageUrl) {
+
             return fireFeedNotice(feed, result, null);
         }
-        ImageManager.OnPostBitmapLoadListener onPostBitmapLoadListener = new AsyncBitmapLoader(feed, result);
+
+        PicassoImageManager.OnPostBitmapLoadListener onPostBitmapLoadListener = new AsyncBitmapLoader(feed, result);
+
         Resources res = getContext().getResources();
-        Bitmap image = getImage(feed, result, (int) Util.dipToPixels(getContext(), res.getDimension(R.dimen.noticeImageLargeWidth)), (int) Util.dipToPixels(getContext(), res.getDimension(R.dimen.noticeImageLargeHeight)), onPostBitmapLoadListener);
+
+        Bitmap image = getImage(feed, result, (int) NewsminuteUtil.dipToPixels(getContext(), res.getDimension(R.dimen.noticeImageLargeWidth)), (int) NewsminuteUtil.dipToPixels(getContext(), res.getDimension(R.dimen.noticeImageLargeHeight)), onPostBitmapLoadListener);
+
         if (image != null) {
+
             return fireFeedNotice(feed, result, image);
         }
+
         return false;
     }
 
     @TargetApi(16)
-    public boolean fireFeedNotice(Feed feed, FeedSearchResult result, Bitmap image) {
+    public boolean fireFeedNotice(Feed feed, SearchResult<JSONObject> result, Bitmap image) {
 
         String summary;
         Style style;
 
-        feed.setJsonData(result.getSearchedFeed());
+        feed.setJsonData(result.getSearchedData());
 
-        final String sourceName = feed.getSourceName(getContext());
+        final String sourceName = feed.getSourceName();
 
         final String heading = feed.getHeading(null, this.textLengthShort);
 
@@ -233,15 +140,20 @@ public class FeedNotificationHandler extends NotificationHandler {
             summary = heading;
         }
 
-        String text = result.getText().contains("<") ? useSourceName && sourceName != null ? heading : null : result.getText();
+        final String searchedText = result.getSearchedText();
+        final String found = result.getMatchResult().group();
+        final String target = searchedText.length() <= this.textLengthLong ? searchedText :
+                NewsminuteUtil.truncateSides(searchedText, found, searchedText.length() - this.textLengthLong, true);
+
+        String text = Util.isHtml(target) ? useSourceName && sourceName != null ? heading : null : target;
 
         if (text == null) {
             summary = heading;
         }
 
-        Logx.debug(getClass(), "Title: {0}, summary: {1}, bigText: {2}", title, summary, text);
+        Logx.getInstance().debug(getClass(), "Title: {0}, summary: {1}, bigText: {2}", title, summary, text);
 
-        Builder builder = getBuilder(getSmallIconResourceId(), image, title, summary);
+        Builder builder = getBuilder(this.getNoticeiconResourceid(), image, title, summary);
         if (text != null) {
             style = getBigTextStyle(title, summary, text);
         } else if (image != null) {
@@ -256,16 +168,34 @@ public class FeedNotificationHandler extends NotificationHandler {
             builder.setStyle(style);
         }
 
-        boolean shown = fireDefaultNotification(
-                builder, MainActivity.class,
-                EXTRA_JSON_STRING_NOTIFIED_FEED, result.getSearchedFeed().toJSONString());
-
-        setLastNotifiedFeedId(getContext(), result.getFeedId().longValue());
+        boolean shown = fireDefaultNotification(builder, MainActivity.class, result);
 
         return shown;
     }
 
-    public Bitmap getImage(Feed feed, FeedSearchResult result, int width, int height, ImageManager.OnPostBitmapLoadListener onPostBitmapLoadListener) {
+    public boolean fireDefaultNotification(
+            Builder notificationBuilder,
+            Class<? extends Activity> targetActivityClass, SearchResult<JSONObject> result) {
+
+        final boolean vibrate = !Pref.isDisableVibration(this.getContext());
+
+        final Long feedid = result.getSearchedDataId();
+
+        final boolean shown = fireDefaultNotification(
+                vibrate, feedid.intValue(), notificationBuilder, targetActivityClass,
+                EXTRA_JSON_STRING_NOTIFIED_FEED, result.getSearchedData().toJSONString());
+
+        Logx.getInstance().debug(this.getClass(), "Notified feed was shown: {0}, ID: {1}, title: {2}",
+                shown, feedid, result.getSearchedData().get(FeedNames.title));
+
+        if (shown) {
+
+            this.addActivelyNotified(feedid);
+        }
+        return shown;
+    }
+
+    public Bitmap getImage(Feed feed, SearchResult<JSONObject> result, int width, int height, PicassoImageManager.OnPostBitmapLoadListener onPostBitmapLoadListener) {
         String imageUrl = feed.getImageUrl();
         if (imageUrl == null || imageUrl.isEmpty()) {
             return null;
@@ -273,173 +203,188 @@ public class FeedNotificationHandler extends NotificationHandler {
         return loadBitmap(imageUrl, width, height, onPostBitmapLoadListener);
     }
 
-    public Bitmap loadBitmap(String imageUrl, int width, int height, ImageManager.OnPostBitmapLoadListener onPostBitmapLoadListener) throws IllegalStateException {
-        ImageManager im = getImageManager();
+    public Bitmap loadBitmap(String imageUrl, int width, int height, PicassoImageManager.OnPostBitmapLoadListener onPostBitmapLoadListener) throws IllegalStateException {
+        final PicassoImageManager picassoImageManager = new PicassoImageManagerImpl(getContext());
         if (onPostBitmapLoadListener == null) {
             try {
-                return im.loadBitmap(imageUrl, width, height);
+                return picassoImageManager.loadBitmap(imageUrl, width, height);
             } catch (Exception e) {
-                Logx.log(getClass(), e);
+                Logx.getInstance().log(getClass(), e);
                 return null;
             }
         }
-        im.loadBitmapAsync(imageUrl, width, height, onPostBitmapLoadListener);
+        picassoImageManager.loadBitmapAsync(imageUrl, width, height, onPostBitmapLoadListener);
         return null;
-    }
-
-    private ImageManager getImageManager() {
-        if (this._t_accessViaGetter == null) {
-            this._t_accessViaGetter = new PicassoImageManager(getContext());
-        }
-        return this._t_accessViaGetter;
-    }
-
-    protected FeedSearchResult getResultForDisplay(Feed feed, List download, int displayLen) {
-
-        download = feed.getFeedsAfter(acceptNonDisplayed(feed, download), getMaxAge());
-
-        if (download == null || download.isEmpty()) {
-            return null;
-        }
-
-        FeedSearcher searcher = new FeedSearcher(getContext());
-
-        Map<String, FeedSearchResult[]> found = searcher.searchForUserPreferenceWordsToBeNotifiedOf(getContext(), download, displayLen);
-
-        if (found == null || found.isEmpty()) {
-            return null;
-        }
-
-        FeedSearchResult[] mostcommon = searcher.getMostCommon(found);
-
-        if (mostcommon == null || mostcommon.length <= 0) {
-            return null;
-        }
-        return mostcommon[0];
-    }
-
-    public FeedSearchResult getMostViewedAfter(Feed feed, List feeds, int maxLen, Date date) {
-        feeds = feed.getFeedsAfter(feeds, date);
-        if (feeds == null || feeds.isEmpty()) {
-            return null;
-        }
-        return getMostViewed(feed, feeds, maxLen);
-    }
-
-    public FeedSearchResult getMostViewed(Feed feed, List feeds, int maxLen) {
-        return toSearchResult(feed, feed.getMostViewed(getContext(), feeds, false), maxLen);
-    }
-
-    public FeedSearchResult getMostRecent(Feed feed, List feeds, int maxLen) {
-        return toSearchResult(feed, (JSONObject) feeds.get(feed.getLatestIndex(feeds)), maxLen);
-    }
-
-    private FeedSearchResult toSearchResult(Feed feed, JSONObject json, int maxLen) {
-        if (json == null) {
-            return null;
-        }
-        feed.setJsonData(json);
-        return getFeedSearcher().getSearchResult(feed.getFeedid(), feed.getHeading(null, maxLen), json);
-    }
-
-    private Date getMaxAge() {
-        if (this._ma == null) {
-            try {
-                this._ma = new Date(System.currentTimeMillis() - TimeUnit.HOURS.toMillis(App.getPropertiesManager(getContext()).getLong(PropertyName.notificationMaxFeedAgeHours)));
-            } catch (Exception e) {
-                this._ma = null;
-                Logx.log(getClass(), e);
-            }
-        }
-        return this._ma;
     }
 
     private boolean isSitenameContainedInImageUrl(Feed feed) {
         String imageUrl = format(feed.getImageUrl());
-        return imageUrl == null ? false : imageUrl.contains(format(feed.getSourceName(getContext())));
+        return imageUrl == null ? false : imageUrl.contains(format(feed.getSourceName()));
     }
 
-    private String format(String s) {
-        return s == null ? null : s.replaceAll("\\s|\\p{Punct}", "").toLowerCase();
-    }
-
-    private FeedSearcher getFeedSearcher() {
-        if (this._fs == null) {
-            this._fs = new FeedSearcher(getContext());
+    public void addFeedViewedFromNotice(Long feedid) {
+        final int i = feedid.intValue();
+        if(!this.viewedNoticeFeedids.contains(i)) {
+            this.viewedNoticeFeedids.add(i);
+            Logx.getInstance().debug(this.getClass(),
+                    "Added feedid: {0} to already notified feedids: {1}", feedid, this.viewedNoticeFeedids);
         }
-        return this._fs;
     }
 
-    public String getTitle() {
-        return getContext().getString(R.string.msg_defaultnoticetext, new Object[]{getAppLabel()});
+    public boolean isFeedViewedFromNotice(Long feedid) {
+        return this.viewedNoticeFeedids.contains(feedid.intValue());
     }
 
-    private String getAppLabel() {
-        if (this._al == null) {
-            this._al = getContext().getString(R.string.app_label);
+    public IntArrayLimitedSize getViewedNoticeFeedids() {
+        return this.viewedNoticeFeedids;
+    }
+
+    public boolean isActiveNotificationsWithinLimit() {
+        final int n = this.activeNoticeFeedids.size();
+        Logx.getInstance().debug(this.getClass(), "Active notices: {0}, Max concurrent: {1}", n, MAX_CONCURRENT_NOTIFICATIONS);
+        return n < MAX_CONCURRENT_NOTIFICATIONS;
+    }
+
+    public void addActivelyNotified(Long feedid) {
+        final int i = feedid.intValue();
+        if(!this.activeNoticeFeedids.contains(i)) {
+            this.activeNoticeFeedids.add(i);
+            Logx.getInstance().debug(this.getClass(),
+                    "Added feedid: {0} to actively notified feedids: {1}", feedid, this.activeNoticeFeedids);
         }
-        return this._al;
     }
 
-    private int getSmallIconResourceId() {
-        if (this._siri < 1) {
-            this._siri = App.isAcceptableVersion(getContext(), 21) ? R.drawable.notification_icon : R.mipmap.ic_launcher;
+    public IntegerArray getActiveNotifications(boolean orphan) {
+
+        synchronized (this.activeNoticeFeedids) {
+
+            final IntegerArray output;
+
+            if(!this.activeNoticeFeedids.isEmpty()) {
+
+                final int[] arr = this.activeNoticeFeedids.toArray();
+
+                output = new IntegerArray(arr.length);
+
+                List<JSONObject> cachedFeeds = FeedDownloadManager.getDownload(this.getContext());
+
+                Feed feed = new Feed();
+
+                for (int e : arr) {
+
+                    JSONObject found = null;
+
+                    for(JSONObject json : cachedFeeds) {
+
+                        feed.setJsonData(json);
+
+                        if(feed.getFeedid().intValue() == e) {
+
+                            found = json;
+
+                            break;
+                        }
+                    }
+
+                    if(orphan && found == null) {
+                        output.add(e);
+                    }else if (!orphan && found != null){
+                        output.add(e);
+                    }
+                }
+            }else{
+
+                output = new IntegerArray(0);
+            }
+
+            Logx.getInstance().debug(this.getClass(), "{0} active feedids: {1}",
+                    orphan ? "Orphan" : "Non-orphan", output);
+
+            return output;
         }
-        return this._siri;
     }
 
-    private List acceptNonDisplayed(Feed feed, List download) {
-        List nonDisplayed = new ArrayList(download.size());
-        for (Object o : download) {
-            feed.setJsonData((JSONObject) o);
-            if (!isFeedViewedFromNotice(getContext(), feed.getFeedid())) {
-                nonDisplayed.add(o);
+    public boolean removeActiveNotification(Long feedid) {
+        final int toRemove = feedid.intValue();
+        synchronized (this.activeNoticeFeedids) {
+            if (this.activeNoticeFeedids.contains(toRemove)) {
+                final int[] arr = this.activeNoticeFeedids.toArray();
+                final IntegerArray update = new IntegerArray(arr.length - 1);
+                for (int e : arr) {
+                    if (e != toRemove) {
+                        update.add(e);
+                    }
+                }
+                this.activeNoticeFeedids.clear();
+                this.activeNoticeFeedids.addAll(update);
+                Logx.getInstance().debug(this.getClass(),
+                        "Removed feedid: {0} to actively notified feedids: {1}", feedid, this.activeNoticeFeedids);
+                return true;
+            } else {
+                return false;
             }
         }
-        return nonDisplayed;
     }
 
-    public static boolean addFeedViewedFromNotice(Context ctx, Long feedid) {
-        CachedSet<Long> list = getNoticeFeedids(ctx);
-        try {
-            boolean add = list.add(feedid);
-            return add;
-        } finally {
-            list.close();
+    public int removeOrphanActiveNotifications() {
+        int output = 0;
+        IntegerArray orphans = this.getActiveNotifications(true);
+        if(!orphans.isEmpty()) {
+            Logx.getInstance().debug(this.getClass(), "BEFORE removing orphans, feedids of active notifications: {0}", this.activeNoticeFeedids);
+            output = this.removeActiveNotifications(orphans);
+            Logx.getInstance().debug(this.getClass(), " AFTER removing orphans, feedids of active notifications: {0}", this.activeNoticeFeedids);
+        }
+        return output;
+    }
+
+    public int removeActiveNotifications(IntegerArray toRemove) {
+        return this.removeAll(this.activeNoticeFeedids, toRemove);
+    }
+
+    private int removeAll(IntegerArray src, IntegerArray toRemove) {
+        if(src.isEmpty() || toRemove.isEmpty()) {
+            return 0;
+        }else {
+            final int[] arr = src.toArray();
+            final IntegerArray update = new IntegerArray(arr.length - toRemove.size());
+            for (int e : arr) {
+                if (!toRemove.contains(e)) {
+                    update.add(e);
+                }
+            }
+            final int removed = src.size() - update.size();
+            src.clear();
+            src.addAll(update);
+            Logx.getInstance().log(Log.VERBOSE, this.getClass(), "Removed {0} values", removed);
+            return removed;
         }
     }
 
-    public static boolean isFeedViewedFromNotice(Context ctx, Long feedid) {
-        CachedSet<Long> list = getNoticeFeedids(ctx);
-        return list == null ? false : list.contains(feedid);
+    public boolean isActivelyNotified(Long feedid) {
+        return this.activeNoticeFeedids.contains(feedid.intValue());
     }
 
-    public static CachedSet<Long> getNoticeFeedids(Context context) {
-        if (_iam_accessViaGetter == null) {
-            _iam_accessViaGetter = new CachedSet(context, FileIO.getDisplayedFeedidsFilename());
-        }
-        return _iam_accessViaGetter;
+    public IntArrayLimitedSize getActiveNoticeFeedids() {
+        return this.activeNoticeFeedids;
     }
 
-    public static void onFeedViewed(Context context, Long feedid) {
-        addFeedViewedFromNotice(context, feedid);
-        ((NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE)).cancel(1);
-        setLastNotifiedFeedId(context, -1);
+    private String getDisplayedFeedidsFilename() {
+        return "com.looseboxes.idisc.common.FeedLoadService.displayedFeeds.intarray";
     }
 
-    public static void onCommentViewed(Context context, Long commentid) {
-        ((NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE)).cancel(2);
+    private String getActiveFeedidsFilename() {
+        return "com.looseboxes.idisc.common.FeedLoadService.activeFeeds.intarray";
     }
 
-    public static void setLastNotifiedFeedId(Context context, long feedid) {
-        Pref.setLong(context, getLastNotifiedFeedidPreferenceKey(), feedid);
-    }
+    @Override
+    public void onViewed(int id) {
 
-    public static long getLastNotifiedFeedId(Context context) {
-        return Pref.getLong(context, getLastNotifiedFeedidPreferenceKey(), -1);
-    }
+        super.onViewed(id);
 
-    private static String getLastNotifiedFeedidPreferenceKey() {
-        return FeedNotificationHandler.class.getName() + "LastNotifiedFeedId";
+        final Long feedid = Long.valueOf(id);
+
+        this.removeActiveNotification(feedid);
+
+        this.addFeedViewedFromNotice(feedid);
     }
 }

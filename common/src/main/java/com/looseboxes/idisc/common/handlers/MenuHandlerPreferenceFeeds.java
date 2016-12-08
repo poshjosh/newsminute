@@ -5,98 +5,75 @@ import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
 import android.os.Bundle;
 import android.view.MenuItem;
-import com.looseboxes.idisc.common.App;
+
+import com.bc.android.core.notice.Popup;
+import com.bc.android.core.util.Logx;
 import com.looseboxes.idisc.common.R;
 import com.looseboxes.idisc.common.activities.BookmarksActivity;
 import com.looseboxes.idisc.common.activities.FavoritesActivity;
-import com.looseboxes.idisc.common.notice.Popup;
-import com.looseboxes.idisc.common.util.Logx;
-import com.looseboxes.idisc.common.util.PreferenceFeedsManager;
-import com.looseboxes.idisc.common.util.PreferenceFeedsManager.PreferenceType;
+import com.looseboxes.idisc.common.preferencefeed.Preferencefeeds.PreferenceType;
+import com.looseboxes.idisc.common.preferencefeed.PreferencefeedManager;
+
 import java.util.Collection;
 
 public class MenuHandlerPreferenceFeeds extends AbstractMenuHandler {
 
-    /* renamed from: com.looseboxes.idisc.common.handlers.MenuHandlerPreferenceFeeds.1 */
-    class AnonymousClass1 implements OnClickListener {
-        final /* synthetic */ Activity val$activity;
-        final /* synthetic */ PreferenceType val$preferenceType;
+    class MenuHandlerPreferenceFeedsOnClickListener implements OnClickListener {
 
-        AnonymousClass1(Activity activity, PreferenceType preferenceType) {
-            this.val$activity = activity;
-            this.val$preferenceType = preferenceType;
+        final MenuHandlerPreferenceFeeds ref;
+
+        MenuHandlerPreferenceFeedsOnClickListener(MenuHandlerPreferenceFeeds ref) {
+            this.ref = ref;
         }
 
         public void onClick(DialogInterface dialog, int which) {
-            int size = 0;
+
             try {
-                Popup.show(this.val$activity, "Deleting " + this.val$preferenceType, 1);
-                PreferenceFeedsManager pfm = MenuHandlerPreferenceFeeds.this.getPreferenceFeedsManager();
-                Collection feeds = pfm.getFeeds();
-                if (feeds != null) {
-                    size = feeds.size();
-                }
+
+                final Activity activity = ref.getActivity();
+                final PreferenceType preferenceType = ref.getPreferenceType();
+                PreferencefeedManager pfm = new PreferencefeedManager(activity, preferenceType, true, null);
+
+                Popup.getInstance().show(activity, "Deleting " + preferenceType, 1);
+
+                final Collection feeds = pfm.getFeeds();
+                final int sizeBeforeDelete = feeds==null?null:feeds.size();
+
                 pfm.clear();
-                MenuHandlerPreferenceFeeds.this.getActivity().finish();
-                Popup.show(this.val$activity, "Deleted " + size + " " + this.val$preferenceType, 0);
+
+                final boolean ignoreSchedule = true;
+
+                pfm.update(ignoreSchedule);
+
+                final int deleted = sizeBeforeDelete - pfm.size();
+
+                Popup.getInstance().show(activity, "Deleted " + deleted + " " + preferenceType, 0);
+
+                activity.finish();
+
             } catch (Exception e) {
-                Logx.log(getClass(), e);
+
+                Logx.getInstance().log(getClass(), e);
             }
         }
     }
 
+    public MenuHandlerPreferenceFeeds() { }
+
     public int getMenuResourceId() {
         return R.menu.preferencefeeds_actions;
-    }
-
-    public int getShareActionViewId() {
-        return -1;
-    }
-
-    public int getLoginActionViewId() {
-        return -1;
-    }
-
-    public int getSearchActionViewId() {
-        return -1;
-    }
-
-    public int getAboutActionViewId() {
-        return -1;
-    }
-
-    public int getSettingsActionViewId() {
-        return -1;
-    }
-
-    public int getForgotpasswordActionViewId() {
-        return -1;
-    }
-
-    public int getSignupActionViewId() {
-        return -1;
-    }
-
-    public int getInviteActionViewId() {
-        return -1;
-    }
-
-    public int getActivateActionViewId() {
-        return -1;
     }
 
     public void onOptionsItemSelected(MenuItem item, Bundle bundle) {
         if (item.getItemId() == R.id.preferencefeeds_actions_delete) {
             PreferenceType preferenceType = getPreferenceType();
             Activity activity = getActivity();
-            Popup.alert(activity, "Delete all " + preferenceType + "?", new AnonymousClass1(activity, preferenceType));
+            String msg = activity.getString(R.string.msg_deleteall_s, preferenceType);
+            String neutralMsg = activity.getString(R.string.msg_ok);
+            Popup.getInstance().alert(activity, msg, new MenuHandlerPreferenceFeedsOnClickListener(this), neutralMsg);
             return;
         }
         throw new IllegalArgumentException("Unexpected MenuItem: " + item.getTitle());
-    }
-
-    private PreferenceFeedsManager getPreferenceFeedsManager() {
-        return App.getPreferenceFeedsManager(getActivity(), getPreferenceType());
     }
 
     private PreferenceType getPreferenceType() {

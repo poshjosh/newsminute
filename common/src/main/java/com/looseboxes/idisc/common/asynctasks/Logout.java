@@ -1,39 +1,33 @@
 package com.looseboxes.idisc.common.asynctasks;
 
 import android.content.Context;
+import android.widget.Toast;
+
+import com.bc.android.core.notice.Popup;
 import com.looseboxes.idisc.common.R;
 import com.looseboxes.idisc.common.User;
-import com.looseboxes.idisc.common.util.Logx;
+import com.bc.android.core.util.Logx;
 
-public class Logout extends DefaultReadTask<Object> {
-    private final Context context;
+public class Logout extends AbstractReadTask<Object> {
 
     public Logout(Context context) {
-        this.context = context;
+        super(context, context.getString(R.string.err_logout));
     }
 
-    public Context getContext() {
-        return this.context;
-    }
-
-    public boolean isRemote() {
-        return true;
-    }
-
-    public String getErrorMessage() {
-        return getContext().getString(R.string.err_logout);
-    }
-
-    public void onSuccess(Object download) {
-        User.getInstance().setDetails(this.context, null);
-        Logx.debug(getClass(), "Logout successful. Server response: {0}", download);
-        if (!isNoUI()) {
-            displayMessage("Logout successful", 1);
+    @Override
+    protected void onPreExecute() {
+        super.onPreExecute();
+        if(!this.isNoUI()) {
+            Popup.getInstance().show(this.getContext(), R.string.msg_loggingout, Toast.LENGTH_SHORT);
         }
     }
 
-    public String getLocalFilename() {
-        throw new UnsupportedOperationException("Not supported.");
+    public void onSuccess(Object download) {
+        User.getInstance().setDetails(this.getContext(), null);
+        Logx.getInstance().debug(getClass(), "Logout successful. Server response: {0}", download);
+        if (!isNoUI()) {
+            displayMessage(this.getContext().getString(R.string.msg_logout_success), Toast.LENGTH_SHORT);
+        }
     }
 
     public String getOutputKey() {

@@ -3,14 +3,19 @@ package com.looseboxes.idisc.common.listeners;
 import android.util.Log;
 import android.view.View;
 import android.widget.AbsListView;
-import android.widget.AbsListView.OnScrollListener;
-import com.looseboxes.idisc.common.util.Logx;
+import android.widget.ListView;
 
-public class ListOnScrollListener implements OnScrollListener {
+import com.bc.android.core.util.Logx;
+
+public class ListOnScrollListener implements ListView.OnScrollListener, VerticalScrollListener {
+
     private boolean disabled;
-    private int lastFirstVisible;
-    private ScrollPosition scrollPosition;
     private int totalItemCount;
+    private ScrollPosition scrollPosition;
+
+    private int lastFirstVisible;
+    private int lastScrollState;
+    private ScrollPosition lastScrollPosition;
 
     public enum ScrollPosition {
         atTop,
@@ -20,37 +25,46 @@ public class ListOnScrollListener implements OnScrollListener {
         exceededBottom
     }
 
-    public void reset() {
-        this.scrollPosition = null;
-        this.lastFirstVisible = -1;
-    }
-
     public ListOnScrollListener() {
         this.lastFirstVisible = -1;
+        this.lastScrollState = -1;
+        this.lastScrollPosition = null;
     }
 
+    public void reset() {
+        this.totalItemCount = 0;
+        this.scrollPosition = null;
+        this.lastFirstVisible = -1;
+        this.lastScrollState = -1;
+        this.lastScrollPosition = null;
+    }
+
+    @Override
     public void onReachedTop() {
         log("Reached top");
     }
 
+    @Override
     public void onExceedTop() {
         log("Exceeded top");
     }
 
+    public void onScrollStarted() { log("Started"); }
+
+    public void onScrollStopped() { log("Stopped"); }
+
+    @Override
     public void onReachedBottom() {
         log("Reached bottom");
     }
 
+    @Override
     public void onExceedBottom() {
         log("Exceeded bottom");
     }
 
     public ScrollPosition getScrollPosition() {
         return this.scrollPosition;
-    }
-
-    private void log(String key) {
-        Logx.log(Log.DEBUG, getClass(), key);
     }
 
     public boolean isDisabled() {
@@ -83,6 +97,9 @@ public class ListOnScrollListener implements OnScrollListener {
     }
 
     private void doOnScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
+        if(this.disabled) {
+            return;
+        }
         if (firstVisibleItem == 0) {
             View firstChild = view.getChildAt(0);
             if (firstChild != null) {
@@ -118,27 +135,63 @@ public class ListOnScrollListener implements OnScrollListener {
     }
 
     public void onScrollStateChanged(AbsListView view, int scrollState) {
+
         doOnScrollStateChanged(view, scrollState);
     }
 
     private void doOnScrollStateChanged(AbsListView view, int scrollState) {
-        int currentFirstVisible = view.getFirstVisiblePosition();
-        int currentLastVisible = view.getLastVisiblePosition();
-        if (this.lastFirstVisible < currentFirstVisible) {
-            if (isExceededTop() || isExceededBottom()) {
-                this.scrollPosition = null;
-            }
-        } else if (this.lastFirstVisible > currentFirstVisible) {
-            if (isExceededTop() || isExceededBottom()) {
-                this.scrollPosition = null;
-            }
-        } else if (currentFirstVisible == 0 || isAtTop()) {
-            this.scrollPosition = ScrollPosition.exceededTop;
-            onExceedTop();
-        } else if ((this.totalItemCount > 0 && currentLastVisible == this.totalItemCount - 1) || isAtBottom()) {
-            this.scrollPosition = ScrollPosition.exceededBottom;
-            onExceedBottom();
+
+        if(this.disabled) {
+            return;
         }
-        this.lastFirstVisible = currentFirstVisible;
+
+//Logx.getInstance().log(Log.VERBOSE, this.getClass(),
+//"State: "+scrollState+", pos: "+this.scrollPosition+
+//", scrolling up: "+this.isScrollingUp(view)+", down: "+this.isScrollingDown(view)+
+//", top: "+this.isAtTop()+", top-item: "+this.isAtTopItem(view)+
+//", bottom: "+this.isAtBottom()+", bottom-item: " + this.isAtBottomItem(view));
+
+        if(scrollState == ListView.OnScrollListener.SCROLL_STATE_IDLE) {
+
+            if(lastScrollState == ListView.OnScrollListener.SCROLL_STATE_TOUCH_SCROLL ||
+                    lastScrollState == ListView.OnScrollListener.SCROLL_STATE_FLING) {
+
+                if(lastScrollPosition == ScrollPosition.atTop) {
+                    scrollPosition = ScrollPosition.exceededTop;
+                    this.onExceedTop();
+                }else if(lastScrollPosition == ScrollPosition.atBottom){
+                    scrollPosition = ScrollPosition.exceededBottom;
+                    this.onExceedBottom();
+                }
+            }
+
+            this.onScrollStopped();
+        }
+
+        this.lastFirstVisible = view.getFirstVisiblePosition();
+        this.lastScrollState = scrollState;
+        this.lastScrollPosition = this.scrollPosition;
+    }
+
+    private boolean isScrollingUp(AbsListView view) {
+        return this.lastFirstVisible > view.getFirstVisiblePosition();
+    }
+
+    private boolean isScrollingDown(AbsListView view) {
+        return this.lastFirstVisible < view.getFirstVisiblePosition();
+    }
+
+    private boolean isAtTopItem(AbsListView view) {
+        final int currentFirstVisible = view.getFirstVisiblePosition();
+        return currentFirstVisible == 0;
+    }
+
+    private boolean isAtBottomItem(AbsListView view) {
+        final int currentLastVisible = view.getLastVisiblePosition();
+        return (this.totalItemCount > 0 && currentLastVisible == this.totalItemCount - 1);
+    }
+
+    private void log(String message) {
+        Logx.getInstance().log(Log.VERBOSE, getClass(), message);
     }
 }

@@ -7,13 +7,15 @@ import android.content.Intent;
 import android.net.Uri;
 import android.view.View;
 
+import com.bc.android.core.util.Util;
 import com.looseboxes.idisc.common.App;
 import com.looseboxes.idisc.common.R;
-import com.looseboxes.idisc.common.notice.Popup;
-import com.looseboxes.idisc.common.util.Logx;
-import com.looseboxes.idisc.common.util.Util;
+import com.bc.android.core.notice.Popup;
+import com.bc.android.core.util.Logx;
+import com.looseboxes.idisc.common.util.NewsminuteUtil;
 
 public abstract class AbstractContentOptionsButtonListener implements ContentOptionsButtonListener {
+
     private Context context;
 
     public AbstractContentOptionsButtonListener(Context context) {
@@ -22,7 +24,7 @@ public abstract class AbstractContentOptionsButtonListener implements ContentOpt
 
     @Override
     public void onClick(View v) {
-//Logx.log(Log.VERBOSE, this.getClass(), "onClick(View)");
+//Logx.getInstance().log(Log.VERBOSE, this.getClass(), "onClick(View)");
         int id = v.getId();
         if (id == R.id.contentoptions_share) {
             share(v);
@@ -58,12 +60,12 @@ public abstract class AbstractContentOptionsButtonListener implements ContentOpt
         final String subj = this.getSubject();
         final String text = this.getText();
         final String contentIntentType;
-        if(text.contains("<")) {
+        if(Util.isHtml(text)) {
             contentIntentType = Intent.EXTRA_HTML_TEXT;
         }else{
             contentIntentType = Intent.EXTRA_TEXT;
         }
-        Intent shareIntent = Util.createShareIntent(this.context, subj, text, contentIntentType, true);
+        Intent shareIntent = NewsminuteUtil.createShareIntent(this.context, subj, text, contentIntentType, true);
         v.getContext().startActivity(Intent.createChooser(shareIntent, "Share via"));
     }
 
@@ -76,7 +78,7 @@ public abstract class AbstractContentOptionsButtonListener implements ContentOpt
         } else {
             ((android.text.ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE)).setText(text);
         }
-        Popup.show(this.context, R.string.msg_copied_to_clipboard, 0);
+        Popup.getInstance().show(this.context, R.string.msg_copied_to_clipboard, 0);
     }
 
     @Override
@@ -84,13 +86,13 @@ public abstract class AbstractContentOptionsButtonListener implements ContentOpt
         String url = getUrl();
         try {
             if (url == null) {
-                Popup.show(this.context, R.string.msg_nolink, 1);
+                Popup.getInstance().show(this.context, R.string.msg_nolink, 1);
             } else {
                 v.getContext().startActivity(new Intent("android.intent.action.VIEW", Uri.parse(url)));
             }
         } catch (Exception e) {
-            Popup.show(this.context, url == null ? "Error accessing URL of feed" : "Error browsing: " + url, 1);
-            Logx.debug(getClass(), e);
+            Popup.getInstance().show(this.context, url == null ? "Error accessing URL of feed" : "Error browsing: " + url, 1);
+            Logx.getInstance().debug(getClass(), e);
         }
     }
 

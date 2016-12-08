@@ -4,30 +4,28 @@ import android.app.Activity;
 import android.os.Bundle;
 import android.view.View;
 import android.view.View.OnClickListener;
-import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
-import android.widget.TextView;
 
 import com.looseboxes.idisc.common.R;
 import com.looseboxes.idisc.common.handlers.ButtonGroupHandler;
 import com.looseboxes.idisc.common.util.Pref;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 public abstract class AbstractSelectOptions extends AbstractSingleTopActivity {
+
     public static final String CATEGORY_ALL = "All";
-    private ButtonGroupHandler<CheckBox> _bh;
+
+    private ButtonGroupHandler<CheckBox> buttonGroupHandler;
 
     private class AllButtonListener implements OnClickListener {
-        private AllButtonListener() {
-        }
-
         public void onClick(View v) {
             boolean check = ((CompoundButton) v).isChecked();
-            List<CheckBox> ccs = AbstractSelectOptions.this.getButtonGroupHandler().getButtons();
+            List<CheckBox> ccs = buttonGroupHandler.getButtons();
             if (ccs != null) {
                 for (CheckBox cb : ccs) {
                     cb.setChecked(check);
@@ -37,26 +35,19 @@ public abstract class AbstractSelectOptions extends AbstractSingleTopActivity {
     }
 
     private class CategoryButtonListener implements OnClickListener {
-        private CategoryButtonListener() {
-        }
-
         public void onClick(View v) {
             if (!((CompoundButton) v).isChecked()) {
-                ((CheckBox) AbstractSelectOptions.this.getButtonGroupHandler().getButton(AbstractSelectOptions.CATEGORY_ALL)).setChecked(false);
+                (buttonGroupHandler.getButton(AbstractSelectOptions.CATEGORY_ALL)).setChecked(false);
             }
         }
     }
 
     private class OkButtonListener implements OnClickListener {
-        private OkButtonListener() {
-        }
-
         public void onClick(View v) {
             Set selectedCategories = new HashSet();
-            ButtonGroupHandler<CheckBox> cbHandler = AbstractSelectOptions.this.getButtonGroupHandler();
-            CheckBox all = (CheckBox) cbHandler.getButton(AbstractSelectOptions.CATEGORY_ALL);
+            CheckBox all = buttonGroupHandler.getButton(AbstractSelectOptions.CATEGORY_ALL);
             if (all == null || !all.isChecked()) {
-                List<CheckBox> ccs = cbHandler.getButtons();
+                List<CheckBox> ccs = buttonGroupHandler.getButtons();
                 if (ccs != null) {
                     for (CheckBox cb : ccs) {
                         if (!cb.getText().equals(AbstractSelectOptions.CATEGORY_ALL) && cb.isChecked()) {
@@ -73,13 +64,25 @@ public abstract class AbstractSelectOptions extends AbstractSingleTopActivity {
     }
 
     private class CategoriesCheckBoxHandler extends ButtonGroupHandler<CheckBox> {
-        private List<String> _c_accessViaGetter;
 
-        private CategoriesCheckBoxHandler() {
+        private final List<String> buttonTexts;
+
+        public CategoriesCheckBoxHandler() {
+            Set<Object> set = AbstractSelectOptions.this.getOptions();
+            this.buttonTexts = new ArrayList(set.size() + 1);
+            this.buttonTexts.add(AbstractSelectOptions.CATEGORY_ALL);
+            for (Object o : set) {
+                this.buttonTexts.add(o.toString());
+            }
         }
 
         public int getViewGroupId() {
             return R.id.selectcategories_categories;
+        }
+
+        @Override
+        public CheckBox createNew() {
+            return new CheckBox(this.getActivity());
         }
 
         public OnClickListener getOnClickListener(CheckBox button) {
@@ -94,19 +97,7 @@ public abstract class AbstractSelectOptions extends AbstractSingleTopActivity {
         }
 
         public List getButtonTexts() {
-            if (this._c_accessViaGetter == null) {
-                Set<Object> set = AbstractSelectOptions.this.getOptions();
-                this._c_accessViaGetter = new ArrayList(set.size() + 1);
-                this._c_accessViaGetter.add(AbstractSelectOptions.CATEGORY_ALL);
-                for (Object o : set) {
-                    this._c_accessViaGetter.add(o.toString());
-                }
-            }
-            return this._c_accessViaGetter;
-        }
-
-        public Class<CheckBox> getButtonClass() {
-            return CheckBox.class;
+            return this.buttonTexts;
         }
     }
 
@@ -116,7 +107,7 @@ public abstract class AbstractSelectOptions extends AbstractSingleTopActivity {
 
     public abstract void onSelection(View view, Set<String> set);
 
-    public int getContentView() {
+    public int getContentViewId() {
         return R.layout.selectcategories;
     }
 
@@ -124,9 +115,11 @@ public abstract class AbstractSelectOptions extends AbstractSingleTopActivity {
 
         super.doCreate(icicle);
 
-        ((Button) findViewById(R.id.selectcategories_ok)).setOnClickListener(new OkButtonListener());
+        this.buttonGroupHandler = new CategoriesCheckBoxHandler();
 
-        List<CheckBox> btns = getButtonGroupHandler().initButtons();
+        (findViewById(R.id.selectcategories_ok)).setOnClickListener(new OkButtonListener());
+
+        List<CheckBox> btns = this.buttonGroupHandler.initButtons();
 
         Set<String> storedUserSelectedCategories = Pref.getStringSet(getApplicationContext(), getPreferenceKeyForStoredUserSelection(), null);
 
@@ -137,12 +130,5 @@ public abstract class AbstractSelectOptions extends AbstractSingleTopActivity {
                 btn.setChecked(storedUserSelectedCategories.contains(btn.getText()));
             }
         }
-    }
-
-    public ButtonGroupHandler<CheckBox> getButtonGroupHandler() {
-        if (this._bh == null) {
-            this._bh = new CategoriesCheckBoxHandler();
-        }
-        return this._bh;
     }
 }

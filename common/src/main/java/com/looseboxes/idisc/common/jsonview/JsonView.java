@@ -1,29 +1,39 @@
 package com.looseboxes.idisc.common.jsonview;
 
-import android.content.Context;
-import com.looseboxes.idisc.common.App;
-import com.looseboxes.idisc.common.R;
-import com.looseboxes.idisc.common.io.Raw;
-import com.looseboxes.idisc.common.util.Logx;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import android.util.Log;
+
+import com.bc.android.core.util.Logx;
+
 import org.json.simple.JSONObject;
 
+import java.util.Date;
+import java.util.List;
+
 public class JsonView {
-    private Date date;
-    private transient SimpleDateFormat dateFormat;
+
+    private transient DateParser dateParser;
+
     private boolean displayDateAsTimeElapsed;
+
     private JSONObject source;
 
-    public JsonView() {
-    }
+    private final Date NOW = new Date();
+
+    public JsonView() { }
 
     public JsonView(JSONObject source) {
         this.source = source;
+    }
+
+    public Object get(String name, Object defaultValue) {
+        Object output;
+        if(source == null) {
+            output = defaultValue;
+        }else{
+            Object value = source.get(name);
+            output = value == null ? defaultValue : value;
+        }
+        return output;
     }
 
     public int getEarliestIndex(List<JSONObject> download, String dateColumn) {
@@ -34,38 +44,43 @@ public class JsonView {
         return getIndex(download, dateColumn, false);
     }
 
-    public long getEarliestTime(List<JSONObject> download, String dateColumn) {
-        Date output = getDate(download, dateColumn, true);
-        return output == null ? -1 : output.getTime();
+    public Date getEarliestDate(List<JSONObject> download, String dateColumn, Date defaultValue) {
+        Date output = getDate(download, dateColumn, true, defaultValue);
+        return output;
     }
 
-    public long getLatestTime(List<JSONObject> download, String dateColumn) {
-        Date output = getDate(download, dateColumn, false);
-        return output == null ? -1 : output.getTime();
+    public Date getLatestDate(List<JSONObject> download, String dateColumn, Date defaultValue) {
+        Date output = getDate(download, dateColumn, false, defaultValue);
+        return output;
     }
 
-    private Date getDate(List<JSONObject> download, String dateColumn, boolean earliest) {
+    private Date getDate(List<JSONObject> download, String dateColumn, boolean earliest, Date defaultValue) {
         int i = getIndex(download, dateColumn, earliest);
+        Date output;
         if (i == -1) {
-            return null;
+            output = null;
+        }else {
+            try {
+                setJsonData(download.get(i));
+                output = getDate(dateColumn, defaultValue);
+            } finally {
+                setJsonData(this.source);
+            }
         }
-        try {
-            setJsonData((JSONObject) download.get(i));
-            Date date = getDate(dateColumn);
-            return date;
-        } finally {
-            setJsonData(this.source);
-        }
+        final int priority = output == null ? Log.DEBUG : Log.VERBOSE;
+        Logx.getInstance().log(priority, this.getClass(), "{0} = {1} date in {2} values",
+                output, earliest?"earliest":"latest", download==null?null:download.size());
+        return output == null ? defaultValue : output;
     }
 
     private int getIndex(List<JSONObject> download, String dateColumn, boolean earliest) {
         int output = -1;
         Date target = null;
         for (int i = 0; i < download.size(); i++) {
-            JSONObject o = (JSONObject) download.get(i);
+            JSONObject o = download.get(i);
             if (o != null) {
                 setJsonData(o);
-                Date curr = getDate(dateColumn);
+                Date curr = getDate(dateColumn, null);
                 if (curr != null) {
                     if (target != null) {
                         if (earliest ? curr.before(target) : curr.after(target)) {
@@ -112,51 +127,36 @@ public class JsonView {
         return defaultValue;
     }
 
-    public Date getDate(String dateColumn) {
-        return _parse((String) getJsonData().get(dateColumn));
+    public Date getDate(String dateColumn, Date outputIfNone) {
+        String dateStr = (String) getJsonData().get(dateColumn);
+        if(dateStr == null || dateStr.isEmpty()) {
+            return outputIfNone;
+        }else {
+            Date date = parse(dateStr, outputIfNone);
+            return date;
+        }
     }
 
-    private Date _parse(String dateStr) {
+    private Date parse(String dateStr, Date outputIfNone) {
         if (dateStr == null || dateStr.isEmpty()) {
-            return null;
+            return outputIfNone;
         }
-        if (this.dateFormat == null) {
-            this.dateFormat = createDefaultDateFormat();
+        if (this.dateParser == null) {
+            this.dateParser = new DateParser();
         }
-        this.date = parse(this.dateFormat, dateStr);
-        return this.date;
-    }
-
-    public static Date parse(String dateStr) {
-        return parse(createDefaultDateFormat(), dateStr);
-    }
-
-    public static SimpleDateFormat createDefaultDateFormat() {
-        SimpleDateFormat dateFormat = new SimpleDateFormat();
-        dateFormat.applyLocalizedPattern("EEE MMM dd HH:mm:ss z yyyy");
-        dateFormat.setTimeZone(App.getUserSelectedTimeZone());
-        return dateFormat;
-    }
-
-    public static Date parse(SimpleDateFormat dateFormat, String dateStr) {
-        Date date = null;
-        if (!(dateStr == null || dateStr.isEmpty())) {
-            try {
-                date = dateFormat.parse(dateStr);
-            } catch (Exception e) {
-                Logx.log(5, JsonView.class, "Error parsing date: {0} with pattern: 'EEE MMM dd HH:mm:ss z yyyy'", dateStr);
-                Logx.log(JsonView.class, e);
-            }
+        Date output = this.dateParser.parse(dateStr);
+        if(output != null && output.after(NOW)) {
+            output = outputIfNone;
         }
-        return date;
+        return output;
     }
 
     public String getDateDisplay(String dateStr) {
         String output = null;
         if (isDisplayDateAsTimeElapsed()) {
-            this.date = _parse(dateStr);
-            if (this.date != null) {
-                output = getTimeElapsed(this.date);
+            Date date = parse(dateStr, null);
+            if (date != null) {
+                output = getTimeElapsed(date);
             }
         }
         if (output != null && !output.isEmpty()) {
@@ -178,6 +178,9 @@ public class JsonView {
 
     public String getTimeElapsed(Date date) {
         long secs = (System.currentTimeMillis() - date.getTime()) / 1000;
+        if(secs < 0) {
+            return "";
+        }
         if (secs < 60) {
             return secs + "s";
         }
@@ -190,68 +193,6 @@ public class JsonView {
             return hrs + "h";
         }
         return (hrs / 24) + "d";
-    }
-
-    public static List<JSONObject> getDummyFeeds(Context context) {
-        return getDummyFeeds(context, context.getString(R.string.app_label) + "-local-default-feed-list");
-    }
-
-    public static List<JSONObject> getDummyFeeds(Context context, Object categories) {
-        List<JSONObject> output = new ArrayList();
-        Map map = Raw.get(context);
-        for (Object title : map.keySet()) {
-            try {
-                output.add(getDefaultJsonObject(context, title, map.get(title), categories));
-            } catch (Exception e) {
-                Logx.log(JsonView.class, e);
-            }
-        }
-        return output;
-    }
-
-    public static JSONObject getDefaultJsonObject(Context context, Object title, Object content, Object categories) {
-        JSONObject obj = new JSONObject();
-        String cat = categories.toString();
-        Date date = new Date();
-        String appLabel = App.getLabel(context);
-        obj.put(FeedNames.author, appLabel);
-        obj.put(FeedNames.categories, cat);
-        obj.put(FeedNames.content, content.toString());
-        obj.put(FeedNames.datecreated, date.toString());
-        obj.put(FeedNames.description, title);
-        obj.put(FeedNames.feeddate, date.toString());
-        obj.put(FeedhitNames.feedid, Long.valueOf(0));
-        obj.put(FeedNames.keywords, cat);
-        Map siteData = new HashMap();
-        siteData.put(FeedNames.siteid, Integer.valueOf(0));
-        siteData.put("site", appLabel);
-        obj.put(FeedNames.siteid, siteData);
-        obj.put(FeedNames.title, title.toString());
-        obj.put("hitcount", Integer.valueOf(0));
-        return obj;
-    }
-
-    public static void appendDefaultJsonString(Context context, StringBuilder appendTo, Object title, Object content, Object categories) {
-        appendTo.append('{');
-        Date date = new Date();
-        String x = ",\n\t\"";
-        String y = "\": \"";
-        appendTo.append("\n\t\"").append(FeedNames.datecreated).append(y).append(date).append('\"');
-        appendTo.append(x).append(FeedNames.datecreated).append(y).append(date).append('\"');
-        String appName = App.getLabel(context);
-        StringBuilder append = appendTo.append(x).append(FeedNames.author).append(y);
-        if (appName == null) {
-            appName = "";
-        }
-        append.append(appName).append('\"');
-        appendTo.append(x).append(FeedNames.title).append(y).append(title).append('\"');
-        appendTo.append(x).append(FeedNames.description).append(y).append(title).append('\"');
-        appendTo.append(x).append(FeedNames.siteid).append(y).append('0').append('\"');
-        appendTo.append(x).append("hitcount").append(y).append(0).append('\"');
-        appendTo.append(x).append(FeedNames.content).append("\": ").append(content).append('\"');
-        appendTo.append(x).append(FeedhitNames.feedid).append("\": ").append(0);
-        appendTo.append(x).append(FeedNames.categories).append(y).append(categories).append('\"');
-        appendTo.append('}');
     }
 
     public boolean isDisplayDateAsTimeElapsed() {
@@ -268,6 +209,5 @@ public class JsonView {
 
     public void setJsonData(JSONObject source) {
         this.source = source;
-        this.date = null;
     }
 }

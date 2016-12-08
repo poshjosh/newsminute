@@ -5,19 +5,21 @@ import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
 import android.view.View;
-import com.looseboxes.idisc.common.App;
+
+import com.bc.android.core.notice.Popup;
+import com.bc.android.core.util.Logx;
 import com.looseboxes.idisc.common.R;
+import com.looseboxes.idisc.common.User;
 import com.looseboxes.idisc.common.activities.MainActivity;
+import com.looseboxes.idisc.common.asynctasks.Addhotnewsfeedid;
 import com.looseboxes.idisc.common.asynctasks.FeedDownloadManager;
 import com.looseboxes.idisc.common.jsonview.Feed;
-import com.looseboxes.idisc.common.notice.Popup;
-import com.looseboxes.idisc.common.util.Logx;
-import com.looseboxes.idisc.common.util.PreferenceFeedsManager;
-import com.looseboxes.idisc.common.util.PreferenceFeedsManager.PreferenceType;
+import com.looseboxes.idisc.common.preferencefeed.Preferencefeeds.PreferenceType;
+import com.looseboxes.idisc.common.preferencefeed.PreferencefeedManager;
+
 import org.json.simple.JSONObject;
 
 public abstract class AbstractFeedContentOptionsButtonListener extends AbstractContentOptionsButtonListener {
-    private Feed f;
 
     public abstract JSONObject getJsonData();
 
@@ -44,38 +46,74 @@ public abstract class AbstractFeedContentOptionsButtonListener extends AbstractC
     }
 
     public void favorite(View v) {
-        updateUserPreferenceLongFromFeedid(PreferenceType.favorites, v);
+
+        final boolean added = updateUserPreferenceLongFromFeedid(PreferenceType.favorites, v);
+
+        final Context context = this.getContext();
+
+        if(added && User.getInstance().isAdmin(context)) {
+
+            new Addhotnewsfeedid(context, getFeed().getFeedid()).execute();
+        }
     }
 
-    private void updateUserPreferenceLongFromFeedid(PreferenceType pref, View v) {
-        int updateImgId;
+    private boolean updateUserPreferenceLongFromFeedid(PreferenceType pref, View v) {
+
+        final int updateImgId;
+
         JSONObject feed = getJsonData();
-        PreferenceFeedsManager feedsManager = App.getPreferenceFeedsManager(getContext(), pref);
-        if (feedsManager.contains(feed)) {
-            feedsManager.remove(feed);
+
+        PreferencefeedManager pfm = new PreferencefeedManager(getContext(), pref, true, null);
+
+        final boolean contains = pfm.contains(feed);
+
+        if (contains) {
+
+            pfm.remove(feed);
+
             updateImgId = getDefaultImageId(pref);
+
         } else {
-            feedsManager.add(feed);
+
+            pfm.add(feed);
+
             updateImgId = getClickedImageId(pref);
         }
+
         v.setBackgroundResource(updateImgId);
+
+        final boolean ignoreSchedule = true;
+
+        pfm.update(ignoreSchedule);
+
+        return !contains;
     }
 
     public void delete(View v) {
-        Popup.alert(getContext(), "Delete?", new OnClickListener() {
+
+        final Long feedid = this.getId();
+
+        Popup.getInstance().alert(getContext(), R.string.msg_delete, new OnClickListener() {
             public void onClick(DialogInterface dialog, int which) {
                 try {
+
                     Context context = AbstractFeedContentOptionsButtonListener.this.getContext();
-                    FeedDownloadManager.addDeletedFeedId(context, AbstractFeedContentOptionsButtonListener.this.getId());
-                    Popup.show(context, R.string.msg_deleted, 0);
+
+                    FeedDownloadManager.addDeletedFeedId(context, feedid);
+
+                    Popup.getInstance().show(context, R.string.msg_deleted, 0);
+
                     Intent intent = new Intent(context, MainActivity.class);
+
                     intent.putExtra(MainActivity.EXTRA_BOOLEAN_CLEAR_PREVIOUS, true);
+
                     context.startActivity(intent);
+
                 } catch (Exception e) {
-                    Logx.log(getClass(), e);
+                    Logx.getInstance().log(getClass(), e);
                 }
             }
-        });
+        }, R.string.msg_ok);
     }
 
     private int getDefaultImageId(PreferenceType pref) {
@@ -102,6 +140,7 @@ public abstract class AbstractFeedContentOptionsButtonListener extends AbstractC
         return getFeed().getFeedid();
     }
 
+    private Feed f;
     private Feed getFeed() {
         if (this.f == null) {
             this.f = new Feed(getJsonData());

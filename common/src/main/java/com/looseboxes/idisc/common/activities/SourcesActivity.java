@@ -1,39 +1,40 @@
 package com.looseboxes.idisc.common.activities;
 
-import android.content.Context;
 import android.os.Bundle;
+
 import com.looseboxes.idisc.common.R;
 import com.looseboxes.idisc.common.feedfilters.FeedFilter;
 import com.looseboxes.idisc.common.feedfilters.FilterByFeedSource;
+
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
-public class SourcesActivity extends DefaultFeedListActivity {
-    public static final String EXTRA_STRING_ARRAYLIST_SELECTED_CATEGORIES;
-    private FeedFilter _ff;
+public class SourcesActivity extends AbstractCategoriesActivity {
 
-    static {
-        EXTRA_STRING_ARRAYLIST_SELECTED_CATEGORIES = FilterByFeedSource.EXTRA_STRING_ARRAYLIST_SELECTED_SOURCES;
-    }
+    public static final String EXTRA_STRING_ARRAYLIST_SELECTED_CATEGORIES = FilterByFeedSource.EXTRA_STRING_ARRAYLIST_SELECTED_SOURCES;
 
     public int getTabId() {
         return R.id.tabs_sources;
     }
 
-    public ArrayList<String> getSelectedSources() {
-        return getIntent().getStringArrayListExtra(EXTRA_STRING_ARRAYLIST_SELECTED_CATEGORIES);
+    @Override
+    public Set<String> getSelected() {
+        ArrayList<String> output = getIntent().getStringArrayListExtra(EXTRA_STRING_ARRAYLIST_SELECTED_CATEGORIES);
+        return output == null ? Collections.EMPTY_SET : new HashSet(output);
     }
 
+    @Override
     public Bundle getBundleDataForSearchableActivity() {
         Bundle bundle = new Bundle();
         bundle.putString(SearchableActivity.EXTRA_STRING_FEEDFILTER_CLASSNAME, FilterByFeedSource.class.getName());
-        bundle.putStringArrayList(FilterByFeedSource.EXTRA_STRING_ARRAYLIST_SELECTED_SOURCES, getSelectedSources());
+        bundle.putStringArrayList(FilterByFeedSource.EXTRA_STRING_ARRAYLIST_SELECTED_SOURCES, new ArrayList(getSelected()));
         return bundle;
     }
 
-    public FeedFilter getFeedFilter() {
-        if (this._ff == null) {
-            this._ff = new FilterByFeedSource((Context) this, getSelectedSources());
-        }
-        return this._ff;
+    @Override
+    public FeedFilter createFeedFilter() {
+        return new FilterByFeedSource(this, new ArrayList<>(getSelected()));
     }
 }

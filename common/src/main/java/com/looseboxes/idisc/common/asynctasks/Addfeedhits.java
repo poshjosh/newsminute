@@ -1,73 +1,51 @@
 package com.looseboxes.idisc.common.asynctasks;
 
 import android.content.Context;
+
+import com.bc.android.core.util.SparseIntArrayForLongsLimitedSize;
 import com.bc.util.JsonFormat;
 import com.looseboxes.idisc.common.R;
 import com.looseboxes.idisc.common.User;
 import com.looseboxes.idisc.common.util.FeedhitManager;
-import com.looseboxes.idisc.common.util.Logx;
-import java.util.HashMap;
+import com.bc.android.core.util.Logx;
+
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import org.json.simple.parser.JSONParser;
 
-public class Addfeedhits extends DefaultReadTask<Object> {
-    private final Context context;
-    private List<String> hits;
+import org.json.simple.JSONValue;
 
-    public Addfeedhits(Context context) {
-        Map<String, String> params = new HashMap(20, 0.75f);
-        int added = User.getInstance().addParameters(context, params);
-        setOutputParameters(params);
-        this.context = context;
+public abstract class Addfeedhits extends AbstractReadTask<Object> {
+
+    public Addfeedhits(Context context, SparseIntArrayForLongsLimitedSize feedIdToHittime) {
+
+        super(context, context.getString(R.string.err_updatinghitcount));
+
+        if (feedIdToHittime == null || feedIdToHittime.size() == 0) {
+            throw new NullPointerException();
+        }
+
+        this.addOutputParameters(User.getInstance().getOutputParameters(context));
+
+        final int size = feedIdToHittime.size();
+
+        List<String> hits = new LinkedList<>();
+        for(int i=0; i<size; i++) {
+            int key = feedIdToHittime.keyAt(i);
+            long val = feedIdToHittime.longValueAt(i);
+            hits.add(this.toOutputFormat(key, val));
+        }
+
+        this.addOutputParameter("hits", new JsonFormat(false).toJSONString(hits));
+
         setNoUI(!User.getInstance().isAdmin(context));
     }
 
-    public void reset() {
-        super.reset();
-        this.hits = null;
-    }
-
-    public void onSuccess(Object download) {
-        try {
-            if (this.hits != null) {
-                this.hits.clear();
-            }
-            FeedhitManager.getHitcounts(this.context, true).putAll((Map) new JSONParser().parse(download.toString()));
-        } catch (Exception e) {
-            Logx.log(getClass(), e);
-        }
-    }
-
-    public String getLocalFilename() {
-        throw new UnsupportedOperationException("Not supported.");
+    public static String toOutputFormat(long feedid, long hittime) {
+        return Long.toString(feedid) + ',' + hittime;
     }
 
     public String getOutputKey() {
         return "addfeedhits";
-    }
-
-    public Context getContext() {
-        return this.context;
-    }
-
-    public boolean isRemote() {
-        return true;
-    }
-
-    public String getErrorMessage() {
-        return getContext().getString(R.string.err_updatinghitcount);
-    }
-
-    public List<String> getHits() {
-        return this.hits;
-    }
-
-    public void setHits(List<String> hits) {
-        if (hits == null || hits.isEmpty()) {
-            throw new NullPointerException();
-        }
-        getOutputParameters().put("hits", new JsonFormat().toJSONString(hits));
-        this.hits = hits;
     }
 }

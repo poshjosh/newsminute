@@ -1,0 +1,47 @@
+Feed Load
+--------
+-switch off internet
+-install application
+-check that default feeds are loaded
+-check that each default feed is showing appropriately
+-switch on internet
+-wait to see: NEW FEEDS SHOULD LOAD WHILE YOU ARE VIEWING
+
+Notifications
+-------------
+How quick first notification is fired after startup
+Clicking on notification opens correct feed
+
+Internet
+--------
+Test app behaviour when there is no internet
+Test app behaviour when there is no wifi
+Test how quick pushnotification is fired when network state changes
+
+UI Restoration
+--------------
+Test restoration of list position after
+- onCreate, onResume
+
+UI Response
+-----------
+How quick UI loads on startup
+
+
+Test that when an advert is displayed, no-more-advert button works
+Test that each tab loads desired UI
+
+Test results after selecting, categories/sources
+
+Test behaviour after user selects preferred categories/sources
+
+Adding, removing Bookmarks
+Adding removing favorites
+
+Search
+Test search (local and search on server)
+Test local search when there is no internet
+
+
+
+

@@ -20,7 +20,7 @@ import com.looseboxes.idisc.common.asynctasks.MultiRequest;
 import com.looseboxes.idisc.common.handlers.ButtonGroupHandler;
 import com.looseboxes.idisc.common.notice.CommentNotificationHandler;
 import com.looseboxes.idisc.common.preferencefeed.Preferencefeeds.PreferenceType;
-import com.looseboxes.idisc.common.preferencefeed.PreferencefeedsManager;
+import com.looseboxes.idisc.common.preferencefeed.PreferencefeedManager;
 import com.looseboxes.idisc.common.service.DownloadService;
 import com.looseboxes.idisc.common.util.AliasesManager;
 import com.looseboxes.idisc.common.util.StaticResourceManager;
@@ -304,7 +304,7 @@ public class DeveloperActivity extends Activity {
                 try {
                     PreferenceType[] prefValues = PreferenceType.values();
                     for (int i = 0; i < prefValues.length; i++) {
-                        PreferencefeedsManager pfm = new PreferencefeedsManager(DeveloperActivity.this, prefValues[i], false, null);
+                        PreferencefeedManager pfm = new PreferencefeedManager(DeveloperActivity.this, prefValues[i], false, null);
                         Popup.getInstance().show(DeveloperActivity.this, "Downloading: " + prefValues[i], 0);
                         pfm.update(true);
                     }

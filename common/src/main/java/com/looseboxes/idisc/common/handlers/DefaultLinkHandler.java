@@ -7,16 +7,17 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.widget.Toast;
 
+import com.bc.android.core.io.RemoteSession;
 import com.looseboxes.idisc.common.App;
 import com.looseboxes.idisc.common.R;
 import com.looseboxes.idisc.common.activities.DisplayFeedActivity;
 import com.looseboxes.idisc.common.activities.DisplayLinkActivity;
 import com.looseboxes.idisc.common.activities.MainActivity;
-import com.looseboxes.idisc.common.io.StreamReader;
+import com.bc.android.core.io.StreamReader;
 import com.looseboxes.idisc.common.jsonview.FeedhitNames;
-import com.looseboxes.idisc.common.notice.Popup;
-import com.looseboxes.idisc.common.util.Logx;
-import com.looseboxes.idisc.common.util.RemoteSession;
+import com.bc.android.core.notice.Popup;
+import com.bc.android.core.util.Logx;
+import com.looseboxes.idisc.common.util.PropertiesManager;
 
 import java.io.FileNotFoundException;
 import java.net.MalformedURLException;
@@ -31,14 +32,17 @@ public class DefaultLinkHandler implements LinkHandler {
 
         private ActivationTask(Context context) {
             this.context = context;
-            this.sess = new RemoteSession(context);
+            PropertiesManager props = App.getPropertiesManager(context);
+            final int connectTimeoutMillis = props.getInt(PropertiesManager.PropertyName.connectTimeoutMillis);
+            final int readTimeoutMillis = props.getInt(PropertiesManager.PropertyName.readTimeoutMillis);
+            this.sess = new RemoteSession(context, connectTimeoutMillis, readTimeoutMillis);
         }
 
         protected String doInBackground(String... params) {
             try {
                 return new StreamReader().readContents(this.sess.getInputStream(new URL(params[0])));
             } catch (Exception e) {
-                Logx.log(getClass(), e);
+                Logx.getInstance().log(getClass(), e);
                 return null;
             }
         }
@@ -61,10 +65,10 @@ public class DefaultLinkHandler implements LinkHandler {
                 } else {
                     err = this.context.getString(R.string.err_activation);
                 }
-                Popup.show(this.context, err, Toast.LENGTH_LONG);
+                Popup.getInstance().show(this.context, err, Toast.LENGTH_LONG);
             } catch (Exception e) {
-                Logx.log(getClass(), e);
-                Popup.show(this.context, this.context.getString(R.string.err_activation), Toast.LENGTH_LONG);
+                Logx.getInstance().log(getClass(), e);
+                Popup.getInstance().show(this.context, this.context.getString(R.string.err_activation), Toast.LENGTH_LONG);
             }
         }
     }
@@ -90,7 +94,7 @@ public class DefaultLinkHandler implements LinkHandler {
                 nextIntent = new Intent(this.context, MainActivity.class);
             } else if (sLower.startsWith("https://play.google.com/store")) {
                 nextIntent = App.getPlayStoreIntent(this.context, uri);
-            } else if (sLower.startsWith("app")) {
+            } else if (sLower.startsWith(App.getUrlScheme()+":")) {
                 nextIntent = getAppLinkIntent(urlString, sLower);
             } else {
                 nextIntent = new Intent(this.context, DisplayLinkActivity.class);
@@ -103,7 +107,7 @@ public class DefaultLinkHandler implements LinkHandler {
             this.context.startActivity(nextIntent);
             return true;
         } catch (Exception e) {
-            Logx.log(getClass(), e);
+            Logx.getInstance().log(getClass(), e);
             return handled;
         }
     }
@@ -122,7 +126,7 @@ public class DefaultLinkHandler implements LinkHandler {
             a = n2;
         }
         if (a == -1) {
-            Popup.show(this.context, this.context.getString(R.string.err_invalid_link_s, new Object[]{urlString}), 0);
+            Popup.getInstance().show(this.context, this.context.getString(R.string.err_invalid_link_s, new Object[]{urlString}), 0);
             return null;
         }
         int end;
@@ -140,6 +144,8 @@ public class DefaultLinkHandler implements LinkHandler {
         } else {
             query = null;
         }
+        Logx.getInstance().debug(this.getClass(), "URL: {0}, activityName: {1}, query: {2}",
+                urlString, activityName, query);
         try {
             return createIntent(urlString, activityName, query);
         } catch (Exception e) {
@@ -151,8 +157,8 @@ public class DefaultLinkHandler implements LinkHandler {
             } else {
                 msg = this.context.getString(R.string.err_error_displaying_s, new Object[]{urlString});
             }
-            Popup.show(this.context, msg, 0);
-            Logx.log(getClass(), e);
+            Popup.getInstance().show(this.context, msg, 0);
+            Logx.getInstance().log(getClass(), e);
             return null;
         }
     }
@@ -178,6 +184,7 @@ public class DefaultLinkHandler implements LinkHandler {
             default:
                 output = null;
         }
+        Logx.getInstance().debug(this.getClass(), "Activity class for name {0} = {1}", activityName, output.getName());
         return output;
     }
 
@@ -192,7 +199,7 @@ public class DefaultLinkHandler implements LinkHandler {
     }
 
     private Long getFeedid(String urlString, String query) throws MalformedURLException {
-        Long l = null;
+        Long feedid = null;
         int n = query.indexOf(FeedhitNames.feedid);
         if (n != -1) {
             n = query.indexOf(61, n);
@@ -203,13 +210,14 @@ public class DefaultLinkHandler implements LinkHandler {
                     end = query.length();
                 }
                 try {
-                    l = Long.valueOf(Long.parseLong(query.substring(start, end)));
+                    feedid = Long.valueOf(Long.parseLong(query.substring(start, end)));
                 } catch (NumberFormatException e) {
-                    Logx.log(getClass(), e);
+                    Logx.getInstance().log(getClass(), e);
                     throw new MalformedURLException(urlString);
                 }
             }
         }
-        return l;
+        Logx.getInstance().debug(this.getClass(), "Feedid: {0}", feedid);
+        return feedid;
     }
 }

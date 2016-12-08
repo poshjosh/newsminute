@@ -10,7 +10,7 @@ public interface FeedNames {
     public static final String feedid = "feedid";
     public static final String imageurl = "imageurl";
     public static final String keywords = "keywords";
-    public static final String siteid = "siteid";
+    public static final String siteid = SiteNames.siteid;
     public static final String title = "title";
     public static final String url = "url";
 }

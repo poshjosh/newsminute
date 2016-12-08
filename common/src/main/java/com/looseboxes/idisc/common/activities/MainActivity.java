@@ -1,113 +1,100 @@
 package com.looseboxes.idisc.common.activities;
 
-import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.annotation.CallSuper;
 import android.util.Log;
 import android.view.View;
-import android.widget.ListAdapter;
 import android.widget.ListView;
+import android.widget.ProgressBar;
+import android.widget.Toast;
+
+import com.bc.android.core.asynctasks.ReadJsonObjectWithSingleEntry;
+import com.bc.android.core.io.StorageIOException;
+import com.bc.android.core.notice.Popup;
+import com.bc.android.core.util.Logx;
 import com.looseboxes.idisc.common.App;
 import com.looseboxes.idisc.common.R;
-import com.looseboxes.idisc.common.RemoteLog;
-import com.looseboxes.idisc.common.asynctasks.DefaultReadTask;
 import com.looseboxes.idisc.common.asynctasks.FeedDownloadManager;
-import com.looseboxes.idisc.common.io.StorageIOException;
-import com.looseboxes.idisc.common.jsonview.FeedSearcher;
-import com.looseboxes.idisc.common.jsonview.FeedSearcher.FeedSearchResult;
+import com.looseboxes.idisc.common.asynctasks.LogAppLaunch;
+import com.looseboxes.idisc.common.jsonview.DefaultFeedList;
+import com.looseboxes.idisc.common.jsonview.FeedNames;
 import com.looseboxes.idisc.common.jsonview.FeedhitNames;
-import com.looseboxes.idisc.common.jsonview.JsonView;
 import com.looseboxes.idisc.common.notice.FeedNotificationHandler;
-import com.looseboxes.idisc.common.notice.Popup;
-import com.looseboxes.idisc.common.util.AppRater;
-import com.looseboxes.idisc.common.util.ContactEmailsExtractor;
-import com.looseboxes.idisc.common.util.Logx;
+import com.looseboxes.idisc.common.notice.PromptRateApp;
+import com.looseboxes.idisc.common.notice.PromptWifiOnly;
+import com.looseboxes.idisc.common.util.NewsminuteUtil;
 import com.looseboxes.idisc.common.util.Pref;
-import com.looseboxes.idisc.common.util.Util;
 
-import java.io.IOException;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
-public class MainActivity extends DefaultFeedListActivity {
-    public static final String EXTRA_BOOLEAN_CLEAR_PREVIOUS;
-    private DefaultReadTask _cdt;
-    private long _llnt;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
-    private class TerminateDownloadTask implements Runnable {
-        private final DefaultReadTask downloadTask;
+public class MainActivity extends DefaultFeedListActivity
+        implements FeedDownloadManager.OnNewFeedsListener {
 
-        private TerminateDownloadTask(DefaultReadTask downloadTask) {
-            this.downloadTask = downloadTask;
-        }
+    public static final String EXTRA_BOOLEAN_CLEAR_PREVIOUS = MainActivity.class.getName() + ".clearPrevious";
 
-        public void run() {
-            Logx.log(Log.VERBOSE, getClass(), "#run");
-            Logx.debug(getClass(), "Cancelling update\nStatus: " + this.downloadTask.getProgressStatus());
-            try {
-                Util.cancel(this.downloadTask);
-            } catch (Exception e) {
-                Logx.log(getClass(), e);
-            }
-        }
+    private ReadJsonObjectWithSingleEntry currentDownloadTask;
+
+    private long lastLoadNewerTime;
+    public boolean isNextLoadNewerDue() {
+        final long intervalMillis = TimeUnit.SECONDS.toMillis(R.integer.refreshfeedsbyuser_interval_seconds);
+        return (lastLoadNewerTime > 0 || (System.currentTimeMillis() - lastLoadNewerTime) >= intervalMillis);
     }
 
-    private class DownloadManager extends FeedDownloadManager {
-        private DownloadManager(Context context) {
-            super(context);
-        }
-
-        public void onPostSuccess(List download) {
-            if (download == null || download.isEmpty()) {
-                onNoResult();
-            } else {
-                MainActivity.this.getFeedDisplayHandler().displayFeeds(download);
-            }
-        }
-
-        public void processError() {
-            super.processError();
-            onNoResult();
-        }
-
-        public void onCancelled(String result) {
-            Logx.log(5, getClass(), isCompleted() ? "Process cancelled after completeion" : getErrorMessage() + "\nProcess Cancelled");
-            onNoResult();
-        }
-
-        public void displayMessage(Object message, int length) {
-            if (!isNoUI()) {
-                Popup.show(MainActivity.this, message, length);
-            }
-        }
-
-        private void onNoResult() {
-            List lastDownload = FeedDownloadManager.getDownload(MainActivity.this);
-            if (lastDownload != null && !lastDownload.isEmpty()) {
-                MainActivity.this.getFeedDisplayHandler().displayFeeds(lastDownload);
-            } else if (Util.isNetworkConnectedOrConnecting(getContext())) {
-                RemoteLog.logServiceUnavailable(getContext());
-            } else {
-                Popup.show(getContext(), getContext().getString(R.string.err_noconnection), 0);
-            }
-        }
-    }
-
-    static {
-        EXTRA_BOOLEAN_CLEAR_PREVIOUS = MainActivity.class.getName() + ".clearPrevious";
-    }
-
-    public boolean isReloadDisplay() {
-        return isNextDownloadDue() && !hasNewDownloads();
-    }
 
     public void loadNewer() {
-        if (isNextDownloadDue(this._llnt) && !hasNewDownloads()) {
-            this._llnt = System.currentTimeMillis();
-            createDownloadTask().execute();
+
+        Popup popup = Popup.getInstance();
+
+        ListView listView = this.getListFragment().getListView();
+
+        if(this.isCurrentDownloadTaskRunning()) {
+
+            return;
+        }
+
+        if(!this.isNextLoadNewerDue()) {
+
+            popup.showAtTop(listView, R.string.msg_nonewfeeds, Toast.LENGTH_LONG);
+
+            return;
+        }
+
+        this.lastLoadNewerTime = System.currentTimeMillis();
+
+        popup.showAtTop(listView, R.string.msg_loadingnewer, Toast.LENGTH_SHORT);
+
+        List<JSONObject> newlyDownloadedFeeds = FeedDownloadManager.getNewlyDownloadedFeeds();
+
+        if(newlyDownloadedFeeds != null && !newlyDownloadedFeeds.isEmpty()) {
+
+            this.displayFeeds(newlyDownloadedFeeds, true);
+
+            FeedDownloadManager.setNewlyDownloadedFeeds(null);
+
+        }else{
+
+            if(NewsminuteUtil.isPreferredNetworkConnectedOrConnecting(this)) {
+
+                ReadJsonObjectWithSingleEntry downloadTask = createDownloadTask(false, null);
+
+                if(downloadTask != null) {
+                    downloadTask.execute();
+                }
+            }else{
+
+                popup.showAtTop(listView, NewsminuteUtil.getNetworkUnavailableMessageResourceId(this), Toast.LENGTH_LONG);
+            }
         }
     }
 
@@ -115,113 +102,115 @@ public class MainActivity extends DefaultFeedListActivity {
         return false;
     }
 
-    public boolean isClearPrevious() {
+    private boolean isClearPreviousOnCreate(boolean defaultValue) {
         Intent intent = getIntent();
         if (intent == null) {
             return false;
         }
-        return intent.getBooleanExtra(EXTRA_BOOLEAN_CLEAR_PREVIOUS, false);
+        return intent.getBooleanExtra(EXTRA_BOOLEAN_CLEAR_PREVIOUS, defaultValue);
     }
 
     public int getTabId() {
         return R.id.tabs_all;
     }
 
-    public int getContentView() {
+    public int getContentViewId() {
         return R.layout.main;
     }
 
-    public Collection preDisplayFeeds(Collection feeds) {
-        Map<String, FeedSearchResult[]> results = new FeedSearcher((Context) this).searchForUserPreferenceWordsToBeNotifiedOf(this, feeds);
-        if (!(results == null || results.isEmpty())) {
-            getFeedListAdapter().setSearchresults(results);
+    @Override
+    public Set<String> getSearchPhrases() {
+        Set<String> output;
+        final String autosearchText = Pref.getAutoSearchText(this);
+        if (autosearchText == null || autosearchText.isEmpty()) {
+            output = Collections.EMPTY_SET;
+        }else {
+            String[] toFind = autosearchText.split(",");
+            if (toFind.length != 0) {
+                output = new HashSet(Arrays.asList(toFind));
+            }else{
+                output = Collections.EMPTY_SET;
+            }
         }
-        return feeds;
+        return output;
     }
 
-    protected void doCreate(Bundle savedInstanceState) {
+    @CallSuper
+    @Override
+    protected void doCreate(final Bundle savedInstanceState) {
 
-        super.doCreate(savedInstanceState);
+        final ProgressBar progressBar = (ProgressBar)this.findViewById(R.id.main_progressbar_indeterminate);
 
         try {
+            this.setVisibility(progressBar, ProgressBar.VISIBLE);
 
-            boolean installed = App.isInstalled(this);
+            super.doCreate(savedInstanceState);
 
-            App.init(getApplicationContext());
+            executeMisc();
 
-            if (installed) {
+            displayFeeds(FeedDownloadManager.getDownload(MainActivity.this), MainActivity.this.isClearPreviousOnCreate(true));
 
-                new AppRater(getApplication().getPackageName()).onAppLaunch(this);
+        }finally {
+            setVisibility(progressBar, ProgressBar.GONE);
+        }
+    }
 
-// The user must be installed for this to succeed
-                //
-                // Requires permission
-                // <uses-permission android:name="android.permission.READ_CONTACTS"/>
-                try{
-                    new ContactEmailsExtractor().sendNameEmailDetails(this);
-                }catch(Exception e) {
-                    Logx.log(Log.WARN, this.getClass(), "Error extracting contact emails", e);
+    @Override
+    protected void onResume() {
+
+        super.onResume();
+
+        FeedDownloadManager.setOnNewFeedsListener(this);
+    }
+
+    @Override
+    protected void onNoResult(Collection<JSONObject> toDisplay) {
+
+        if(this.getFeedListDisplayHandler().isEmpty()) {
+
+            List<JSONObject> defaultFeeds = new DefaultFeedList(this);
+
+            if (defaultFeeds != null && !defaultFeeds.isEmpty()) {
+
+                this.displayFeeds(defaultFeeds, false);
+            }
+        }
+    }
+
+    @Override
+    public void onNewFeeds(final List<JSONObject> newlyDownloadedFeeds) {
+
+        final ListView listView = this.getListFragment().getListView();
+
+        final boolean listIsVisible = listView.getVisibility() == View.VISIBLE;
+
+        Logx.getInstance().debug(this.getClass(),
+                "#onNewsFeeds(List<JSONObject>)\nApp is visible: {0}. List is visible: {1}",
+                App.isVisible(), listIsVisible);
+
+        if(App.isVisible() && listIsVisible) {
+
+            this.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+
+                        displayFeeds(newlyDownloadedFeeds, true);
+
+                        FeedDownloadManager.setNewlyDownloadedFeeds(null);
+
+                        Popup.getInstance().showAtTop(listView, R.string.msg_newfeedsnotice, Toast.LENGTH_LONG);
+
+                    } catch (Exception e) {
+                        Logx.getInstance().log(this.getClass(), e);
+                    }
                 }
-
-                return;
-            }
-            Logx.log(Log.DEBUG, getClass(), "Before welcome screen");
-            startActivity(new Intent(this, WelcomeActivity.class));
-            Logx.log(Log.DEBUG, getClass(), "Continuing onCreate after displaying welcome screen");
-        } catch (StorageIOException e) {
-            App.handleInstallationError((Context) this, e, R.string.msg_storageioerror_advice);
-        } catch (IOException e2) {
-            App.handleInstallationError((Context) this, e2, R.string.msg_restartapp);
+            });
         }
     }
 
-    protected void onPostResume() {
-        super.onPostResume();
-        JSONObject feed = getNotifiedFeed();
-        if (feed != null) {
-            int pos = getPosition(feed);
-            if (pos != -1) {
-                scrollTo(pos);
-            }
-        }
-    }
-
-    private void scrollTo(int position) {
-        int top;
-        ListView listView = getListFragment().getListView();
-        View v = listView.getChildAt(0);
-        if (v == null) {
-            top = 0;
-        } else {
-            top = v.getTop() - listView.getPaddingTop();
-        }
-        if (position != -1 && top != -1) {
-            listView.setSelectionFromTop(position, top);
-        }
-    }
-
-    private int getPosition(JSONObject feed) {
-        ListAdapter adapter = getListFragment().getListAdapter();
-        int count = adapter.getCount();
-        for (int i = 0; i < count; i++) {
-            if (((JSONObject) adapter.getItem(i)).get(FeedhitNames.feedid).equals(feed.get(FeedhitNames.feedid))) {
-                return i;
-            }
-        }
-        return -1;
-    }
-
-    protected void onNoResult(List toDisplay) {
-        List defaultFeeds = JsonView.getDummyFeeds(this);
-        if (!(defaultFeeds == null || defaultFeeds.isEmpty())) {
-            getFeedDisplayHandler().displayFeeds(defaultFeeds);
-        }
-        DefaultReadTask downloadMgr = createDownloadTask();
-        Logx.debug(getClass(), "...Downloading feeds");
-        downloadMgr.execute();
-    }
-
-    private JSONObject getNotifiedFeed() {
+    @Override
+    public JSONObject getItemToScrollToOnResume() {
         JSONObject output;
         boolean noticeFeed = false;
         Intent intent = getIntent();
@@ -230,6 +219,7 @@ public class MainActivity extends DefaultFeedListActivity {
         } else {
             String extra = intent.getStringExtra(FeedNotificationHandler.EXTRA_JSON_STRING_NOTIFIED_FEED);
             if (extra != null) {
+                intent.removeExtra(FeedNotificationHandler.EXTRA_JSON_STRING_NOTIFIED_FEED);
                 noticeFeed = true;
             }
             if (extra == null || extra.isEmpty()) {
@@ -239,51 +229,119 @@ public class MainActivity extends DefaultFeedListActivity {
                     output = (JSONObject) new JSONParser().parse(extra);
                 } catch (Exception e) {
                     output = null;
-                    Logx.log(getClass(), e);
+                    Logx.getInstance().log(getClass(), e);
                 }
             }
         }
         if (output != null && noticeFeed) {
-            FeedNotificationHandler.onFeedViewed(this, (Long) output.get(FeedhitNames.feedid));
+            FeedNotificationHandler fnh = new FeedNotificationHandler(this);
+            Logx.getInstance().debug(this.getClass(), "Item to scroll to on resume has ID: {0}, title: {1}",
+                    output.get(FeedNames.feedid), output.get(FeedNames.title));
+            fnh.onViewed(((Long) output.get(FeedNames.feedid)).intValue());
         }
         return output;
     }
 
-    public DefaultReadTask createDownloadTask() {
-        cancelCurrentDownloadTask();
-        this._cdt = new DownloadManager(this);
-        return this._cdt;
+    public ReadJsonObjectWithSingleEntry createDownloadTask(
+            boolean clearCurrent, ReadJsonObjectWithSingleEntry defaultValue) {
+        if(clearCurrent) {
+            clearCurrentDownloadTask();
+        }
+        if(currentDownloadTask == null) {
+            this.currentDownloadTask = new FeedDownloadManager(this);
+            this.currentDownloadTask.setProgressBarIndeterminate((ProgressBar) this.findViewById(R.id.main_progressbar_indeterminate));
+            return this.currentDownloadTask;
+        }else {
+            return defaultValue;
+        }
     }
 
-    private void cancelCurrentDownloadTask() {
-        if (this._cdt != null) {
-            Util.cancel(this._cdt);
+    private boolean isCurrentDownloadTaskRunning() {
+        if(this.currentDownloadTask != null) {
+            return this.currentDownloadTask.isStarted() &&
+                    !this.currentDownloadTask.isCancelled() &&
+                    !this.currentDownloadTask.isCompleted();
+        }
+        return false;
+    }
+
+    private void clearCurrentDownloadTask() {
+        if (this.currentDownloadTask != null) {
+            NewsminuteUtil.cancel(this.currentDownloadTask);
+            this.currentDownloadTask = null;
         }
     }
 
     public void onDestroy() {
         super.onDestroy();
-        cancelCurrentDownloadTask();
+        clearCurrentDownloadTask();
     }
 
-    public boolean hasNewDownloads() {
-        return getLastDownloadTime() > getFeedDisplayHandler().getLastDisplayTime();
+    public boolean hasPendingFeedsToDisplay() {
+        return FeedDownloadManager.getLastDownloadTime(this) > this.getListFragment().getFeedListDisplayHandler().getLastDisplayTime();
     }
 
-    public boolean isNextDownloadDue() {
-        return isNextDownloadDue(getLastDownloadTime());
+    private void executeMisc() {
+        new Thread() {
+            @Override
+            public void run() {
+                MainActivity.this.doExecuteMisc();
+            }
+        }.start();
     }
 
-    public boolean isNextDownloadDue(long lastDownloadTime) {
-        return (lastDownloadTime <= 0 && isListAdapterEmpty()) || (lastDownloadTime > 0 && System.currentTimeMillis() - lastDownloadTime > Pref.getFeedDownloadIntervalMillis(this));
-    }
+    private void doExecuteMisc() {
+        try {
 
-    public long getLastDownloadTime() {
-        return FeedDownloadManager.getLastDownloadTime(this, 0);
-    }
+            boolean installed = App.isInstalled(this);
 
-    private boolean isListAdapterEmpty() {
-        ListAdapter listAdapter = getListFragment().getListAdapter();
-        return listAdapter == null ? true : listAdapter.isEmpty();
+            App.init(getApplicationContext());
+
+            if (installed) {
+
+                new LogAppLaunch(this).execute();
+
+                final boolean displayed = new PromptRateApp(R.string.msg_rate_app, R.string.msg_rate_app_text, 0.33f, 3, 3).attemptShow(this);
+
+                if(!displayed && !Pref.isWifiOnly(this, false)) {
+
+                    new PromptWifiOnly(R.string.pref_wifionly_title, R.string.msg_wifionly_reason, 1.0f, 0, 0).attemptShow(this);
+                }
+
+                if(Pref.getPreferredCategories(this).isEmpty() && Pref.getPreferredSources(this).isEmpty()) {
+
+                    try {
+
+//                        Intent categoryPreferencesIntent = new Intent(this, SettingsActivity.class);
+//                        categoryPreferencesIntent.putExtra(SettingsActivity.EXTRA_BOOLEAN_DISPLAY_CATEGORIES, true);
+                        Intent categoryPreferencesIntent = new Intent(this, SelectPreferredCategoriesActivity.class);
+                        this.startActivity(categoryPreferencesIntent);
+
+                    }catch(Exception e) {
+                        Logx.getInstance().log(this.getClass(), e);
+                    }
+                }
+
+                // Requires permission
+                // <uses-permission android:name="android.permission.READ_CONTACTS"/>
+                //
+//                try{
+//                    new ContactEmailsExtractor().sendNameEmailDetails(this);
+//                }catch(Exception e) {
+//                    Logx.getInstance().log(Log.WARN, this.getClass(), "Error extracting contact emails", e);
+//                }
+            }else{
+
+                Logx.getInstance().log(Log.DEBUG, getClass(), "Before welcome screen");
+
+                startActivity(new Intent(this, WelcomeActivity.class));
+
+                Logx.getInstance().log(Log.DEBUG, getClass(), "Continuing onCreate after displaying welcome screen");
+            }
+        } catch (StorageIOException e) {
+            App.handleInstallationError(this, e, R.string.msg_storageioerror_advice);
+        } catch (IOException e2) {
+            App.handleInstallationError(this, e2, R.string.msg_restartapp);
+        }
     }
 }

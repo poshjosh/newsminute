@@ -14,7 +14,7 @@ import com.looseboxes.idisc.common.asynctasks.FeedDownloadManager;
 import com.looseboxes.idisc.common.util.AliasesManager;
 import com.looseboxes.idisc.common.util.AliasesManager.AliasType;
 import com.bc.android.core.util.Logx;
-import com.looseboxes.idisc.common.preferencefeed.PreferencefeedsManager;
+import com.looseboxes.idisc.common.preferencefeed.PreferencefeedManager;
 import com.looseboxes.idisc.common.preferencefeed.Preferencefeeds.PreferenceType;
 import com.looseboxes.idisc.common.util.PropertiesManager;
 import com.looseboxes.idisc.common.util.NewsminuteUtil;
@@ -104,7 +104,7 @@ public class DownloadService extends IntentService {
             if (User.getInstance().isLoggedIn(this)) {
                 for (PreferenceType preferenceType : PreferenceType.values()) {
                     try {
-                        PreferencefeedsManager pfm = new PreferencefeedsManager(this, preferenceType, true, null);
+                        PreferencefeedManager pfm = new PreferencefeedManager(this, preferenceType, true, null);
                         log("Updating " + preferenceType);
                         pfm.update(false);
                     } catch (Exception e222) {

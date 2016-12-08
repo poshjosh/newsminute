@@ -1,6 +1,5 @@
 package com.looseboxes.idisc.common.fragments;
 
-import android.annotation.TargetApi;
 import android.app.Activity;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -9,21 +8,23 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.webkit.WebSettings;
-import android.webkit.WebSettings.LayoutAlgorithm;
 import android.webkit.WebView;
 import android.widget.Button;
+
+import com.bc.android.core.ui.WebViewClientImpl;
+import com.bc.android.core.util.Util;
 import com.looseboxes.idisc.common.App;
 import com.looseboxes.idisc.common.DefaultApplication;
 import com.looseboxes.idisc.common.R;
-import com.looseboxes.idisc.common.ui.DefaultWebViewClient;
 import com.looseboxes.idisc.common.activities.WebContentActivity;
 import com.looseboxes.idisc.common.listeners.AbstractContentOptionsButtonListener;
-import com.looseboxes.idisc.common.util.Logx;
+import com.looseboxes.idisc.common.ui.DefaultWebViewClient;
+import com.bc.android.core.util.Logx;
+import com.looseboxes.idisc.common.ui.OnHtmlExtractedListener;
 import com.looseboxes.idisc.common.util.PropertiesManager.PropertyName;
-import com.looseboxes.idisc.common.util.Util;
-import org.apache.harmony.awt.datatransfer.DataProvider;
+import com.looseboxes.idisc.common.util.NewsminuteUtil;
 
-public abstract class WebContentFragment extends BaseFragment {
+public abstract class WebContentFragment extends BaseFragment implements OnHtmlExtractedListener {
 
     private class ContentOptionsButtonListener extends AbstractContentOptionsButtonListener {
 
@@ -37,7 +38,7 @@ public abstract class WebContentFragment extends BaseFragment {
         }
 
         public String getSubject() {
-            return Util.getDefaultSubjectForMessages(getContext());
+            return NewsminuteUtil.getDefaultSubjectForMessages(getContext());
         }
 
         public String getText() {
@@ -45,7 +46,7 @@ public abstract class WebContentFragment extends BaseFragment {
         }
     }
 
-    public abstract int getContentView();
+    public abstract int getContentViewId();
 
     public abstract int getWebViewId();
 
@@ -84,7 +85,6 @@ public abstract class WebContentFragment extends BaseFragment {
         return super.onCreateView(inflater, container, savedInstanceState);
     }
 
-    @TargetApi(19)
     public void onViewCreated(View view, Bundle savedInstanceState) {
 
         super.onViewCreated(view, savedInstanceState);
@@ -92,32 +92,12 @@ public abstract class WebContentFragment extends BaseFragment {
         initButtons();
 
         WebView webView = this.getWebView();
+
         if (webView != null) {
+
             DefaultWebViewClient webViewClient = getWebViewClient();
-            if (webViewClient != null) {
-                webView.setWebViewClient(webViewClient);
-            }
 
-            // This helps us extract the WebView's html content
-            //
-            webView.addJavascriptInterface(webViewClient, webViewClient.getName());
-
-            WebSettings webSettings = webView.getSettings();
-            if (App.isAcceptableVersion(getContext(), 19)) {
-                webSettings.setLayoutAlgorithm(LayoutAlgorithm.TEXT_AUTOSIZING);
-            } else {
-                webSettings.setLayoutAlgorithm(LayoutAlgorithm.NORMAL);
-            }
-            webSettings.setLoadWithOverviewMode(true);
-            webSettings.setJavaScriptEnabled(true);
-            webSettings.setJavaScriptCanOpenWindowsAutomatically(false);
-            if (isDualPaneMode(false)) {
-                multiplyFontSizes(webSettings, 2);
-            }
-            webSettings.setLoadsImagesAutomatically(true);
-            webSettings.setGeolocationEnabled(false);
-            webSettings.setNeedInitialFocus(false);
-            webSettings.setSaveFormData(false);
+            Util.setupInBcMode(webView, webViewClient);
         }
 
         loadData();
@@ -133,20 +113,20 @@ public abstract class WebContentFragment extends BaseFragment {
             s = s.substring(0, maxLen - 3) + "...";
         }
         if (!(s == null || s.isEmpty())) {
-            s = s + "\n\n" + Util.getMessageSuffix(getContext());
+            s = s + "\n\n" + NewsminuteUtil.getMessageSuffix(getContext());
         }
-        Logx.debug(getClass(), "Share content: {0}", s);
+        Logx.getInstance().debug(getClass(), "Share content: {0}", s);
         return s;
     }
 
     public DefaultWebViewClient getWebViewClient() {
-        return new DefaultWebViewClient(null);
+        return new DefaultWebViewClient(null, this);
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        Logx.log(Log.VERBOSE, getClass(), "#onResume");
+        Logx.getInstance().log(Log.VERBOSE, getClass(), "#onResume");
         updateButtonStates();
     }
 
@@ -154,7 +134,7 @@ public abstract class WebContentFragment extends BaseFragment {
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         if(this.getArguments() != null && outState != null) {
-            Logx.log(Log.DEBUG, this.getClass(), "SAVING:: {0}", this.getArguments().keySet());
+            Logx.getInstance().log(Log.DEBUG, this.getClass(), "SAVING:: {0}", this.getArguments().keySet());
             outState.putAll(this.getArguments());
         }
     }
@@ -163,7 +143,7 @@ public abstract class WebContentFragment extends BaseFragment {
     public void onViewStateRestored(Bundle inState) {
         super.onViewStateRestored(inState);
         if(this.getArguments() != null && inState != null) {
-            Logx.log(Log.DEBUG, this.getClass(), "RESTORING:: {0}", this.getArguments().keySet());
+            Logx.getInstance().log(Log.DEBUG, this.getClass(), "RESTORING:: {0}", this.getArguments().keySet());
             this.getArguments().putAll(inState);
         }
     }
@@ -176,7 +156,7 @@ public abstract class WebContentFragment extends BaseFragment {
         loadData();
     }
 
-    protected boolean loadData() {
+    public boolean loadData() {
         return loadData(this.getWebView());
     }
 
@@ -188,7 +168,7 @@ public abstract class WebContentFragment extends BaseFragment {
 
         final int logLevel = Log.VERBOSE;
 
-        Logx.log(logLevel, cls, "{0} options buttons", optionsButtonIds == null ? null : optionsButtonIds.length);
+        Logx.getInstance().log(logLevel, cls, "{0} options buttons", optionsButtonIds == null ? null : optionsButtonIds.length);
 
         if (optionsButtonIds != null && optionsButtonIds.length != 0) {
 
@@ -204,15 +184,15 @@ public abstract class WebContentFragment extends BaseFragment {
 
                     final boolean isSupported = isSupported(buttonId);
 
-                    if(Logx.isLoggable(logLevel))
-                    Logx.log(logLevel, cls, "Button({0}) is supported: {1}", buttonText, isSupported);
+                    if(Logx.getInstance().isLoggable(logLevel))
+                    Logx.getInstance().log(logLevel, cls, "Button({0}) is supported: {1}", buttonText, isSupported);
 
 
                     if (isSupported) {
                         if (listener == null) {
                             listener = getContentOptionsButtonListener();
                         }
-                        Logx.log(logLevel, cls, "Setting listener for Button: ({0})", buttonText);
+                        Logx.getInstance().log(logLevel, cls, "Setting listener for Button: ({0})", buttonText);
                         contentOptionButton.setOnClickListener(listener);
                     } else {
                         contentOptionButton.setVisibility(View.GONE);
@@ -233,47 +213,48 @@ public abstract class WebContentFragment extends BaseFragment {
         }
     }
 
-    protected void updateButtonState(int buttonId) {
-    }
+    protected void updateButtonState(int buttonId) { }
 
     public final int[] getContentOptionButtonIds() {
         return new int[]{R.id.contentoptions_bookmark, R.id.contentoptions_browse, R.id.contentoptions_copy, R.id.contentoptions_delete, R.id.contentoptions_favorite, R.id.contentoptions_share};
     }
 
-    protected boolean loadData(WebView webView) {
+    public boolean loadData(WebView webView) {
+
         // First display loading message before the actual loading begins
-        webView.loadDataWithBaseURL(null, getString(R.string.msg_loading), DataProvider.TYPE_HTML, "utf-8", null);
-        String content = getContentToDisplay();
-        if (content != null && !content.isEmpty()) {
+        Util.loadData(webView, getString(R.string.msg_loading));
+
+        final String content = getContentToDisplay();
+
+        if (this.acceptContentForDisplay(content)) {
             return loadData(webView, content, getContentType(), getContentCharset());
         }
-        String urlString = getLinkToDisplay();
-        if (urlString == null || urlString.isEmpty()) {
+
+        final String urlString = getLinkToDisplay();
+
+        if (this.acceptLinkForDisplay(urlString)) {
+            this.loadData(webView, urlString);
+            return true;
+        }else {
             return false;
         }
-        this.loadData(webView, urlString);
-        return true;
     }
 
-    protected void loadData(WebView webView, String urlString) {
+    public boolean acceptContentForDisplay(String content) {
+        return content != null && !content.isEmpty();
+    }
+
+    public boolean acceptLinkForDisplay(String urlString) {
+        return urlString != null && !urlString.isEmpty();
+    }
+
+    public void loadData(WebView webView, String urlString) {
+
         if (urlString == null || urlString.isEmpty()) {
             throw new NullPointerException();
         }
+
         webView.loadUrl(urlString);
-        DefaultWebViewClient webViewClient = this.getWebViewClient();
-        if(webViewClient != null) {
-
-            String extractedHtml = webViewClient.getExtractedHtmlContent();
-
-            if(extractedHtml != null && !extractedHtml.isEmpty()) {
-
-                this.getArguments().putString(WebContentActivity.EXTRA_STRING_CONTENT_TO_DISPLAY, extractedHtml);
-
-                Logx.log(Log.DEBUG, this.getClass(), "Updated contents to display with HTML from URL: {0}", urlString);
-
-                webViewClient.clearExtractedHtmlContent();
-            }
-        }
     }
 
     protected boolean loadData(WebView webView, String content, String contentType, String charset) {
@@ -282,47 +263,135 @@ public abstract class WebContentFragment extends BaseFragment {
         }
         try {
             content = format(content);
-            if (contentType == null) {
-                contentType = DataProvider.TYPE_HTML;
-            }
-            if (charset == null) {
-                charset = "utf-8";
-            }
-            webView.loadDataWithBaseURL(null, content, contentType, charset, null);
-            return true;
+            return Util.loadData(webView, content, contentType, charset);
         } catch (Exception e) {
-            try {
-                Logx.log(getClass(), e);
-                webView.loadData(content, contentType, charset);
-                return true;
-            } catch (Exception e1) {
-                Logx.log(getClass(), e1);
-                return false;
+            Logx.getInstance().log(getClass(), e);
+            return false;
+        }
+    }
+
+    @Override
+    public void onHtmlExtracted(WebViewClientImpl webViewClient, String url, String extractedHtml) {
+
+        if(extractedHtml != null && !extractedHtml.isEmpty()) {
+
+            Bundle bundle = this.getArguments();
+            if(bundle == null) {
+                bundle = new Bundle();
+                this.setArguments(bundle);
             }
+
+            bundle.putString(WebContentActivity.EXTRA_STRING_CONTENT_TO_DISPLAY, extractedHtml);
+
+            Logx.getInstance().log(Log.DEBUG, this.getClass(), "Updated contents to display with HTML from URL: {0}", url);
         }
     }
 
     public String format(String bodyHTML) {
-        if (bodyHTML.contains("<html") || bodyHTML.contains("<HTML")) {
-            return bodyHTML.replaceFirst("(<head>|<HEAD>)", "<head><style>img{max-width: 100%; width:auto; height: auto;}</style>");
+        bodyHTML = this.addStyle(bodyHTML);
+        bodyHTML = this.addGoToSourceLink(bodyHTML);
+        return bodyHTML;
+    }
+
+    private String addStyle(String bodyHTML) {
+        final String style = this.getStyle();
+        if(style == null) {
+            return bodyHTML;
+        }else{
+            String updated = this.insert(bodyHTML, null, "<head>", style);
+            if(updated != null){
+                Logx.getInstance().log(Log.VERBOSE, this.getClass(), "Added style to existing head");
+                return updated;
+            }
+            Logx.getInstance().log(Log.VERBOSE, this.getClass(), "Created head and added style");
+            return "<html>" + "<head>"+style+"<title>"+this.getContext().getString(R.string.app_label)+"</title></head>" + "<body>" + bodyHTML + "</body></html>";
         }
-        return "<html>" + "<head><style>img{max-width: 100%; width:auto; height: auto;}</style><title>Auto Generated</title></head>" + "<body>" + bodyHTML + "</body></html>";
+    }
+
+    private String addGoToSourceLink(String bodyHTML) {
+        final String goToSourceLink = this.getGoToSourceLink();
+        if(goToSourceLink == null) {
+            return bodyHTML;
+        }else{
+            String updated = this.insert(bodyHTML, goToSourceLink, "</body>", null);
+            if(updated != null){
+                return updated;
+            }
+            return goToSourceLink + bodyHTML;
+        }
+    }
+
+    public String getGoToSourceLink() {
+        final String link = this.getLinkToDisplay();
+        if(link == null) {
+            return null;
+        }else {
+//            return "<p style=\"width:100%; text-align:center;\"><a href=\" " + link + " \">"+this.getContext().getString(R.string.msg_gotosource)+"</a></p>";
+            // &hellip;    &#8230;
+            return "&hellip;&nbsp;[<a href=\" " + link + " \">"+this.getContext().getString(R.string.msg_readfullstory)+"</a>]";
+        }
+    }
+
+    public String getStyle() {
+        if(this.isDualPaneMode(false)) {
+            return "<style>body {font-size:1.6em; line-height: 150%;} img{max-width: 100%; width:auto; height: auto;} </style>";
+        }else{
+            return "<style>body {font-size:1.4em; line-height: 150%;} img{max-width: 100%; width:auto; height: auto;} </style>";
+        }
+    }
+
+    /**
+     * @param text The text containing the <tt>target</tt> before which a <tt>prefix</tt> will be inserted
+     * @param prefix The <tt>prefix</tt> to insert before the <tt>target</tt> contained within the text
+     * @param target The <tt>target</tt> before which a <tt>prefix</tt> will be inserted
+     * @return The updated text or null if the <tt>prefix</tt> was not inserted
+     */
+    private String insert(String text, String prefix, String target, String suffix) {
+        int n = text.indexOf(target);
+        if(n == -1) {
+            target = target.toUpperCase();
+            n = text.indexOf(target);
+        }
+        if(n != -1) {
+            if(suffix != null) {
+                text = text.replaceFirst(target, target + suffix);
+            }
+            if(prefix != null) {
+                text = text.replaceFirst(target, prefix + target);
+            }
+            return text;
+        }
+        return null;
     }
 
     public String getLinkToDisplay() {
-        return getArguments().getString(WebContentActivity.EXTRA_STRING_LINK_TO_DISPLAY);
+        return this.getString(WebContentActivity.EXTRA_STRING_LINK_TO_DISPLAY, null);
     }
 
     public String getContentToDisplay() {
-        return getArguments().getString(WebContentActivity.EXTRA_STRING_CONTENT_TO_DISPLAY);
+        return this.getString(WebContentActivity.EXTRA_STRING_CONTENT_TO_DISPLAY, null);
     }
 
     public String getContentType() {
-        return getArguments().getString(WebContentActivity.EXTRA_STRING_CONTENT_TYPE);
+        return this.getString(WebContentActivity.EXTRA_STRING_CONTENT_TYPE, "text/html");
     }
 
     public String getContentCharset() {
-        return getArguments().getString(WebContentActivity.EXTRA_STRING_CONTENT_CHARSET);
+        return this.getString(WebContentActivity.EXTRA_STRING_CONTENT_CHARSET, "utf-8");
+    }
+
+    public String getString(String key, String defaultValue) {
+        String output;
+        Bundle bundle = this.getArguments();
+        if(bundle == null || bundle.isEmpty()) {
+            output = defaultValue;
+        }else{
+            output = bundle.getString(key);
+            if(output == null) {
+                output = defaultValue;
+            }
+        }
+        return output;
     }
 
     public com.looseboxes.idisc.common.listeners.ContentOptionsButtonListener getContentOptionsButtonListener() {
@@ -337,10 +406,10 @@ public abstract class WebContentFragment extends BaseFragment {
         return defaultValue;
     }
 
-    private void multiplyFontSizes(WebSettings webSettings, int factor) {
-        webSettings.setDefaultFontSize(webSettings.getDefaultFontSize() * factor);
-        webSettings.setDefaultFixedFontSize(webSettings.getDefaultFixedFontSize() * factor);
-        webSettings.setMinimumFontSize(webSettings.getMinimumFontSize() * factor);
-        webSettings.setMinimumLogicalFontSize(webSettings.getMinimumLogicalFontSize() * factor);
+    private void multiplyFontSizes(WebSettings webSettings, float factor) {
+        webSettings.setDefaultFontSize( (int)(webSettings.getDefaultFontSize() * factor) );
+//        webSettings.setDefaultFixedFontSize( (int)(webSettings.getDefaultFixedFontSize() * factor) );
+//        webSettings.setMinimumFontSize( (int)(webSettings.getMinimumFontSize() * factor) );
+//        webSettings.setMinimumLogicalFontSize( (int)(webSettings.getMinimumLogicalFontSize() * factor) );
     }
 }

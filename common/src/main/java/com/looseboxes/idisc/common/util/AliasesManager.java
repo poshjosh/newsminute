@@ -1,67 +1,48 @@
 package com.looseboxes.idisc.common.util;
 
 import android.content.Context;
-import com.looseboxes.idisc.common.asynctasks.DownloadToLocalCache;
+
+import com.bc.android.core.io.IOWrapper;
+import com.bc.android.core.io.JsonObjectIO;
+import com.bc.android.core.util.Util;
 import com.looseboxes.idisc.common.io.FileIO;
-import com.looseboxes.idisc.common.io.IOWrapper;
-import com.looseboxes.idisc.common.io.JsonObjectIO;
+
 import org.json.simple.JSONObject;
 
 public class AliasesManager extends StaticResourceManager<JSONObject> {
-
-    private boolean noUI;
 
     public enum AliasType {
         Categories,
         Content
     }
 
-    private final AliasType aliasType;
-
-    private final String filename;
+    private AliasType aliasType;
 
     public AliasesManager(Context context, long updateIntervalMillis, AliasType aliasType) {
-        super(context, updateIntervalMillis, FileIO.getLastDownloadTimePreferenceName(AliasesManager.class, aliasType));
-        if(aliasType == null) {
-            throw new NullPointerException();
-        }
+        super(context, updateIntervalMillis, false,
+                "com.looseboxes.idisc.common.AliasesManager." + aliasType + ".lastDownloadTime.long",
+                FileIO.getAliasesKey(aliasType));
+        Util.requireNonNull(context);
+        Util.requireNonNull(aliasType);
         this.aliasType = aliasType;
-        this.filename = FileIO.getAliasesFilename(getAliasType());
+    }
+
+    public void destroy() {
+        super.destroy();
+        this.aliasType = null;
     }
 
     public final AliasType getAliasType() {
         return aliasType;
     }
 
-    public String getFilename() {
-        return filename;
-    }
-
     protected IOWrapper<JSONObject> createIOWrapper(Context context) {
-        return new JsonObjectIO(context, getFilename());
-    }
-
-    public void update(IOWrapper<JSONObject> ioWrapper) {
-        setLastDownloadTime(System.currentTimeMillis());
-        DownloadToLocalCache<JSONObject> downloader = new DownloadToLocalCache(getContext(), getOutputkey(), ioWrapper);
-        downloader.setNoUI(this.noUI);
-        downloader.execute();
+        Util.requireNonNull(aliasType);
+        return new JsonObjectIO(context, "com.looseboxes.idisc.common.AliasesManager." + aliasType + ".json");
     }
 
     public String[] getAliases(String content) {
-        JSONObject aliases = (JSONObject) getTarget();
+        JSONObject aliases = getTarget();
         return aliases == null ? null : (String[]) aliases.get(content);
-    }
-
-    public String getOutputkey() {
-        return FileIO.getAliasesKey(getAliasType());
-    }
-
-    public boolean isNoUI() {
-        return this.noUI;
-    }
-
-    public void setNoUI(boolean noUI) {
-        this.noUI = noUI;
     }
 }

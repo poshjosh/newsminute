@@ -1,41 +1,45 @@
 package com.looseboxes.idisc.common.asynctasks;
 
+import android.content.Context;
+
 import com.looseboxes.idisc.common.R;
 import com.looseboxes.idisc.common.User;
 import com.looseboxes.idisc.common.io.FileIO;
 import com.looseboxes.idisc.common.jsonview.FeedhitNames;
-import java.util.HashMap;
-import java.util.Map;
+import com.looseboxes.idisc.common.util.NewsminuteUtil;
+
 import org.json.simple.JSONArray;
 
-public abstract class CommentDownloadTask extends DefaultReadTask<JSONArray> {
-    public CommentDownloadTask(Object feedid, int offset, int limit) {
-        Map<String, String> params = new HashMap(20, 0.75f);
+public abstract class CommentDownloadTask extends AbstractReadTask<JSONArray> {
+
+    public CommentDownloadTask(Context context, Object feedid, int offset, int limit) {
+
+        super(context, context.getString(R.string.err_loadingcomments));
+
+        this.addOutputParameters(User.getInstance().getOutputParameters(context));
+
         if (offset > 0) {
-            params.put("offset", Integer.toString(offset));
+            this.addOutputParameter("offset", Integer.toString(offset));
         }
         if (limit > 0) {
-            params.put("limit", Integer.toString(limit));
+            this.addOutputParameter("limit", Integer.toString(limit));
         }
-        params.put(FeedhitNames.feedid, feedid.toString());
-        User.getInstance().addParameters(getContext(), params);
-        setOutputParameters(params);
+        this.addOutputParameter(FeedhitNames.feedid, feedid.toString());
+
         setNoUI(true);
-    }
-
-    public String getErrorMessage() {
-        return getContext().getString(R.string.err_loadingcomments);
-    }
-
-    public boolean isRemote() {
-        return true;
     }
 
     public String getOutputKey() {
         return FileIO.getCommentskey();
     }
 
-    public String getLocalFilename() {
-        return FileIO.getCommentsFilename();
+    @Override
+    protected boolean isNetworkAvailable() {
+        return NewsminuteUtil.isPreferredNetworkConnectedOrConnecting(this.getContext());
+    }
+
+    @Override
+    protected String getNetworkUnavailableMessage() {
+        return NewsminuteUtil.getNetworkUnavailableMessage(this.getContext());
     }
 }

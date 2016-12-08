@@ -16,8 +16,8 @@ import android.widget.TextView;
 import com.looseboxes.idisc.common.App;
 import com.looseboxes.idisc.common.R;
 import com.looseboxes.idisc.common.io.FileIO;
-import com.looseboxes.idisc.common.notice.Popup;
-import com.looseboxes.idisc.common.util.Logx;
+import com.bc.android.core.notice.Popup;
+import com.bc.android.core.util.Logx;
 import com.looseboxes.idisc.common.util.PropertiesManager;
 
 import java.io.File;
@@ -47,14 +47,14 @@ public class ViewLogFilesActivity extends Activity {
                 Object item = parent.getItemAtPosition(position);
                 for (int i = 0; i < this.val$entries.length; i++) {
                     if (this.val$entries[i].equals(item.toString())) {
-                        Logx.debug(getClass(), "Found selection:\n" + this.val$entries[i]);
+                        Logx.getInstance().debug(getClass(), "Found selection:\n" + this.val$entries[i]);
                         ViewLogFilesActivity.this.selectedFilename = this.val$values[i];
                         ViewLogFilesActivity.this.selectedItem = item;
                         return;
                     }
                 }
             } catch (Exception e) {
-                Logx.log(getClass(), e);
+                Logx.getInstance().log(getClass(), e);
             }
         }
 
@@ -63,7 +63,7 @@ public class ViewLogFilesActivity extends Activity {
     }
 
     public void onCreate(Bundle savedInstanceState) {
-        Logx.log(Log.VERBOSE, getClass(), "#onCreate");
+        Logx.getInstance().log(Log.VERBOSE, getClass(), "#onCreate");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.viewlogfiles);
         this.spinner = (Spinner) findViewById(R.id.viewlogfiles_spinner);
@@ -81,22 +81,22 @@ public class ViewLogFilesActivity extends Activity {
         this.okButton.setOnClickListener(new OnClickListener() {
             public void onClick(View v) {
                 try {
-                    Logx.debug(getClass(), "Selected filename:\n" + ViewLogFilesActivity.this.selectedFilename);
+                    Logx.getInstance().debug(getClass(), "Selected filename:\n" + ViewLogFilesActivity.this.selectedFilename);
                     if (ViewLogFilesActivity.this.selectedFilename != null) {
-                        File file = Logx.getLogFile(ViewLogFilesActivity.this.selectedFilename);
+                        File file = Logx.getInstance().getLogFile(ViewLogFilesActivity.this.selectedFilename);
                         if (file == null || !file.exists()) {
-                            Popup.show(ViewLogFilesActivity.this, "Does not exist:\n" + ViewLogFilesActivity.this.selectedFilename, 1);
+                            Popup.getInstance().show(ViewLogFilesActivity.this, "Does not exist:\n" + ViewLogFilesActivity.this.selectedFilename, 1);
                             return;
                         }
-                        String contents = FileIO.readFile(file);
+                        String contents = new FileIO().readFile(file);
                         if (contents == null || contents.isEmpty()) {
-                            Popup.show(ViewLogFilesActivity.this, (Object) "Selected log file is empty", 1);
+                            Popup.getInstance().show(ViewLogFilesActivity.this, (Object) "Selected log file is empty", 1);
                         } else {
                             ((TextView) ((ScrollView) ViewLogFilesActivity.this.findViewById(R.id.viewlogfiles_scrollview)).getChildAt(0)).setText(contents);
                         }
                     }
                 } catch (Exception e) {
-                    Logx.log(getClass(), e);
+                    Logx.getInstance().log(getClass(), e);
                 }
             }
         });
@@ -106,13 +106,13 @@ public class ViewLogFilesActivity extends Activity {
         int logFileCount = App.getPropertiesManager(this).getInt(PropertiesManager.PropertyName.logFileCount);
         List<File> files = new LinkedList<>(); // Linked list very important
         for(int i=0; i<logFileCount; i++) {
-            File file = Logx.getLogFile(i);
+            File file = Logx.getInstance().getLogFile(i);
             if(file == null || !file.exists()) {
                 break;
             }
             files.add(file);
         }
-        Logx.debug(this.getClass(), "Files: {0}", files);
+        Logx.getInstance().debug(this.getClass(), "Files: {0}", files);
         return files;
     }
 
@@ -121,7 +121,7 @@ public class ViewLogFilesActivity extends Activity {
         for (int i = 0; i < entries.length; i++) {
             entries[i] = ((File) files.get(i)).getName();
         }
-        Logx.debug(getClass(), "Spinner entries: {0}", Arrays.toString(entries));
+        Logx.getInstance().debug(getClass(), "Spinner entries: {0}", Arrays.toString(entries));
         return entries;
     }
 
@@ -130,7 +130,7 @@ public class ViewLogFilesActivity extends Activity {
         for (int i = 0; i < values.length; i++) {
             values[i] = ((File) files.get(i)).getName();
         }
-        Logx.debug(getClass(), "Spinner values: {0}", Arrays.toString(values));
+        Logx.getInstance().debug(getClass(), "Spinner values: {0}", Arrays.toString(values));
         return values;
     }
 }

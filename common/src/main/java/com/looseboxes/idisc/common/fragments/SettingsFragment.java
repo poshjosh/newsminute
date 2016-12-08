@@ -2,31 +2,69 @@ package com.looseboxes.idisc.common.fragments;
 
 import android.content.Context;
 import android.os.Bundle;
-import android.preference.MultiSelectListPreference;
 import android.preference.Preference;
 import android.preference.Preference.OnPreferenceChangeListener;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceScreen;
+import android.view.View;
+
 import com.looseboxes.idisc.common.App;
 import com.looseboxes.idisc.common.R;
 import com.looseboxes.idisc.common.asynctasks.FeedDownloadManager;
-import com.looseboxes.idisc.common.service.ServiceScheduler;
+import com.looseboxes.idisc.common.service.ServiceSchedulerImpl;
 import com.looseboxes.idisc.common.service.StartFeedLoadServiceReceiver;
-import com.looseboxes.idisc.common.util.Logx;
-import com.looseboxes.idisc.common.util.Pref;
+import com.bc.android.core.util.Logx;
+import com.looseboxes.idisc.common.ui.CategoryPreferences;
+import com.looseboxes.idisc.common.ui.SourcePreferences;
 import com.looseboxes.idisc.common.util.PropertiesManager.PropertyName;
-import java.util.Map;
-import java.util.Set;
 
 public class SettingsFragment extends PreferenceFragment implements OnPreferenceChangeListener {
+
+    public static final String EXTRA_BOOLEAN_DISPLAY_CATEGORIES = SettingsFragment.class.getName()+".displayCategories.extraBoolean";
+
+    private CategoryPreferences categoryPreferences;
+
+    private SourcePreferences sourcePreferences;
+
     public void onCreate(Bundle icicle) {
+
         super.onCreate(icicle);
+
         addPreferencesFromResource(R.xml.preferences);
+
         updateAutoSearchPreference();
+
         PreferenceScreen root = getPreferenceScreen();
-        addCategoryPreference(root, R.string.pref_categories_id, R.string.pref_categories_title, R.string.pref_categories_summary, R.string.pref_categories_dialogtitle);
-        addCategoryPreference(root, R.string.pref_sources_id, R.string.pref_sources_title, R.string.pref_sources_summary, R.string.pref_sources_dialogtitle);
+
+        this.categoryPreferences = new CategoryPreferences(this.getContext());
+
+        addPreference(root, this.categoryPreferences);
+
+        this.sourcePreferences = new SourcePreferences(this.getContext());
+
+        addPreference(root, this.sourcePreferences);
+
         root.findPreference(getString(R.string.pref_syncinterval_id)).setOnPreferenceChangeListener(this);
+        root.findPreference(getString(R.string.pref_categories_id)).setOnPreferenceChangeListener(this);
+//        root.setOnPreferenceChangeListener(this);
+    }
+
+    @Override
+    public void onViewCreated(View view, Bundle savedInstanceState) {
+
+        super.onViewCreated(view, savedInstanceState);
+
+        final boolean displayCategories = this.isDisplayCategories(false);
+
+        if(displayCategories) {
+            try {
+
+                this.categoryPreferences.show();
+
+            }catch(Exception e) {
+                Logx.getInstance().log(this.getClass(), e);
+            }
+        }
     }
 
     public Context getContext() {
@@ -44,87 +82,71 @@ public class SettingsFragment extends PreferenceFragment implements OnPreference
                 pref.setDefaultValue(defaultValue);
             }
         } catch (Exception e) {
-            Logx.log(getClass(), e);
+            Logx.getInstance().log(getClass(), e);
         }
     }
 
-    private boolean addCategoryPreference(PreferenceScreen screen, int idRes, int titleRes, int summaryRes, int dialogTitleRes) {
-        MultiSelectListPreference listPreference = createCategoryPreference(idRes, titleRes, summaryRes, dialogTitleRes);
-        if (listPreference != null) {
-            return screen.addPreference(listPreference);
+    private boolean addPreference(PreferenceScreen screen, Preference preference) {
+        if (preference != null) {
+            return screen.addPreference(preference);
         }
         return false;
-    }
-
-    private MultiSelectListPreference createCategoryPreference(int idRes, int titleRes, int summaryRes, int dialogTitleRes) {
-        try {
-            String key = getString(idRes);
-            MultiSelectListPreference listPref = new MultiSelectListPreference(getActivity());
-            listPref.setKey(key);
-            listPref.setTitle(titleRes);
-            listPref.setSummary(summaryRes);
-            listPref.setDialogTitle(dialogTitleRes);
-            CharSequence[] values = getValues(idRes);
-            listPref.setEntries(values);
-            listPref.setEntryValues(values);
-            return listPref;
-        } catch (Exception e) {
-            Logx.log(getClass(), e);
-            return null;
-        }
-    }
-
-    private CharSequence[] getValues(int prefKeyRes) {
-        if (prefKeyRes == R.string.pref_categories_id) {
-            Set<String> categories = App.getPropertiesManager(getContext()).getSet(PropertyName.categories);
-            return (CharSequence[]) categories.toArray(new CharSequence[categories.size()]);
-        } else if (prefKeyRes == R.string.pref_sources_id) {
-            Map sources = App.getPropertiesManager(getContext()).getMap(PropertyName.sources);
-            return (CharSequence[]) sources.values().toArray(new CharSequence[sources.size()]);
-        } else {
-            throw new UnsupportedOperationException();
-        }
     }
 
     public boolean onPreferenceChange(Preference preference, Object newValue) {
         try {
             return _onPreferenceChange(preference, newValue);
         } catch (Exception e) {
-            Logx.log(getClass(), e);
+            Logx.getInstance().log(getClass(), e);
             return true;
         }
     }
 
     private boolean _onPreferenceChange(Preference preference, Object newValue) {
+
         Context context = preference.getContext();
-        if (preference.getKey() == context.getString(R.string.pref_syncinterval_id)) {
-            long delay;
+
+        final String preferenceKey = preference.getKey();
+
+        if (context.getString(R.string.pref_syncinterval_id).equals(preferenceKey)) {
+
+            final int delay;
+            final long updatedFeedDownloadInterval = Long.parseLong(newValue.toString());
             long lastDownloadTime = FeedDownloadManager.getLastDownloadTime(context, -1);
             if (lastDownloadTime == -1) {
                 delay = 500;
             } else {
                 long periodSinceLastDownload = System.currentTimeMillis() - lastDownloadTime;
-                long updatedFeedDownloadInterval = Long.parseLong(newValue.toString());
                 if (periodSinceLastDownload < updatedFeedDownloadInterval) {
-                    delay = updatedFeedDownloadInterval - periodSinceLastDownload;
+                    delay = (int)(updatedFeedDownloadInterval - periodSinceLastDownload);
                 } else {
                     delay = 500;
                 }
             }
-            ServiceScheduler.scheduleDefault(StartFeedLoadServiceReceiver.class, context, (int) delay);
+
+            new ServiceSchedulerImpl().scheduleDefault(StartFeedLoadServiceReceiver.class, context, delay, updatedFeedDownloadInterval);
+
+        }else if(context.getString(R.string.pref_categories_id).equals(preferenceKey)) {
+
+            if(this.isDisplayCategories(false)) {
+
+                this.getActivity().finish();
+            }
         }
 
         return true;
     }
 
-    private void updateCategoryPreferences(int prefKeyRes) {
-        try {
-            MultiSelectListPreference listPref = (MultiSelectListPreference) findPreference(getString(prefKeyRes));
-            CharSequence[] values = getValues(prefKeyRes);
-            listPref.setEntries(values);
-            listPref.setEntryValues(values);
-        } catch (Exception e) {
-            Logx.log(getClass(), e);
-        }
+    private boolean isDisplayCategories(boolean defaultValue) {
+        Bundle bundle = this.getArguments();
+        return bundle == null ? defaultValue : bundle.getBoolean(EXTRA_BOOLEAN_DISPLAY_CATEGORIES, false);
+    }
+
+    public CategoryPreferences getCategoryPreferences() {
+        return categoryPreferences;
+    }
+
+    public SourcePreferences getSourcePreferences() {
+        return sourcePreferences;
     }
 }

@@ -9,7 +9,7 @@ import android.widget.EditText;
 import com.looseboxes.idisc.common.R;
 import com.looseboxes.idisc.common.asynctasks.Requestpassword;
 import com.looseboxes.idisc.common.listeners.AbstractOnClickListenerForAsyncTask;
-import com.looseboxes.idisc.common.util.Logx;
+import com.bc.android.core.util.Logx;
 
 public class ForgotPasswordActivity extends AbstractSingleTopActivity {
 
@@ -21,9 +21,9 @@ public class ForgotPasswordActivity extends AbstractSingleTopActivity {
                 super(x0, x1);
             }
 
-            protected void onPostExecute(String contents) {
+            protected void onPostExecute(String download) {
                 try {
-                    super.onPostExecute(contents);
+                    super.onPostExecute(download);
                 } finally {
                     ForgotPasswordActivity.this.finish();
                 }
@@ -53,7 +53,7 @@ public class ForgotPasswordActivity extends AbstractSingleTopActivity {
         }
     }
 
-    public int getContentView() {
+    public int getContentViewId() {
         return R.layout.forgotpassword;
     }
 
@@ -62,7 +62,7 @@ public class ForgotPasswordActivity extends AbstractSingleTopActivity {
             super.doCreate(savedInstanceState);
             doCreate();
         } catch (Exception e) {
-            Logx.debug(getClass(), e);
+            Logx.getInstance().debug(getClass(), e);
         }
     }
 

@@ -1,23 +1,24 @@
 package com.looseboxes.idisc.common.handlers;
 
 import android.app.Activity;
-import android.content.Context;
 import android.content.res.Resources;
+import android.util.Log;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.LinearLayout.LayoutParams;
+
+import com.bc.android.core.util.Logx;
 import com.looseboxes.idisc.common.R;
-import java.lang.reflect.InvocationTargetException;
+
 import java.util.ArrayList;
 import java.util.List;
 
 public abstract class ButtonGroupHandler<T extends Button> {
+
     private List<T> _btns_accessViaGetter;
 
     public abstract Activity getActivity();
-
-    public abstract Class<T> getButtonClass();
 
     public abstract List<String> getButtonTexts();
 
@@ -31,9 +32,10 @@ public abstract class ButtonGroupHandler<T extends Button> {
         return null;
     }
 
-    public T createNew() throws NoSuchMethodException, IllegalAccessException, InstantiationException, InvocationTargetException {
-        return (T) getButtonClass().getConstructor(new Class[]{Context.class}).newInstance(new Object[]{getActivity()});
-    }
+    public abstract T createNew();
+//    public T createNew() throws NoSuchMethodException, IllegalAccessException, InstantiationException, InvocationTargetException {
+//        return (T) getButtonClass().getConstructor(new Class[]{Context.class}).newInstance(new Object[]{getActivity()});
+//    }
 
     public T initButton(String buttonText) {
         return getButton(buttonText, true);
@@ -86,9 +88,11 @@ public abstract class ButtonGroupHandler<T extends Button> {
                 i = 0;
                 while (i < size) {
                     try {
+                        final String buttonText = categories.get(i);
+                        Logx.getInstance().log(Log.VERBOSE, this.getClass(), "Creating button with text: {0}", buttonText);
                         T cb = createNew();
                         cb.setLayoutParams(params);
-                        cb.setText((String) categories.get(i));
+                        cb.setText(buttonText);
                         formatButton(cb, res);
                         OnClickListener listener = getOnClickListener(cb);
                         if (listener != null) {

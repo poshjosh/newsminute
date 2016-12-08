@@ -9,13 +9,14 @@ import com.looseboxes.idisc.common.App;
 import com.looseboxes.idisc.common.R;
 import com.looseboxes.idisc.common.util.Pref;
 import com.looseboxes.idisc.common.util.PropertiesManager.PropertyName;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 
 public class SelectSourcesActivity extends AbstractSelectOptions {
 
-    private Set _c_accessViaGetter;
+    public SelectSourcesActivity() { }
 
     @Override
     protected void doCreate(Bundle icicle) {
@@ -42,9 +43,7 @@ public class SelectSourcesActivity extends AbstractSelectOptions {
     }
 
     public Set getOptions() {
-        if (this._c_accessViaGetter == null) {
-            this._c_accessViaGetter = Pref.getAvailableSources(this, new HashSet(App.getPropertiesManager(this).getMap(PropertyName.sources).values()));
-        }
-        return this._c_accessViaGetter;
+        final Set options = Pref.getAvailableSources(this, null);
+        return options == null ? new HashSet(App.getPropertiesManager(this).getMap(PropertyName.sources).values()) : options;
     }
 }

@@ -3,83 +3,79 @@ package com.looseboxes.idisc.common.activities;
 import android.app.SearchManager;
 import android.content.Context;
 import android.content.Intent;
-import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
+import android.widget.ListView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
-import com.looseboxes.idisc.common.App;
+import android.widget.Toast;
+
+import com.bc.android.core.util.Util;
 import com.looseboxes.idisc.common.DefaultApplication;
 import com.looseboxes.idisc.common.R;
-import com.looseboxes.idisc.common.asynctasks.AsyncReadTask.ProgressStatus;
 import com.looseboxes.idisc.common.asynctasks.FeedDownloadManager;
 import com.looseboxes.idisc.common.asynctasks.FeedDownloadTask;
 import com.looseboxes.idisc.common.feedfilters.FeedFilter;
-import com.looseboxes.idisc.common.feedfilters.FeedFilterWithBundle;
+import com.looseboxes.idisc.common.fragments.DefaultListFragment;
 import com.looseboxes.idisc.common.io.FileIO;
 import com.looseboxes.idisc.common.jsonview.Feed;
-import com.looseboxes.idisc.common.jsonview.FeedSearcher;
-import com.looseboxes.idisc.common.jsonview.FeedSearcher.FeedSearchResult;
-import com.looseboxes.idisc.common.notice.Popup;
-import com.looseboxes.idisc.common.util.Logx;
-import com.looseboxes.idisc.common.util.PropertiesManager.PropertyName;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
+import com.looseboxes.idisc.common.search.FeedSearcherFeedid;
+import com.bc.android.core.notice.Popup;
+import com.bc.android.core.util.Logx;
+
 import org.json.simple.JSONObject;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+
 public class SearchableActivity extends DefaultFeedListActivity {
-    public static String EXTRA_STRING_FEEDFILTER_CLASSNAME;
-    private String query;
 
-    /* renamed from: com.looseboxes.idisc.common.activities.SearchableActivity.2 */
-    class AnonymousClass2 extends FeedDownloadTask {
-        final /* synthetic */ Button val$button;
+    public static String EXTRA_STRING_FEEDFILTER_CLASSNAME = SearchableActivity.class.getName() + ".FeedFilterClassName";
 
-        AnonymousClass2(Context x0, Button button) {
-            super(x0);
-            this.val$button = button;
+    class SearchFeedsOnServerTask extends FeedDownloadTask {
+
+        private final String query;
+        private final TextView textView;
+
+        SearchFeedsOnServerTask(Context context, TextView textView, String query) {
+            super(context);
+            this.query = query;
+            this.textView = textView;
+            this.setProgressBarIndeterminate((ProgressBar)SearchableActivity.this.findViewById(R.id.searchresults_progressbar_indeterminate));
+            this.setProgressBarLinear((ProgressBar)SearchableActivity.this.findViewById(R.id.searchresults_progressbar_linear));
         }
 
-        protected void onProgressUpdate(Object... values) {
-            if (values != null && values.length > 0) {
-                if (values[0] instanceof ProgressStatus) {
-                    int percent = getProgressPercent((ProgressStatus)values[0]);
-                    this.val$button.setText(SearchableActivity.this.getString(R.string.msg_loading) + ": " + percent + "%");
-                    if (percent >= 100) {
-                        this.val$button.setText(SearchableActivity.this.getString(R.string.msg_done));
-                        return;
-                    }
-                    return;
-                }
-                Logx.debug(getClass(), values[0]);
+        @Override
+        protected void doOnProgressUpdate(ProgressStatus progressStatus) {
+
+            final int percent = getProgressPercent(progressStatus);
+
+            final String message;
+            if(percent < 100) {
+                message = this.getContext().getString(R.string.msg_loading) + ": " + percent + '%';
+            }else{
+                message = this.getContext().getString(R.string.msg_done);
             }
+
+            this.textView.setText(message);
+        }
+
+        public void onSuccess(List download) {
+            SearchableActivity.this.displayFeeds(download, this.query, true);
         }
 
         public String getOutputKey() {
             return FileIO.getSearchfeedskey();
         }
-
-        public void onSuccess(List download) {
-            if (!(download == null || download.isEmpty())) {
-                SearchableActivity.this.getFeedDisplayHandler().displayFeeds(download);
-            }
-            SearchableActivity.this.updateMessage((download == null ? null : Integer.valueOf(download.size())).intValue(), SearchableActivity.this.query);
-        }
-
-        public Context getContext() {
-            return SearchableActivity.this;
-        }
     }
 
-    static {
-        EXTRA_STRING_FEEDFILTER_CLASSNAME = SearchableActivity.class.getName() + ".FeedFilterClassName";
-    }
-
-    public FeedFilter getFeedFilter() {
-        FeedFilterWithBundle feedFilter = ((DefaultApplication) getApplication()).createFeedFilter(this);
-        return feedFilter != null ? feedFilter : super.getFeedFilter();
+    public FeedFilter createFeedFilter() {
+        FeedFilter feedFilter = ((DefaultApplication) getApplication()).createFeedFilter(this);
+        return feedFilter != null ? feedFilter : super.createFeedFilter();
     }
 
     public int getTabId() {
@@ -90,99 +86,190 @@ public class SearchableActivity extends DefaultFeedListActivity {
         return null;
     }
 
-    public int getContentView() {
+    public int getContentViewId() {
         return R.layout.searchresults;
     }
 
-    protected void onPostCreate(Bundle savedInstanceState) {
-        try {
-            super.onPostCreate(savedInstanceState);
-            ((Button) findViewById(R.id.searchresults_serveroption)).setOnClickListener(new OnClickListener() {
-                public void onClick(View v) {
-                    try {
-                        SearchableActivity.this.downloadFeeds();
-                    } catch (Exception e) {
-                        Popup.show(SearchableActivity.this, (Object) "Failed to update searchresults", 1);
-                        Logx.log(getClass(), e);
+    protected void onNoResult(Collection<JSONObject> items) {
+
+        Popup.getInstance().show(this, R.string.msg_nosearchresult, Toast.LENGTH_SHORT);
+    }
+
+    protected void handleIntent(final Intent intent) {
+
+        if ("android.intent.action.SEARCH".equals(intent.getAction())) {
+
+            final ProgressBar progressBarIndeterminate = (ProgressBar)this.findViewById(R.id.searchresults_progressbar_indeterminate);
+            final ProgressBar progressBarLinear = (ProgressBar)this.findViewById(R.id.searchresults_progressbar_linear);
+
+            try {
+
+                this.setVisibility(progressBarIndeterminate, ProgressBar.VISIBLE);
+                this.setVisibility(progressBarLinear, ProgressBar.VISIBLE);
+
+                new Thread() {
+                    @Override
+                    public void run() {
+                        try {
+                            SearchableActivity.this.handleSearchIntent(intent);
+                        }catch(Exception e) {
+                            Logx.getInstance().log(this.getClass(), e);
+                        }finally {
+                            SearchableActivity.this.setVisibility(progressBarIndeterminate, ProgressBar.GONE);
+                            SearchableActivity.this.setVisibility(progressBarLinear, ProgressBar.GONE);
+                        }
                     }
+                }.start();
+            }catch(RuntimeException e){
+
+                this.setVisibility(progressBarIndeterminate, ProgressBar.GONE);
+                this.setVisibility(progressBarLinear, ProgressBar.GONE);
+
+                throw e;
+            }
+        }
+    }
+
+    protected void handleSearchIntent(Intent intent) {
+
+        final DefaultListFragment listFragment = this.getListFragment();
+
+        final ListView listView = listFragment.getListView();
+
+        final ProgressBar progressBarLinear = (ProgressBar)this.findViewById(R.id.searchresults_progressbar_linear);
+
+        this.setProgress(listView, progressBarLinear, 10);
+
+        listFragment.setMessageToDisplayWhileLoading(getString(R.string.msg_searchingfeeds));
+
+        String query = intent.getStringExtra(SearchManager.QUERY);
+
+        Logx.getInstance().log(Log.DEBUG, getClass(), "Handling search intent, query: {0}", query);
+
+        final Button serveroption = (Button)findViewById(R.id.searchresults_serveroption);
+        this.setText(listView, serveroption, R.string.msg_loadmoreresults);
+
+        this.addSearchOnServerListenerForQuery(serveroption, query);
+
+        this.setText(listView, ((TextView) findViewById(R.id.searchresults_message)), R.string.msg_searchingfeeds);
+
+        final List<JSONObject> toSearch = FeedDownloadManager.getDownload(this);
+
+        this.setProgress(listView, progressBarLinear, 40);
+
+        final List<Long> feedids = this.search(toSearch, query);
+
+        this.setProgress(listView, progressBarLinear, 80);
+
+        final Collection<JSONObject> toDisplay = this.getFeedsToDisplay(serveroption, toSearch, query, feedids);
+
+        this.displayFeeds(toDisplay, query, false);
+
+        this.setProgress(listView, progressBarLinear, 90);
+    }
+
+    protected void addSearchOnServerListenerForQuery(final TextView textView, final String query) {
+        try {
+            textView.setOnClickListener(new OnClickListener() {
+                public void onClick(View v) {
+                    SearchableActivity.this.searchOnServer(textView, query);
                 }
             });
         } catch (Exception e) {
-            Logx.log(getClass(), e);
+            Logx.getInstance().log(getClass(), e);
         }
     }
 
-    protected void onDestroy() {
-        super.onDestroy();
-        this.query = null;
+    public void displayFeeds(final Collection<JSONObject> toDisplay, final String query, final boolean append) {
+
+        this.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                SearchableActivity.this.clearDisplayedFeeds();
+                final int displayed = SearchableActivity.this.displayFeeds(toDisplay, append);
+                SearchableActivity.this.updateMessage(displayed, query, append);
+            }
+        });
     }
 
-    public boolean isToFinishOnNoResult() {
-        return false;
-    }
+    private List<Long> search(Collection<JSONObject> toSearch, String query) {
 
-    protected void handleIntent(Intent intent) {
-        if ("android.intent.action.SEARCH".equals(intent.getAction())) {
-            getListFragment().setMessageToDisplayWhileLoading(getString(R.string.msg_searchingfeeds));
-            getFeedDisplayHandler().getFeedDisplayArray().clear();
-            this.query = intent.getStringExtra(SearchManager.QUERY);
-            Logx.log(Log.DEBUG, getClass(), "Handling search intent, query: {0}", this.query);
-            ((Button) findViewById(R.id.searchresults_serveroption)).setText(R.string.msg_loadmoreresults);
-            ((TextView) findViewById(R.id.searchresults_message)).setText(R.string.msg_searchingfeeds);
-            super.handleIntent(intent);
+        FeedSearcherFeedid searcher = new FeedSearcherFeedid();
+
+        List<Long> results = searcher.searchFor(query, toSearch);
+
+        List<Long> output = new ArrayList(results.size());
+
+        for(Long feedid:results) {
+
+            output.add(feedid);
         }
+
+        return output;
     }
 
-    public List<JSONObject> getFeedsToDisplay() {
-        List<JSONObject> toSearch = FeedDownloadManager.getDownload(this);
-        return getFeeds(toSearch, this.query, search(toSearch, this.query));
-    }
+    private List<JSONObject> getFeedsToDisplay(
+            TextView textView, Collection<JSONObject> toSearch, String query, List<Long> searchedFeedids) {
 
-    private FeedSearchResult[] search(Collection<JSONObject> toSearch, String query) {
-        getFeedDisplayHandler().getFeedDisplayArray().clear();
-        FeedSearcher searcher = new FeedSearcher((Context) this);
-        searcher.setOutputSize(App.getPropertiesManager(this).getInt(PropertyName.textLengthShort));
-        return searcher.searchFor(query, (Collection) toSearch);
-    }
+        if (searchedFeedids == null || searchedFeedids.isEmpty()) {
 
-    private List<JSONObject> getFeeds(Collection<JSONObject> toSearch, String query, FeedSearchResult[] results) {
-        getFeedDisplayHandler().getFeedDisplayArray().clear();
-        if (results == null || results.length == 0) {
-            updateMessage(0, query);
-            return null;
+            this.searchOnServer(textView, query);
+
+            return Collections.EMPTY_LIST;
         }
+
         Feed feed = new Feed();
         List<JSONObject> found = new ArrayList();
         for (JSONObject json : toSearch) {
             feed.setJsonData(json);
-            if (get(results, feed.getFeedid()) != null) {
+            if (searchedFeedids.contains(feed.getFeedid())) {
                 found.add(json);
             }
         }
-        final int size = found == null ? 0 : found.size();
-        Logx.log(Log.DEBUG, getClass(), "Results found: {0}", Integer.valueOf(size));
-        updateMessage(size, query);
+
+        Logx.getInstance().log(Log.DEBUG, getClass(), "Results found: {0}", (found == null ? null : found.size()));
+
         return found;
     }
 
-    private FeedSearchResult get(FeedSearchResult[] results, Long feedId) {
-        for (FeedSearchResult result : results) {
-            if (result.getFeedId().equals(feedId)) {
-                return result;
-            }
+    private int updateMessage(int size, String query, boolean append) {
+
+        if(append) {
+
+            size += this.getFeedListDisplayHandler().size();
         }
-        return null;
+
+        this.updateMessage(size, query);
+
+        return size;
     }
 
-    private void updateMessage(int found, String query) {
-        ((TextView) findViewById(R.id.searchresults_message)).setText(found + " search results for '" + query + "'");
+    private void updateMessage(final int size, final String query) {
+        final TextView textView = ((TextView) findViewById(R.id.searchresults_message));
+        this.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                textView.setText(size + " search results for '" + query + "'");
+            }
+        });
     }
 
-    private void downloadFeeds() {
-        if (this.query != null) {
-            FeedDownloadTask downloadTask = new AnonymousClass2(this, (Button) findViewById(R.id.searchresults_serveroption));
-            downloadTask.getOutputParameters().put(SearchManager.QUERY, this.query);
-            downloadTask.execute();
+    private void searchOnServer(TextView textView, String query) {
+        try {
+            if (query != null) {
+
+                if(!Util.isNetworkConnectedOrConnecting(this)) {
+                    Popup.getInstance().show(this, R.string.err_internetunavailable, Toast.LENGTH_LONG);
+                    return;
+                }
+
+                FeedDownloadTask downloadTask = new SearchFeedsOnServerTask(this, textView, query);
+                downloadTask.addOutputParameter(SearchManager.QUERY, query);
+                downloadTask.execute();
+            }
+        } catch (Exception e) {
+            Popup.getInstance().show(SearchableActivity.this, (Object) "Failed to update searchresults", 1);
+            Logx.getInstance().log(getClass(), e);
         }
     }
 }

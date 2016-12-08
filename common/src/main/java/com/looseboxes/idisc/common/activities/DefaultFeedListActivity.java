@@ -1,23 +1,28 @@
 package com.looseboxes.idisc.common.activities;
 
-import android.app.Activity;
-import android.view.View;
+import android.os.Bundle;
+import android.widget.ListView;
 import android.widget.ProgressBar;
+import android.widget.Toast;
+
+import com.bc.android.core.ui.ListState;
+import com.bc.android.core.util.Preferences;
 import com.looseboxes.idisc.common.R;
-import com.looseboxes.idisc.common.asynctasks.FeedDownloadManager;
 import com.looseboxes.idisc.common.feedfilters.FeedFilter;
+import com.looseboxes.idisc.common.fragments.DefaultListFragment;
 import com.looseboxes.idisc.common.fragments.DisplayFeedFragment;
 import com.looseboxes.idisc.common.fragments.WebContentFragment;
-import com.looseboxes.idisc.common.handlers.FeedDisplayHandler;
-import com.looseboxes.idisc.common.jsonview.Feed;
-import com.looseboxes.idisc.common.notice.Popup;
-import com.looseboxes.idisc.common.util.Logx;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
+import com.looseboxes.idisc.common.handlers.FeedListDisplayHandler;
+import com.bc.android.core.notice.Popup;
+import com.bc.android.core.util.Logx;
+
 import org.json.simple.JSONObject;
 
-public abstract class DefaultFeedListActivity extends ListFragmentActivity {
+import java.util.Collection;
+import java.util.Date;
+
+public abstract class DefaultFeedListActivity extends ListFragmentActivity{
+
     private FeedFilter feedFilter;
 
     public int getDetailsFragmentId() {
@@ -32,96 +37,72 @@ public abstract class DefaultFeedListActivity extends ListFragmentActivity {
         return new DisplayFeedFragment();
     }
 
-    public boolean isClearPrevious() {
-        return false;
-    }
-
-    public boolean isReloadDisplay() {
-        return false;
-    }
-
-    public int getContentView() {
+    public int getContentViewId() {
         return R.layout.main;
     }
 
-    public boolean isToFinishOnNoResult() {
-        return true;
-    }
-
-    protected String getNoResultMessageId() {
-        return getString(R.string.msg_nofeed);
-    }
-
-    protected void onNoResult(List toDisplay) {
-        Popup.show((Activity) this, getNoResultMessageId(), 0);
-        if (isToFinishOnNoResult()) {
-            finish();
-            return;
-        }
-        ProgressBar progressBar = getListFragment().getEmptyViewProgressBar(false);
-        if (progressBar != null) {
-            progressBar.setVisibility(View.GONE);
-        }
-    }
-
-    public Collection<JSONObject> getFeedsToDisplay() {
-        return FeedDownloadManager.getDownload(this);
-    }
-
     public FeedFilter getFeedFilter() {
+        if(feedFilter == null) {
+            feedFilter = this.createFeedFilter();
+        }
+        return feedFilter;
+    }
+
+    public FeedFilter createFeedFilter() {
         return null;
     }
 
-    private boolean accept(Feed feed) {
-        if (this.feedFilter == null) {
-            this.feedFilter = getFeedFilter();
-        }
-        return this.feedFilter == null ? true : this.feedFilter.accept(feed);
-    }
+    protected void onNoResult(Collection<JSONObject> items) { }
 
-    protected void onResume() {
-        super.onResume();
+    protected void clearDisplayedFeeds() {
+
         try {
-            FeedDisplayHandler fdh = getFeedDisplayHandler();
-            if (isClearPrevious() && !fdh.isEmpty()) {
+
+            final FeedListDisplayHandler fdh = this.getFeedListDisplayHandler();
+
+            if (!fdh.isEmpty()) {
                 fdh.clear();
             }
-            if (fdh.isEmpty() || isReloadDisplay()) {
-                displayFeeds(getFeedsToDisplay());
-            }
         } catch (Exception e) {
-            Logx.log(getClass(), e);
+
+            Logx.getInstance().log(getClass(), e);
         }
     }
 
-    public void displayFeeds(Collection<JSONObject> feeds) {
-        List<JSONObject> toDisplay;
-        Integer num = null;
-        if (feeds == null || feeds.isEmpty()) {
-            toDisplay = null;
-        } else {
-            toDisplay = new ArrayList();
-            Feed feed = new Feed();
-            for (JSONObject json : feeds) {
-                feed.setJsonData(json);
-                if (accept(feed)) {
-                    toDisplay.add(json);
-                }
+    protected int displayFeeds(Collection<JSONObject> toDisplay, boolean append) {
+
+        int output;
+
+        try {
+
+            final FeedListDisplayHandler fdh = this.getFeedListDisplayHandler();
+
+            if(!append) {
+                fdh.clear();
             }
+
+            Logx.getInstance().debug(this.getClass(), "To display {0} feeds", toDisplay == null ? null : toDisplay.size());
+
+            if(toDisplay == null || toDisplay.isEmpty()) {
+                this.onNoResult(toDisplay);
+                output = 0;
+            }else {
+                output = fdh.displayFeeds(toDisplay, this.getFeedFilter());
+            }
+
+        } catch (Exception e) {
+
+            Logx.getInstance().log(getClass(), e);
+
+            output = 0;
         }
-        Class cls = getClass();
-        String str = "Accepted {0} of {1} feeds for display";
-        Object[] objArr = new Object[2];
-        objArr[0] = toDisplay == null ? null : Integer.valueOf(toDisplay.size());
-        if (feeds != null) {
-            num = Integer.valueOf(feeds.size());
-        }
-        objArr[1] = num;
-        Logx.debug(cls, str, objArr);
-        if (toDisplay == null || toDisplay.isEmpty()) {
-            onNoResult(toDisplay);
-        } else {
-            getFeedDisplayHandler().displayFeeds(toDisplay);
-        }
+
+        return output;
+    }
+
+    public FeedListDisplayHandler getFeedListDisplayHandler() {
+        DefaultListFragment defaultListFragment = this.getListFragment();
+        FeedListDisplayHandler fdh = defaultListFragment.getFeedListDisplayHandler();
+        return fdh;
     }
 }

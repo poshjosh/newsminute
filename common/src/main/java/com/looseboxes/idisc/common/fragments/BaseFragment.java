@@ -3,7 +3,6 @@ package com.looseboxes.idisc.common.fragments;
 import android.annotation.TargetApi;
 import android.app.Fragment;
 import android.content.Context;
-import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.IdRes;
 import android.support.annotation.Nullable;
@@ -12,38 +11,23 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.looseboxes.idisc.common.App;
+import com.looseboxes.idisc.common.util.NewsminuteUtil;
 
-public abstract class BaseFragment extends Fragment implements HasFragmentHandler, FragmentHandler {
-    private FragmentHandler _fh;
+public abstract class BaseFragment extends Fragment {
+
     private View root;
 
-    public abstract int getContentView();
+    public abstract int getContentViewId();
 
-    protected BaseFragment() {
-    }
-
-    public FragmentHandler getFragmentHandler() {
-        if (this._fh == null) {
-            this._fh = new FragmentHandlerImpl(this);
-        }
-        return this._fh;
-    }
-
-    public Fragment getFragment() {
-        return this;
-    }
+    protected BaseFragment() { }
 
     public void update(Bundle bundle, boolean clearPrevious) {
-        getFragmentHandler().update(bundle, clearPrevious);
-    }
-
-    public void update(Intent intent, boolean clearPrevious) {
-        getFragmentHandler().update(intent, clearPrevious);
+        NewsminuteUtil.update(this, bundle, clearPrevious);
     }
 
     @Nullable
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        this.root = inflater.inflate(getContentView(), container, false);
+        this.root = inflater.inflate(getContentViewId(), container, false);
         return this.root;
     }
 
@@ -60,11 +44,15 @@ public abstract class BaseFragment extends Fragment implements HasFragmentHandle
         return getView() != null ? getView().findViewById(id) : null;
     }
 
-    @TargetApi(23)
     public Context getContext() {
         if (App.isAcceptableVersion(this.getActivity(), 23)) {
-            return super.getContext();
+            return this.getContext_v23();
         }
         return this.getActivity();
+    }
+
+    @TargetApi(23)
+    private Context getContext_v23() {
+        return super.getContext();
     }
 }

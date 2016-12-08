@@ -21,6 +21,26 @@
             android:text="@string/msg_searchingfeeds"
             style="@style/TextViewAppTheme" />
     </LinearLayout>
+    <LinearLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <ProgressBar
+            android:id="@+id/searchresults_progressbar_indeterminate"
+            android:layout_width="@dimen/space_xxxlarge"
+            android:layout_height="@dimen/space_xxxlarge"
+            style="@style/ProgressBarIndeterminateAppTheme"/>
+
+        <ProgressBar
+            android:id="@+id/searchresults_progressbar_linear"
+            android:layout_width="0dp"
+            android:layout_weight="1.0"
+            android:layout_height="@dimen/space_xlarge"
+            style="@style/ProgressBarLinearAppTheme"/>
+
+    </LinearLayout>
     <include
         android:id="@+id/searchresults_fragment_dualpane"
         layout="@layout/fragment_dualpane" />
