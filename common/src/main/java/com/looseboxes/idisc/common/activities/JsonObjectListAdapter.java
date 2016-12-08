@@ -1,42 +1,45 @@
 package com.looseboxes.idisc.common.activities;
 
-import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.drawable.Drawable;
-import android.view.ContextThemeWrapper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
+
+import com.bc.android.core.util.Util;
 import com.looseboxes.idisc.common.App;
 import com.looseboxes.idisc.common.R;
-import com.looseboxes.idisc.common.io.image.ImageManager;
-import com.looseboxes.idisc.common.io.image.PicassoImageManager;
-import com.looseboxes.idisc.common.util.Logx;
+import com.bc.android.core.io.image.PicassoImageManager;
+import com.bc.android.core.io.image.PicassoImageManagerImpl;
+import com.bc.android.core.util.Logx;
 import com.looseboxes.idisc.common.util.PropertiesManager;
 import com.looseboxes.idisc.common.util.PropertiesManager.PropertyName;
-import com.looseboxes.idisc.common.util.Util;
+import com.looseboxes.idisc.common.util.NewsminuteUtil;
 import com.squareup.picasso.RequestCreator;
+
+import org.json.simple.JSONObject;
+
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
-import org.json.simple.JSONObject;
 
-public abstract class AbstractArrayAdapter extends ArrayAdapter<JSONObject> {
-    private ImageManager _t_accessViaGetter;
-    private final List<JSONObject> feedDisplayArray;
-    private final int feedListIconHeight;
-    private final int feedListIconWidth;
+public abstract class JsonObjectListAdapter extends ArrayAdapter<JSONObject> {
+
     private final int len_short;
     private final int len_xshort;
+    private final int feedListIconHeight;
+    private final int feedListIconWidth;
+    private final List<JSONObject> feedDisplayArray;
 
     private Drawable imageViewPlaceholder;
 
     static class ViewHolder {
+
         ImageView imageView;
         TextView infoView;
         TextView textView;
@@ -57,41 +60,33 @@ public abstract class AbstractArrayAdapter extends ArrayAdapter<JSONObject> {
 
     protected abstract String getUrl(JSONObject jSONObject);
 
-    @TargetApi(21)
-    public AbstractArrayAdapter(Context context) {
+    public JsonObjectListAdapter(Context context) {
         this(context, new ArrayList());
     }
 
-    @TargetApi(21)
-    public AbstractArrayAdapter(Context context, List<JSONObject> arr) {
+    public JsonObjectListAdapter(Context context, List<JSONObject> arr) {
         super(context, R.layout.listrow, R.id.listrow_text, arr);
         this.feedDisplayArray = arr;
         Resources res = context.getResources();
         float widthDp = res.getDimension(R.dimen.iconImageWidth);
         float heightDp = res.getDimension(R.dimen.iconImageHeight);
-        this.feedListIconWidth = (int) Util.dipToPixels(context, widthDp);
-        this.feedListIconHeight = (int) Util.dipToPixels(context, heightDp);
-        Logx.debug(getClass(), "Width. dp: {0}, px: {1}", Float.valueOf(widthDp), Integer.valueOf(this.feedListIconWidth));
+        this.feedListIconWidth = (int) NewsminuteUtil.dipToPixels(context, widthDp);
+        this.feedListIconHeight = (int) NewsminuteUtil.dipToPixels(context, heightDp);
+        Logx.getInstance().debug(getClass(), "Width. dp: {0}, px: {1}", Float.valueOf(widthDp), Integer.valueOf(this.feedListIconWidth));
         PropertiesManager pm = App.getPropertiesManager(context);
         this.len_xshort = pm.getInt(PropertyName.textLengthXShort);
         this.len_short = pm.getInt(PropertyName.textLengthShort);
-        try {
-            if (App.isAcceptableVersion(context, 21)) {
-                imageViewPlaceholder = context.getResources().getDrawable(R.drawable.placeholder, this.getContext().getTheme());
-            } else {
-                imageViewPlaceholder = context.getResources().getDrawable(R.drawable.placeholder);
-            }
-        }catch (Exception e) {
-            Logx.log(this.getClass(), e);
-        }
+        imageViewPlaceholder = Util.getDrawable(this.getContext(), R.drawable.placeholder);
     }
 
+    @Override
     public long getItemId(int position) {
-        Long feedId = getId((JSONObject) super.getItem(position));
-        return feedId == null ? -1 : feedId.longValue();
+        final JSONObject itemAtPosition = super.getItem(position);
+        Long feedId = itemAtPosition == null ? -1L : getId(itemAtPosition);
+        return feedId == null ? -1L : feedId;
     }
 
-    @TargetApi(16)
+    @Override
     public View getView(int position, View convertView, ViewGroup parent) {
 
         ViewHolder holder;
@@ -131,7 +126,7 @@ public abstract class AbstractArrayAdapter extends ArrayAdapter<JSONObject> {
             holder.imageView.setImageDrawable(imageViewPlaceholder);
 
             RequestCreator rc = null;
-            ImageManager im = getImageManager();
+            PicassoImageManager im = getImageManager();
             if (!(authorFavicon == null || authorFavicon.isEmpty())) {
                 rc = im.from(authorFavicon, this.feedListIconWidth, this.feedListIconHeight);
             }
@@ -145,9 +140,10 @@ public abstract class AbstractArrayAdapter extends ArrayAdapter<JSONObject> {
         return convertView;
     }
 
-    private ImageManager getImageManager() {
+    private PicassoImageManager _t_accessViaGetter;
+    private PicassoImageManager getImageManager() {
         if (this._t_accessViaGetter == null) {
-            this._t_accessViaGetter = new PicassoImageManager(getContext());
+            this._t_accessViaGetter = new PicassoImageManagerImpl(getContext());
         }
         return this._t_accessViaGetter;
     }
@@ -160,7 +156,7 @@ public abstract class AbstractArrayAdapter extends ArrayAdapter<JSONObject> {
                     URL url = new URL(urlStr);
                     return new URL(url.getProtocol(), url.getHost(), fname).toExternalForm();
                 } catch (MalformedURLException e) {
-                    Logx.log(getClass(), e);
+                    Logx.getInstance().log(getClass(), e);
                 }
             }
         }
@@ -175,11 +171,11 @@ public abstract class AbstractArrayAdapter extends ArrayAdapter<JSONObject> {
         return this.feedListIconHeight;
     }
 
-    public int getLen_xshort() {
+    public int getInfoLength() {
         return this.len_xshort;
     }
 
-    public int getLen_short() {
+    public int getHeadingLength() {
         return this.len_short;
     }
 

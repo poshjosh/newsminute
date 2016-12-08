@@ -10,6 +10,6 @@ public class BootCompleteBroadcastReceiver extends BroadcastReceiver {
         if (!App.isVisible()) {
             App.setContext(context);
         }
-        ServiceScheduler.scheduleNetworkService(context);
+        new ServiceSchedulerImpl().scheduleNetworkService(context);
     }
 }

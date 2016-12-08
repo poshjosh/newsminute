@@ -1,10 +1,13 @@
 package com.looseboxes.idisc.common.util;
 
 import android.content.Context;
-import com.looseboxes.idisc.common.asynctasks.DownloadToLocalCache;
+
+import com.bc.android.core.io.IOWrapper;
+import com.bc.android.core.io.JsonObjectIO;
 import com.looseboxes.idisc.common.io.FileIO;
-import com.looseboxes.idisc.common.io.IOWrapper;
-import com.looseboxes.idisc.common.io.JsonObjectIO;
+
+import org.json.simple.JSONObject;
+
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -13,7 +16,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import org.json.simple.JSONObject;
 
 public class PropertiesManager extends StaticResourceManager<JSONObject> {
     public static final int DOWNLOAD_INTERVAL_HOURS = 6;
@@ -21,19 +23,29 @@ public class PropertiesManager extends StaticResourceManager<JSONObject> {
     // That would involve logging howmuch free subscription/trial each user has
     //
     public static final int FREE_SUBSCRIPTION_MONTHS = 12;
-    private boolean noUI;
+//    private boolean noUI;
 
     public enum PropertyName {
         developerEmails(Collections.singletonList("posh.bc@gmail.com")),
         developerPasswords( Collections.singletonList("1kjvdul-")),
         minimumMatchCountForAliases(2),
         textComparisonMaxLength(100),
-        textComparisonTolerance(0.10000000149011612d),
+        textComparisonTolerance(0.1d),
         feedLoadServiceDelay(500),
-        connectTimeoutMillis(30000),
-        readTimeoutMillis(60000),
-        feedDownloadLimit(200),
-        feedDownloadBufferSize(1000),
+        connectTimeoutMillis(60000),
+        readTimeoutMillis(120000),
+
+        feedDownloadLimit(100),
+////////////////// BEGIN memory limited
+        feedDownloadBufferSize(500),
+        readFeedBufferSize(100),
+        readNoticeBufferSize(10),
+        deletedFeedidsBufferSize(20),
+        displayedFeedidsBufferSize(50),
+        preferenceFeedsBufferSize(50),
+        feedhitBufferSize(100),
+////////////////// END memory limited
+
         logFileCount(20),
         logFileLimit(50000),
         addedValueLimitMinutes(2880),
@@ -45,6 +57,7 @@ public class PropertiesManager extends StaticResourceManager<JSONObject> {
         textLengthXLong(1000),
         advertDisplayPeriod(5000),
         advertCategoryName("newsminute-advert"),
+        hotnewsCategoryName("newsminute-hotnews"),
 
         // To be added to live server properties file
 //
@@ -52,6 +65,8 @@ public class PropertiesManager extends StaticResourceManager<JSONObject> {
         advertFrequencyLocalAds(0.2d),
         advertFrequencyBannerAds(0.6d),
         advertFrequencyInterstitialAds(0.2d),
+        addedValuePreferredCategoryMinutes(120),
+        addedValuePreferredSourceMinutes(240),
         syncIntervalHours(6),
         sources(PropertiesManager.getDefaultSources()),
         categories(PropertiesManager.getDefaultCategories()),
@@ -112,18 +127,13 @@ public class PropertiesManager extends StaticResourceManager<JSONObject> {
     }
 
     public PropertiesManager(Context context, long updateIntervalMillis) {
-        super(context, updateIntervalMillis, PropertiesManager.class.getName()+".lastDownloadTime.long");
-    }
-
-    public void update(IOWrapper<JSONObject> ioWrapper) {
-        setLastDownloadTime(System.currentTimeMillis());
-        DownloadToLocalCache<JSONObject> downloader = new DownloadToLocalCache(getContext(), FileIO.getAppPropertiesKey(), ioWrapper);
-        downloader.setNoUI(this.noUI);
-        downloader.execute();
+        super(context, updateIntervalMillis, false,
+                PropertiesManager.class.getName() + ".lastDownloadTime.long",
+                FileIO.getAppPropertiesKey());
     }
 
     protected IOWrapper<JSONObject> createIOWrapper(Context context) {
-        return new JsonObjectIO(context, FileIO.getAppPropertiesFilename());
+        return new JsonObjectIO(context, "com.looseboxes.idisc.common.appproperties.json");
     }
 
     public int getInt(PropertyName propertyName) {
@@ -229,13 +239,5 @@ public class PropertiesManager extends StaticResourceManager<JSONObject> {
         sources.put("22", "aitonline_news");
         sources.put("23", "dailytrust");
         return sources;
-    }
-
-    public boolean isNoUI() {
-        return this.noUI;
-    }
-
-    public void setNoUI(boolean noUI) {
-        this.noUI = noUI;
     }
 }

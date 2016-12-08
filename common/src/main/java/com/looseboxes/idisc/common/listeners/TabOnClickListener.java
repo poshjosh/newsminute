@@ -13,10 +13,11 @@ import com.looseboxes.idisc.common.activities.MainActivity;
 import com.looseboxes.idisc.common.activities.SelectCategoriesActivity;
 import com.looseboxes.idisc.common.activities.SelectInfoActivity;
 import com.looseboxes.idisc.common.activities.SelectSourcesActivity;
-import com.looseboxes.idisc.common.notice.Popup;
-import com.looseboxes.idisc.common.util.Logx;
+import com.bc.android.core.notice.Popup;
+import com.bc.android.core.util.Logx;
+import com.looseboxes.idisc.common.handlers.TabManager;
 
-public class TabOnClickListener implements OnClickListener {
+public class TabOnClickListener extends TabManager implements OnClickListener {
     private Class<? extends Activity> activityClass;
 
     public TabOnClickListener(Class<? extends Activity> activityClass) {
@@ -32,60 +33,9 @@ public class TabOnClickListener implements OnClickListener {
                 context.startActivity(new Intent(context, targetActivityClass));
             }
         } catch (Exception e) {
-            Logx.log(getClass(), e);
-            Popup.show(context, context.getString(getErrorMessageIdForTabId(tabId)), 1);
+            Logx.getInstance().log(getClass(), e);
+            Popup.getInstance().show(context, context.getString(getErrorMessageIdForTabId(tabId)), 1);
         }
-    }
-
-    public int getErrorMessageIdForTabId(int id) {
-        if (id == R.id.tabs_all || id == R.string.msg_all) {
-            return R.string.err_feedfailed;
-        }
-        if (id == R.id.tabs_categories || id == R.string.msg_categories) {
-            return R.string.err;
-        }
-        if (id == R.id.tabs_sources || id == R.string.msg_sources) {
-            return R.string.err;
-        }
-        if (id == R.id.tabs_bookmarks || id == R.string.msg_bookmarks) {
-            return R.string.err_feedfailed;
-        }
-        if (id == R.id.tabs_favorites || id == R.string.msg_favorites) {
-            return R.string.err_feedfailed;
-        }
-        if (id == R.id.tabs_headlines || id == R.string.msg_headlines) {
-            return R.string.err_feedfailed;
-        }
-        if (id == R.id.tabs_info || id == R.string.msg_info) {
-            return R.string.err;
-        }
-        return R.string.err;
-    }
-
-    public Class<? extends Activity> getActivityClassForTabId(int id) {
-        if (id == R.id.tabs_all || id == R.string.msg_all) {
-            return MainActivity.class;
-        }
-        if (id == R.id.tabs_categories || id == R.string.msg_categories) {
-            return SelectCategoriesActivity.class;
-        }
-        if (id == R.id.tabs_sources || id == R.string.msg_sources) {
-            return SelectSourcesActivity.class;
-        }
-        if (id == R.id.tabs_bookmarks || id == R.string.msg_bookmarks) {
-            return BookmarksActivity.class;
-        }
-        if (id == R.id.tabs_favorites || id == R.string.msg_favorites) {
-            return FavoritesActivity.class;
-        }
-        if (id == R.id.tabs_headlines || id == R.string.msg_headlines) {
-            return HeadlinesActivity.class;
-        }
-        if (id == R.id.tabs_info || id == R.string.msg_info) {
-            return SelectInfoActivity.class;
-        }
-        Logx.log(6, getClass(), "No Activity class defined for id: " + id);
-        throw new IllegalArgumentException("Unexpected id: " + id);
     }
 
     public Class<? extends Activity> getActivityClass() {

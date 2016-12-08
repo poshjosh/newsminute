@@ -2,15 +2,19 @@ package com.looseboxes.idisc.common.util;
 
 import android.app.Activity;
 import android.os.Bundle;
+
+import com.bc.android.core.util.Logx;
 import com.bc.util.Util;
 import com.looseboxes.idisc.common.App;
 import com.looseboxes.idisc.common.User;
 import com.looseboxes.idisc.common.asynctasks.FeedDownloadManager;
 import com.looseboxes.idisc.common.jsonview.FeedNames;
 import com.looseboxes.idisc.common.util.PropertiesManager.PropertyName;
+
+import org.json.simple.JSONObject;
+
 import java.util.ArrayList;
 import java.util.List;
-import org.json.simple.JSONObject;
 
 public class AdvertManager {
     public static final int ADVERT_DISPLAYED_AND_NEXT_ACTION_INITIATED = 2;
@@ -68,7 +72,7 @@ public class AdvertManager {
                 pos += getAdvertFrequency(type) / freq;
                 if (random < ((double) pos)) {
                     this.advertTypeToDisplay = type;
-                    Logx.debug(getClass(), "Updated advert type to display to: " + type);
+                    Logx.getInstance().debug(getClass(), "Updated advert type to display to: " + type);
                     break;
                 }
             }
@@ -133,7 +137,7 @@ public class AdvertManager {
         try {
             return getRandomAdvertFeedFromCachedDownloads(App.getPropertiesManager(this.activity).getString(PropertyName.advertCategoryName));
         } catch (Exception e) {
-            Logx.log(getClass(), e);
+            Logx.getInstance().log(getClass(), e);
             return null;
         }
     }
@@ -151,9 +155,14 @@ public class AdvertManager {
             }
         }
         if (adverts.isEmpty()) {
+// For testing only
+//            Activity activity = this.getActivity();
+//            DefaultApplication app = (DefaultApplication)activity.getApplication();
+//            final long feedid = app.getSharedContext().getFeedidsService().getFeedids().getUpdateNoticeFeedid();
+//            return new DefaultJsonObject(this.getActivity(), feedid, "Jesus is Lord", "<html><h3>Jesus is Lord</h3><img alt=\"Rock Art\" src=\"http://christsaves.deviantart.com/art/The-Lord-is-my-rock-431357799\"/><p>Time is coming when all shall proclaim - Jesus is Lord!</p></html>", catName);
             return null;
         }
-        return (JSONObject) adverts.get(Util.randomInt(adverts.size()));
+        return adverts.get(Util.randomInt(adverts.size()));
     }
 
     public void setActivity(Activity activity) {

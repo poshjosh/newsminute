@@ -7,16 +7,17 @@ import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
 import android.util.Log;
 
+import com.bc.android.core.util.Geo;
 import com.looseboxes.idisc.common.App;
 import com.looseboxes.idisc.common.User;
 import com.looseboxes.idisc.common.asynctasks.FeedDownloadManager;
 import com.looseboxes.idisc.common.util.AliasesManager;
 import com.looseboxes.idisc.common.util.AliasesManager.AliasType;
-import com.looseboxes.idisc.common.util.Logx;
-import com.looseboxes.idisc.common.util.PreferenceFeedsManager;
-import com.looseboxes.idisc.common.util.PreferenceFeedsManager.PreferenceType;
+import com.bc.android.core.util.Logx;
+import com.looseboxes.idisc.common.preferencefeed.PreferencefeedsManager;
+import com.looseboxes.idisc.common.preferencefeed.Preferencefeeds.PreferenceType;
 import com.looseboxes.idisc.common.util.PropertiesManager;
-import com.looseboxes.idisc.common.util.Util;
+import com.looseboxes.idisc.common.util.NewsminuteUtil;
 
 public class DownloadService extends IntentService {
 
@@ -39,7 +40,7 @@ public class DownloadService extends IntentService {
                 this.mWakeLock = null;
             }
         } catch (Exception e) {
-            Logx.log(getClass(), e);
+            Logx.getInstance().log(getClass(), e);
         }
     }
 
@@ -47,7 +48,7 @@ public class DownloadService extends IntentService {
         try {
             doHandleIntent();
         } catch (Exception e) {
-            Logx.log(getClass(), e);
+            Logx.getInstance().log(getClass(), e);
         }
     }
 
@@ -64,21 +65,23 @@ public class DownloadService extends IntentService {
                 this.mWakeLock.acquire();
             }
         } catch (Exception e) {
-            Logx.log(getClass(), e);
+            Logx.getInstance().log(getClass(), e);
         }
     }
 
     private void doHandleIntent() {
         log("#doHandleIntent entering");
-        if (Util.isNetworkConnectedOrConnecting(this)) {
+        if (NewsminuteUtil.isPreferredNetworkConnectedOrConnecting(this)) {
+
             acquireWakeLock();
+
             try {
                 FeedDownloadManager dm = new FeedDownloadManager(this);
                 dm.setNoUI(true);
                 log("Downloading feeds");
                 dm.execute();
             } catch (Exception e) {
-                Logx.log(getClass(), e);
+                Logx.getInstance().log(getClass(), e);
             }
             try {
                 PropertiesManager pm = App.getPropertiesManager(this);
@@ -86,7 +89,7 @@ public class DownloadService extends IntentService {
                 log("Updating properties");
                 pm.update(false);
             } catch (Exception e2) {
-                Logx.log(getClass(), e2);
+                Logx.getInstance().log(getClass(), e2);
             }
             for (AliasType aliasType : AliasType.values()) {
                 try {
@@ -95,26 +98,31 @@ public class DownloadService extends IntentService {
                     log("Updating " + aliasType);
                     am.update(false);
                 } catch (Exception e22) {
-                    Logx.log(getClass(), e22);
+                    Logx.getInstance().log(getClass(), e22);
                 }
             }
             if (User.getInstance().isLoggedIn(this)) {
                 for (PreferenceType preferenceType : PreferenceType.values()) {
                     try {
-                        PreferenceFeedsManager pfm = new PreferenceFeedsManager(this, preferenceType);
-                        pfm.setNoUI(true);
+                        PreferencefeedsManager pfm = new PreferencefeedsManager(this, preferenceType, true, null);
                         log("Updating " + preferenceType);
                         pfm.update(false);
                     } catch (Exception e222) {
-                        Logx.log(getClass(), e222);
+                        Logx.getInstance().log(getClass(), e222);
                     }
                 }
+            }
+
+            try{
+                new Geo().getFreegeoipJson(this);
+            }catch (Exception e) {
+                Logx.getInstance().log(getClass(), e);
             }
             log("#doHandleIntent exiting");
         }
     }
 
     private void log(String msg) {
-        Logx.log(Log.VERBOSE, getClass(), msg);
+        Logx.getInstance().log(Log.VERBOSE, getClass(), msg);
     }
 }

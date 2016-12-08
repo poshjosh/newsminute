@@ -10,11 +10,11 @@ import com.android.vending.billing.util.IabHelper.OnIabSetupFinishedListener;
 import com.android.vending.billing.util.IabResult;
 import com.android.vending.billing.util.Inventory;
 import com.android.vending.billing.util.Purchase;
+import com.bc.android.core.util.Logx;
 import com.looseboxes.idisc.common.User;
-import com.looseboxes.idisc.common.notice.Popup;
-import com.looseboxes.idisc.common.util.Logx;
+import com.bc.android.core.notice.Popup;
 import com.looseboxes.idisc.common.util.Pref;
-import com.looseboxes.idisc.common.util.Util;
+import com.looseboxes.idisc.common.util.NewsminuteUtil;
 
 import java.util.concurrent.TimeUnit;
 
@@ -39,7 +39,7 @@ public class BillingManager extends IabHelper implements OnIabSetupFinishedListe
             try {
                 BillingManager.this.launchSubscriptionPurchaseFlow(this.val$activity, this.val$sku, BillingManager.RC_REQUEST, this.val$purchaseFinishedListener, BillingManager.this.generatePayload());
             } catch (Exception e) {
-                Logx.log(getClass(), e);
+                Logx.getInstance().log(getClass(), e);
                 publishProgress(new Object[]{e});
             }
             return null;
@@ -47,9 +47,9 @@ public class BillingManager extends IabHelper implements OnIabSetupFinishedListe
 
         protected void onProgressUpdate(Object[] values) {
             if (values[0] instanceof Exception) {
-                Logx.log(getClass(), (Exception) values[0]);
+                Logx.getInstance().log(getClass(), (Exception) values[0]);
             } else {
-                Logx.log(4, getClass(), values[0]);
+                Logx.getInstance().log(4, getClass(), values[0]);
             }
         }
     }
@@ -59,13 +59,13 @@ public class BillingManager extends IabHelper implements OnIabSetupFinishedListe
         this.mGotInventoryListener = new QueryInventoryFinishedListener() {
             public void onQueryInventoryFinished(IabResult result, Inventory inventory) {
                 try {
-                    Logx.debug(getClass(), "Query in-app inapppurchase inventory request returned");
+                    Logx.getInstance().debug(getClass(), "Query in-app inapppurchase inventory request returned");
                     if (result.isFailure()) {
                         BillingManager.this.showWarning(BillingManager.this.getContext().getString(R.string.err_subscription));
                         BillingManager.this.logWarn("Failed to query in-app inapppurchase inventory: " + result);
                         return;
                     }
-                    Logx.debug(getClass(), "Query in-app inapppurchase successful");
+                    Logx.getInstance().debug(getClass(), "Query in-app inapppurchase successful");
                     boolean version2 = false;
                     if (!BillingManager.this.subscriptionsSupported()) {
                         version2 = BillingManager.this.updateSubscriptionInfoV2(inventory);
@@ -74,43 +74,43 @@ public class BillingManager extends IabHelper implements OnIabSetupFinishedListe
                     }
                     boolean subscriptionActive = Pref.isSubscriptionActive(BillingManager.this.getContext());
                     String subscriptionType = Pref.getSubscriptionSku(BillingManager.this.getContext());
-                    Logx.debug(getClass(), "User subscription active: {0}, type: {1}", Boolean.valueOf(subscriptionActive), subscriptionType);
+                    Logx.getInstance().debug(getClass(), "User subscription active: {0}, type: {1}", Boolean.valueOf(subscriptionActive), subscriptionType);
                     if (!version2 || subscriptionType == null || subscriptionActive) {
-                        Logx.debug(getClass(), "Initial inventory query completed");
+                        Logx.getInstance().debug(getClass(), "Initial inventory query completed");
                     } else {
                         BillingManager.this.consumeAsync(inventory.getPurchase(subscriptionType), BillingManager.this.mConsumeFinishedListener);
                     }
                 } catch (Exception e) {
-                    Logx.log(getClass(), e);
+                    Logx.getInstance().log(getClass(), e);
                 }
             }
         };
         this.mConsumeFinishedListener = new OnConsumeFinishedListener() {
             public void onConsumeFinished(Purchase purchase, IabResult result) {
                 try {
-                    Logx.debug(getClass(), "Consumption of {0} completed. Result: {1}, original purchase: {2}", purchase.getSku(), result, purchase);
+                    Logx.getInstance().debug(getClass(), "Consumption of {0} completed. Result: {1}, original purchase: {2}", purchase.getSku(), result, purchase);
                     if (result.isSuccess()) {
                         Pref.clearSubscription(BillingManager.this.getContext());
-                        Logx.debug(getClass(), "Consumption successful");
+                        Logx.getInstance().debug(getClass(), "Consumption successful");
                     } else {
                         BillingManager.this.showWarning(BillingManager.this.getContext().getString(R.string.err_subscription));
                         BillingManager.this.logWarn("Error while consuming: " + result);
                     }
-                    Logx.log(Log.VERBOSE, getClass(), "End consumption flow");
+                    Logx.getInstance().log(Log.VERBOSE, getClass(), "End consumption flow");
                 } catch (Exception e) {
-                    Logx.log(getClass(), e);
+                    Logx.getInstance().log(getClass(), e);
                 }
             }
         };
-        Logx.debug(getClass(), "Package Name: {0}", context.getApplicationContext().getPackageName());
-        enableDebugLogging(Logx.isDebugMode());
+        Logx.getInstance().debug(getClass(), "Package Name: {0}", context.getApplicationContext().getPackageName());
+        enableDebugLogging(Logx.getInstance().isDebugMode());
     }
 
     public boolean launchSubscriptionPurchaseFlow(String sku, Activity activity, OnIabPurchaseFinishedListener purchaseFinishedListener) {
-        Logx.debug(getClass(), "User clicked button to purchase: {0}", sku);
+        Logx.getInstance().debug(getClass(), "User clicked button to purchase: {0}", sku);
         String currentSubscription = Pref.getSubscriptionSku(activity);
         if (currentSubscription == null || !User.getInstance().isActivated(activity)) {
-            Logx.debug(getClass(), "Launching purchase flow for: {0}", sku);
+            Logx.getInstance().debug(getClass(), "Launching purchase flow for: {0}", sku);
             new AnonymousClass1(activity, sku, purchaseFinishedListener).execute((Object[]) null);
             return true;
         }
@@ -126,17 +126,17 @@ public class BillingManager extends IabHelper implements OnIabSetupFinishedListe
 
     public void onIabSetupFinished(IabResult result) {
         try {
-            Logx.debug(getClass(), "in-app purchase setup request returned");
+            Logx.getInstance().debug(getClass(), "in-app purchase setup request returned");
             Pref.setSubscriptionSupported(getContext(), subscriptionsSupported());
             if (result.isSuccess()) {
-                Logx.debug(getClass(), "In-app purchase setup successful. Now Querying inventory");
+                Logx.getInstance().debug(getClass(), "In-app purchase setup successful. Now Querying inventory");
                 queryInventoryAsync(this.mGotInventoryListener);
                 return;
             }
             showWarning(getContext().getString(R.string.err_subscription));
             logWarn("Problem setting up subscription: " + result);
         } catch (Exception e) {
-            Logx.log(getClass(), e);
+            Logx.getInstance().log(getClass(), e);
         }
     }
 
@@ -209,7 +209,7 @@ public class BillingManager extends IabHelper implements OnIabSetupFinishedListe
 //            throw new NullPointerException();
 //        }
         String value = "1mXa9u";
-        String payload = Util.encrpyt(value, "vM3cEfe7GdHgmNVv", 128);
+        String payload = NewsminuteUtil.encrpyt(value, "vM3cEfe7GdHgmNVv", 128);
         return payload;
 
     }
@@ -219,23 +219,27 @@ public class BillingManager extends IabHelper implements OnIabSetupFinishedListe
     }
 
     protected void showWarning(String message) {
-        Popup.alert(getContext(), message);
+        try {
+            Popup.getInstance().alert(getContext(), message, null, getContext().getString(R.string.msg_ok));
+        }catch(Exception e) {
+            Logx.getInstance().log(this.getClass(), e);
+        }
     }
 
     protected void logDebug(String msg) {
         if (isEnableDebugLogging()) {
             super.logDebug(msg);
-            Logx.debug(getClass(), msg);
+            Logx.getInstance().debug(getClass(), msg);
         }
     }
 
     protected void logError(String msg) {
         super.logError(msg);
-        Logx.log(6, getClass(), msg);
+        Logx.getInstance().log(6, getClass(), msg);
     }
 
     protected void logWarn(String msg) {
         super.logWarn(msg);
-        Logx.log(5, getClass(), msg);
+        Logx.getInstance().log(5, getClass(), msg);
     }
 }

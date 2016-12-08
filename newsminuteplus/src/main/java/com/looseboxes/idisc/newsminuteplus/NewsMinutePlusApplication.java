@@ -3,11 +3,11 @@ package com.looseboxes.idisc.newsminuteplus;
 import android.content.Context;
 import android.content.Intent;
 
+import com.bc.android.core.util.Logx;
 import com.looseboxes.idisc.appbilling.ApplicationWithInAppPurchase;
 import com.looseboxes.idisc.appbilling.InAppPurchaseActivity;
 import com.looseboxes.idisc.appbilling.SkuData;
 import com.looseboxes.idisc.common.App;
-import com.looseboxes.idisc.common.util.Logx;
 import com.looseboxes.idisc.common.util.Pref;
 
 /**
@@ -49,7 +49,7 @@ public class NewsMinutePlusApplication extends ApplicationWithInAppPurchase {
                 Pref.setInitiallyGrantedSubscription(this, SkuData.SKU_12MONTHS_SUBSCRIPTION);
             }
         }catch(Exception e) {
-            Logx.log(this.getClass(), e);
+            Logx.getInstance().log(this.getClass(), e);
         }
     }
 
@@ -77,7 +77,7 @@ public class NewsMinutePlusApplication extends ApplicationWithInAppPurchase {
             super.onWelcomeProcessFinished(context);
 
         }catch(Exception e) {
-            Logx.log(this.getClass(), e);
+            Logx.getInstance().log(this.getClass(), e);
         }
     }
 }

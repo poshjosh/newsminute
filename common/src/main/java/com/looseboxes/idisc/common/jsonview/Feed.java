@@ -3,15 +3,17 @@ package com.looseboxes.idisc.common.jsonview;
 import android.content.Context;
 import android.util.Log;
 
+import com.bc.android.core.util.Logx;
 import com.bc.util.StringComparator;
 import com.looseboxes.idisc.common.App;
-import com.looseboxes.idisc.common.User;
+import com.looseboxes.idisc.common.feedfilters.FeedFilter;
 import com.looseboxes.idisc.common.util.AliasesManager.AliasType;
-import com.looseboxes.idisc.common.util.FeedhitManager;
-import com.looseboxes.idisc.common.util.Logx;
+import com.looseboxes.idisc.common.util.NewsminuteUtil;
 import com.looseboxes.idisc.common.util.PropertiesManager;
 import com.looseboxes.idisc.common.util.PropertiesManager.PropertyName;
-import com.looseboxes.idisc.common.util.Util;
+
+import org.json.simple.JSONObject;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -20,7 +22,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import org.json.simple.JSONObject;
 
 /**
  * A Feed must have FeedID. Numeral Zero (0) is the default FeedID for any locally
@@ -31,15 +32,42 @@ import org.json.simple.JSONObject;
  * @since    2.0
  */
 public class Feed extends JsonView {
-    public static final long DEFAULT_FEED_ID = 0;
-    private static int _mmca;
-    private StringBuilder _b_accessViaGetter;
-    private String filename;
 
     public Feed() { }
 
     public Feed(JSONObject source) {
         super(source);
+    }
+
+    private static int _$mmca = -1;
+    public static int getDefaultMinimumMatchCountAliases(Context context) {
+        if (_$mmca == -1) {
+            _$mmca = App.getPropertiesManager(context).getInt(PropertyName.minimumMatchCountForAliases);
+        }
+        return _$mmca;
+    }
+
+    public List<JSONObject> getFeeds(List<JSONObject> feeds, FeedFilter feedFilter) {
+
+        int iterated = 0;
+
+        List<JSONObject> output = null;
+
+        for (JSONObject json : feeds) {
+
+            setJsonData(json);
+
+            if(feedFilter == null || feedFilter.accept(this)) {
+                if (output == null) {
+                    output = new ArrayList(feeds.size() - iterated);
+                }
+                output.add(json);
+            }
+
+            ++iterated;
+        }
+
+        return output;
     }
 
     public List<JSONObject> getFeedsAfter(List<JSONObject> feeds, Date date) {
@@ -52,53 +80,54 @@ public class Feed extends JsonView {
 
     private List<JSONObject> getFeedsFromDateReference(List<JSONObject> feeds, Date date, boolean after) {
         List<JSONObject> output = null;
-        for (JSONObject o : feeds) {
-            setJsonData(o);
-            Date feeddate = getDate(FeedNames.feeddate);
+        for (JSONObject json : feeds) {
+            setJsonData(json);
+            Date feeddate = getDate(FeedNames.feeddate, null);
             if (feeddate != null && ((after && feeddate.after(date)) || (!after && feeddate.before(date)))) {
                 if (output == null) {
                     output = new ArrayList(feeds.size());
                 }
-                output.add(o);
+                output.add(json);
             }
         }
         return output;
     }
 
-    public JSONObject getMostViewed(Context context, List download, boolean currentUserInclusive) {
+    public JSONObject getMostViewed(Context context, List<JSONObject> feeds) {
+        return this.getMostViewed(context, feeds, null);
+    }
+
+    public JSONObject getMostViewed(Context context, List<JSONObject> feeds, FeedFilter filter) {
         int mostViewedHitcount = -1;
         JSONObject mostViewed = null;
-        for (Object obj : download) {
-            JSONObject json = (JSONObject)obj;
+        for (JSONObject json : feeds) {
             setJsonData(json);
-            int hitcount = getHitcount(context, currentUserInclusive);
-            if (hitcount > mostViewedHitcount) {
-                mostViewedHitcount = hitcount;
-                mostViewed = json;
+            if(filter == null || filter.accept(this)) {
+                int hitcount = getHitcount(context);
+                if (hitcount > mostViewedHitcount) {
+                    mostViewedHitcount = hitcount;
+                    mostViewed = json;
+                }
             }
         }
         return mostViewed;
     }
 
-    public String getFilename() {
-        if (this.filename == null) {
-            StringBuilder builder = getReusedStringBuilder();
-            builder.append(getFeedid()).append('_');
-            String heading = getHeading("page", 100);
-            boolean mayAppendDash = false;
-            for (int i = 0; i < heading.length(); i++) {
-                char ch = heading.charAt(i);
-                if (Character.isLetterOrDigit(ch)) {
-                    builder.append(ch);
-                    mayAppendDash = true;
-                } else if (mayAppendDash) {
-                    builder.append('-');
-                    mayAppendDash = false;
-                }
+    public void appendFilename(StringBuilder appendTo) {
+        appendTo.append(getFeedid()).append('_');
+        String heading = getHeading("page", 100);
+        boolean mayAppendDash = false;
+        for (int i = 0; i < heading.length(); i++) {
+            char ch = heading.charAt(i);
+            if (Character.isLetterOrDigit(ch)) {
+                appendTo.append(ch);
+                mayAppendDash = true;
+            } else if (mayAppendDash) {
+                appendTo.append('-');
+                mayAppendDash = false;
             }
-            this.filename = builder.append(".jsp").toString();
         }
-        return this.filename;
+        appendTo.append(".jsp");
     }
 
     public int getEarliestIndex(List<JSONObject> download) {
@@ -109,46 +138,51 @@ public class Feed extends JsonView {
         return getLatestIndex(download, FeedNames.feeddate);
     }
 
-    public long getEarliestTime(List<JSONObject> download) {
-        return getEarliestTime(download, FeedNames.feeddate);
+    public Date getEarliestDate(List<JSONObject> download, Date defaultValue) {
+        return getEarliestDate(download, FeedNames.feeddate, defaultValue);
     }
 
-    public long getLatestTime(List<JSONObject> download) {
-        return getLatestTime(download, FeedNames.feeddate);
+    public Date getLatestDate(List<JSONObject> download, Date defaultValue) {
+        return getLatestDate(download, FeedNames.feeddate, defaultValue);
     }
 
     /**
      * This method does not use the equals method of the objects involved
      */
-    public boolean contains(Context context, Collection<JSONObject> feeds, JSONObject feed_1) {
+    public boolean contains(Context context, Collection<JSONObject> feeds, JSONObject feedJson) {
         PropertiesManager appProps = App.getPropertiesManager(context);
-        return contains(feeds, feed_1, (float) appProps.getInt(PropertyName.textComparisonTolerance), appProps.getInt(PropertyName.textComparisonMaxLength));
+        return contains(feeds, feedJson, (float) appProps.getInt(PropertyName.textComparisonTolerance), appProps.getInt(PropertyName.textComparisonMaxLength));
     }
 
     /**
      * This method does not use the equals method of the objects involved
      */
-    public boolean contains(Collection<JSONObject> feeds, JSONObject feed_1, float textComparisonTolerance, int textComparisonMaxLength) {
-        return indexOf(feeds, feed_1, textComparisonTolerance, textComparisonMaxLength) != -1;
+    public boolean contains(Collection<JSONObject> feeds, JSONObject toFind, float textComparisonTolerance, int textComparisonMaxLength) {
+        return indexOf(feeds, toFind, textComparisonTolerance, textComparisonMaxLength) != -1;
     }
 
     /**
      * This method does not use the equals method of the objects involved
      */
-    public int indexOf(Context context, Collection<JSONObject> feeds, JSONObject feed_1) {
+    public int indexOf(Context context, Collection<JSONObject> feeds, JSONObject toFind) {
         PropertiesManager appProps = App.getPropertiesManager(context);
-        return indexOf(feeds, feed_1, (float) appProps.getInt(PropertyName.textComparisonTolerance), appProps.getInt(PropertyName.textComparisonMaxLength));
+        return indexOf(feeds, toFind, (float) appProps.getInt(PropertyName.textComparisonTolerance), appProps.getInt(PropertyName.textComparisonMaxLength));
     }
 
     /**
      * This method does not use the equals method of the objects involved
      */
-    public int indexOf(Collection<JSONObject> feeds, JSONObject feed_1, float textComparisonTolerance, int textComparisonMaxLength) {
+    public int indexOf(Collection<JSONObject> feeds, JSONObject toFind, float textComparisonTolerance, int textComparisonMaxLength) {
         StringComparator sc = new StringComparator();
         int pos = -1;
-        for (JSONObject feed_0 : feeds) {
-            pos++;
-            if (matches(feed_0, feed_1, sc, textComparisonTolerance, textComparisonMaxLength)) {
+        for (JSONObject feedJson : feeds) {
+            ++pos;
+            Object id1 = feedJson.get(FeedNames.feedid);
+            Object id2 = toFind.get(FeedNames.feedid);
+            if(id1 != null && id1.equals(id2)) {
+                return pos;
+            }
+            if (matches(feedJson, toFind, sc, textComparisonTolerance, textComparisonMaxLength)) {
                 return pos;
             }
         }
@@ -163,18 +197,28 @@ public class Feed extends JsonView {
         if (feed_0 == null || feed_1 == null) {
             throw new NullPointerException();
         }
-        setJsonData(feed_1);
-        long siteid_1 = getSiteid();
-        Object text_1 = getText(null, maxTextLen);
-        setJsonData(feed_0);
-        if (getSiteid() != siteid_1) {
-            return false;
+        boolean matches = false;
+        final JSONObject json = this.getJsonData();
+        try {
+            setJsonData(feed_1);
+            long siteid_1 = getSiteid();
+            Object text_1 = getText(null, maxTextLen);
+            setJsonData(feed_0);
+            if (getSiteid() != siteid_1) {
+                return false;
+            }
+            Object text_0 = getText(null, maxTextLen);
+            if (sc == null || tolerance <= 0.0f) {
+                return text_0.equals(text_1);
+            }
+            matches = sc.compare(text_0, text_1, tolerance);
+            if(matches) {
+                Logx.getInstance().debug(this.getClass(), "Matches: {0}\nlhs: {1}\nrhs: {2}", matches, feed_0, feed_1);
+            }
+        }finally{
+            this.setJsonData(json);
         }
-        Object text_0 = getText(null, maxTextLen);
-        if (sc == null || tolerance <= 0.0f) {
-            return text_0.equals(text_1);
-        }
-        return sc.compare(text_0, text_1, tolerance);
+        return matches;
     }
 
     /**
@@ -196,7 +240,7 @@ public class Feed extends JsonView {
 
             for (Object feed_0:feeds) {
                 // Custom equality which only checks entries of selected keys.
-                if (Util.equals((Map)feed_0, feed_1, keys)) {
+                if (NewsminuteUtil.equals((Map) feed_0, feed_1, keys)) {
                     return true;
                 }
             }
@@ -231,33 +275,23 @@ public class Feed extends JsonView {
     }
 
     public int getHitcount(Context context) {
-        return getHitcount(context, true);
-    }
-
-    public int getHitcount(Context context, boolean currentUserInclusive) {
-        int c;
         Long feedid = getFeedid();
-        int a = FeedhitManager.getHitcount(context, feedid);
         Object oval = getJsonData().get("hitcount");
         String sval = oval == null ? null : oval.toString();
         int b = sval == null ? 0 : Integer.parseInt(sval);
-        if (a > b) {
-            c = a;
-        } else {
-            c = b;
-        }
-        if (currentUserInclusive || !User.getInstance().isReadFeed(context, feedid)) {
-            return c;
-        }
-        return c - 1;
+        return b;
     }
 
     public Long getFeedid() {
-        return (Long) getJsonData().get(FeedhitNames.feedid);
+        return (Long) getJsonData().get(FeedNames.feedid);
     }
 
     public String getImageUrl() {
         return (String) getJsonData().get(FeedNames.imageurl);
+    }
+
+    public String getLocalUrl() {
+        return App.getUrlScheme()+"://displayfeed?feedid="+this.getFeedid();
     }
 
     public String getUrl() {
@@ -292,10 +326,6 @@ public class Feed extends JsonView {
 
         Map siteData = this.getSite();
 
-        if(siteData == null) {
-            return null;
-        }
-
         return (String)siteData.get("iconurl");
     }
 
@@ -303,28 +333,35 @@ public class Feed extends JsonView {
 
         Map siteData = this.getSite();
 
-        if(siteData == null) {
-            return getSiteid_v1_0_1(siteData.toString());
-        }
-
         Long lval = (Long)siteData.get(FeedNames.siteid);
 
-        return lval == null ? 0 : lval.longValue();
+        return lval == null ? 28 : lval.longValue();
+    }
+
+    public Map getCountry() {
+        Map site = this.getSite();
+        if(site == null) {
+            return Collections.EMPTY_MAP;
+        }else {
+            Map country = (Map)site.get(CountryNames.countryid);
+            return country == null ? Collections.EMPTY_MAP : country;
+        }
     }
 
     public Map getSite() {
-        Object data = getJsonData().get(FeedNames.siteid);
-        if (!(data instanceof Map)) {
-            return null;
-        }else{
-            return (Map)data;
-        }
+        return (Map)this.get(SiteNames.siteid, Collections.EMPTY_MAP);
     }
 
+    /**
+     * Use {@link #getSiteid()}
+     * @deprecated
+     * @see #getSiteid()
+     */
+    @Deprecated
     public long getSiteid_v1_0_1(String sitedata) {
-// Format:        com.idisc.pu.entities.Site[ siteid=4 ]
+// Format:        com.idisc.pu.entities.SiteNames[ siteid=4 ]
 // We want to extract the 4
-        StringBuilder idbuff = getReusedStringBuilder();
+        StringBuilder idbuff = new StringBuilder();
         boolean started = false;
         for (int i = 0; i < sitedata.length(); i++) {
             char ch = sitedata.charAt(i);
@@ -338,14 +375,18 @@ public class Feed extends JsonView {
         return Long.parseLong(idbuff.toString());
     }
 
-    public String getSourceName(Context context) {
-        Object data = getJsonData().get(FeedNames.siteid);
-        if (data instanceof Map) {
-            return (String) ((Map) data).get("site");
-        }
-        return getSourceName_v1_0_1(context);
+    public String getSourceName() {
+        return (String)this.getSite().get(SiteNames.site);
     }
 
+    /**
+     * Use {@link #getSourceName()}
+     * @param context
+     * @return The name of the source of the contents if this feed
+     * @deprecated
+     * @see #getSourceName()
+     */
+    @Deprecated
     public String getSourceName_v1_0_1(Context context) {
         Map sources = App.getPropertiesManager(context).getMap(PropertyName.sources);
         Set keys = sources.keySet();
@@ -377,28 +418,49 @@ public class Feed extends JsonView {
     }
 
     public String getText(String defaultValue) {
-        String output;
+        String output = null;
         String content = getContent();
         if (content != null) {
             content = content.trim();
             if (!content.isEmpty()) {
                 output = content;
-                Logx.log(Log.VERBOSE, getClass(), "Text:\n{0}", output);
-                return output;
             }
         }
-        String title = getTitle();
-        if (title != null) {
-            title = title.trim();
-            if (!title.isEmpty()) {
-                output = title.replaceAll("\\s{2,}", " ");
-                Logx.log(Log.VERBOSE, getClass(), "Text:\n{0}", output);
-                return output;
+        if(output == null) {
+            String description = this.getDescription();
+            if(description != null) {
+                description = description.trim();
+                if(!description.isEmpty()) {
+                    output = description;
+                }
             }
         }
-        output = defaultValue;
-        Logx.log(Log.VERBOSE, getClass(), "Text:\n{0}", output);
-        return output;
+        if(output == null) {
+            String title = getTitle();
+            if (title != null) {
+                title = title.trim();
+                if (!title.isEmpty()) {
+                    output = title.replaceAll("\\s{2,}", " ");
+                }
+            }
+        }
+
+        final String imageUrl = this.getImageUrl();
+
+        if(imageUrl != null && !imageUrl.isEmpty() && !imageUrl.equals(this.getSiteIconurl())) {
+            final String imageNode = "<img src=\"" + imageUrl + "\"/><br/>";
+            if(output != null) {
+                if(!output.contains("<img") && !output.contains("<IMG")) {
+                    output = imageNode + output;
+                }
+            }else{
+                output = imageNode;
+            }
+        }
+
+        Logx.getInstance().log(Log.VERBOSE, getClass(), "Text:\n{0}", output);
+
+        return output == null ? defaultValue : output;
     }
 
     public String getInfo(Context context, String defaultValue, int maxLength) {
@@ -406,7 +468,7 @@ public class Feed extends JsonView {
         String author;
         String dateStr = (String) getJsonData().get(FeedNames.feeddate);
         String views;
-        final int hitcount = this.getHitcount(context, true);
+        final int hitcount = this.getHitcount(context);
         if(hitcount < 1) {
             views = "";
         }else if(hitcount == 1) {
@@ -447,7 +509,7 @@ public class Feed extends JsonView {
             }
         }
 
-        StringBuilder builder = this.getReusedStringBuilder();
+        StringBuilder builder = new StringBuilder(maxLength + 10);
         if(dateStr != null && !dateStr.isEmpty()) {
             builder.append(dateStr);
         }
@@ -455,7 +517,7 @@ public class Feed extends JsonView {
         // Replace  'This post bla bla bla etc was written by Jane Doe' with 'by Jane Doe'
         if(author != null && !author.isEmpty()) {
             String sLower = author.toLowerCase();
-            int x = sLower.indexOf(BY.toLowerCase());
+            int x = sLower.indexOf(BY.trim().toLowerCase());
             if(x != -1) {
                 author = author.substring(x + BY.length());
             }
@@ -532,24 +594,5 @@ public class Feed extends JsonView {
         s0 = s0.toLowerCase();
         s1 = s1.toLowerCase();
         return s0.contains(s1) || s1.contains(s0);
-    }
-
-    static {
-        _mmca = -1;
-    }
-
-    public static int getDefaultMinimumMatchCountAliases(Context context) {
-        if (_mmca == -1) {
-            _mmca = App.getPropertiesManager(context).getInt(PropertyName.minimumMatchCountForAliases);
-        }
-        return _mmca;
-    }
-
-    private StringBuilder getReusedStringBuilder() {
-        if (this._b_accessViaGetter == null) {
-            this._b_accessViaGetter = new StringBuilder(20);
-        }
-        this._b_accessViaGetter.setLength(0);
-        return this._b_accessViaGetter;
     }
 }

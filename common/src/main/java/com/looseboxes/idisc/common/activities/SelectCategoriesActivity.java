@@ -9,12 +9,13 @@ import com.looseboxes.idisc.common.App;
 import com.looseboxes.idisc.common.R;
 import com.looseboxes.idisc.common.util.Pref;
 import com.looseboxes.idisc.common.util.PropertiesManager.PropertyName;
+
 import java.util.ArrayList;
 import java.util.Set;
 
 public class SelectCategoriesActivity extends AbstractSelectOptions {
 
-    private Set _c_accessViaGetter;
+    public SelectCategoriesActivity() { }
 
     @Override
     protected void doCreate(Bundle icicle) {
@@ -41,9 +42,6 @@ public class SelectCategoriesActivity extends AbstractSelectOptions {
     }
 
     public Set getOptions() {
-        if (this._c_accessViaGetter == null) {
-            this._c_accessViaGetter = Pref.getAvailableCategories(this, App.getPropertiesManager(this).getSet(PropertyName.categories));
-        }
-        return this._c_accessViaGetter;
+        return Pref.getAvailableCategories(this, App.getPropertiesManager(this).getSet(PropertyName.categories));
     }
 }

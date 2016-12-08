@@ -1,53 +1,49 @@
 package com.looseboxes.idisc.common.asynctasks;
 
+import android.content.Context;
+import android.widget.Toast;
+
+import com.bc.android.core.notice.Popup;
+import com.bc.android.core.util.Util;
 import com.looseboxes.idisc.common.R;
+import com.looseboxes.idisc.common.User;
 import com.looseboxes.idisc.common.jsonview.AuthuserNames;
 import com.looseboxes.idisc.common.jsonview.FeeduserNames;
 
-import java.util.HashMap;
-import java.util.Map;
+public class Signup extends AbstractReadTask<Object> {
 
-public abstract class Signup extends DefaultReadTask<Object> {
-    public Signup(String email, String username, char[] password, boolean sendActivationMail) {
-        if (email == null) {
-            throw new NullPointerException();
-        }
-        Map<String, String> loginParams = new HashMap(6, 1.0f);
-        loginParams.put(AuthuserNames.emailaddress, email);
+    public Signup(Context context, String email, String username, char[] password, boolean sendActivationMail) {
+
+        super(context, context.getString(R.string.err_signup));
+
+        Util.requireNonNullOrEmpty(email, context.getString(R.string.err_required_s, AuthuserNames.emailaddress));
+
+        this.addOutputParameters(User.getInstance().getOutputParameters(context));
+
+        this.addOutputParameter(AuthuserNames.emailaddress, email);
+        this.addOutputParameter(FeeduserNames.emailAddress, email);
         if (username != null) {
-            loginParams.put(AuthuserNames.username, username);
+            this.addOutputParameter(AuthuserNames.username, username);
         }
         if (password != null) {
-            loginParams.put(FeeduserNames.password, new String(password));
+            this.addOutputParameter(FeeduserNames.password, new String(password));
         }
-        loginParams.put("sendregistrationmail", Boolean.toString(sendActivationMail));
-        setOutputParameters(loginParams);
-    }
-
-    public boolean isRemote() {
-        return true;
-    }
-
-    public String getErrorMessage() {
-        return getContext().getString(R.string.err_signup);
-    }
-
-    public String getLocalFilename() {
-        throw new UnsupportedOperationException("Not supported.");
+        this.addOutputParameter("sendregistrationmail", Boolean.toString(sendActivationMail));
     }
 
     public String getOutputKey() {
         return "signup";
     }
 
-    public void setOutputParameters(Map<String, String> loginParameters) {
-        checkNull(loginParameters, AuthuserNames.emailaddress);
-        super.setOutputParameters(loginParameters);
-    }
-
-    protected void checkNull(Map<String, String> params, String key) throws NullPointerException {
-        if (params.get(key) == null) {
-            throw new NullPointerException("Required: " + key);
+    public void onSuccess(Object download) {
+        Context context = this.getContext();
+        String msg;
+        if (Boolean.TRUE.equals(download)) {
+            String app_label = context.getString(R.string.app_label);
+            msg = context.getString(R.string.msg_signupsuccess, new Object[]{app_label});
+        } else {
+            msg = context.getString(R.string.err_signup);
         }
+        Popup.getInstance().show(context, msg, Toast.LENGTH_SHORT);
     }
 }

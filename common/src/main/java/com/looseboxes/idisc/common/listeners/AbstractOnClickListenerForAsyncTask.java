@@ -4,8 +4,8 @@ import android.app.Activity;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
-import com.looseboxes.idisc.common.notice.Popup;
-import com.looseboxes.idisc.common.util.Logx;
+import com.bc.android.core.notice.Popup;
+import com.bc.android.core.util.Logx;
 
 public abstract class AbstractOnClickListenerForAsyncTask implements OnClickListener {
     private final Activity activity;
@@ -22,15 +22,15 @@ public abstract class AbstractOnClickListenerForAsyncTask implements OnClickList
 
     public void onClick(View v) {
         try {
-            Logx.log(Log.VERBOSE, getClass(), "onClick");
+            Logx.getInstance().log(Log.VERBOSE, getClass(), "onClick");
             if (accept(v)) {
                 execute(v);
             } else {
                 this.activity.finish();
             }
         } catch (Exception e) {
-            Popup.show(this.activity, getErrorMessageResourceId(), 1);
-            Logx.log(getClass(), e);
+            Popup.getInstance().show(this.activity, getErrorMessageResourceId(), 1);
+            Logx.getInstance().log(getClass(), e);
         }
     }
 

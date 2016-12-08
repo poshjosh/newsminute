@@ -1,0 +1,70 @@
+Exceed top
+----------
+08-24 23:33:02.372 10980-10980/com.looseboxes.idisc.newsminutefree V/com.looseboxes.idisc.common.fragments.DefaultListFragment$ScrollListener: VERBOSE Wed Aug 24 23:33:02 GMT+01:00 2016
+                                                                                                                                               @com.looseboxes.idisc.common.fragments.DefaultListFragment$ScrollListener
+                                                                                                                                               State: 1, pos: atTop, scrolling up: false, down: true, top: true, top-item: true, bottom: false, bottom-item: false
+08-24 23:33:02.692 10980-10980/com.looseboxes.idisc.newsminutefree V/com.looseboxes.idisc.common.fragments.DefaultListFragment$ScrollListener: VERBOSE Wed Aug 24 23:33:02 GMT+01:00 2016
+                                                                                                                                               @com.looseboxes.idisc.common.fragments.DefaultListFragment$ScrollListener
+                                                                                                                                               State: 0, pos: betweenTopAndBottom, scrolling up: false, down: false, top: false, top-item: true, bottom: false, bottom-item: false
+
+Exceed top
+----------
+08-24 23:33:19.617 10980-10980/com.looseboxes.idisc.newsminutefree V/com.looseboxes.idisc.common.fragments.DefaultListFragment$ScrollListener: VERBOSE Wed Aug 24 23:33:19 GMT+01:00 2016
+                                                                                                                                               @com.looseboxes.idisc.common.fragments.DefaultListFragment$ScrollListener
+                                                                                                                                               State: 1, pos: betweenTopAndBottom, scrolling up: false, down: false, top: false, top-item: true, bottom: false, bottom-item: false
+08-24 23:33:19.797 10980-10980/com.looseboxes.idisc.newsminutefree V/com.looseboxes.idisc.common.fragments.DefaultListFragment$ScrollListener: VERBOSE Wed Aug 24 23:33:19 GMT+01:00 2016
+                                                                                                                                               @com.looseboxes.idisc.common.fragments.DefaultListFragment$ScrollListener
+                                                                                                                                               State: 0, pos: atTop, scrolling up: false, down: false, top: true, top-item: true, bottom: false, bottom-item: false
+From top scrolled down
+----------------------
+08-24 23:33:35.462 10980-10980/com.looseboxes.idisc.newsminutefree V/com.looseboxes.idisc.common.fragments.DefaultListFragment$ScrollListener: VERBOSE Wed Aug 24 23:33:35 GMT+01:00 2016
+                                                                                                                                               @com.looseboxes.idisc.common.fragments.DefaultListFragment$ScrollListener
+                                                                                                                                               State: 1, pos: atTop, scrolling up: false, down: false, top: true, top-item: true, bottom: false, bottom-item: false
+08-24 23:33:35.942 10980-10980/com.looseboxes.idisc.newsminutefree V/com.looseboxes.idisc.common.fragments.DefaultListFragment$ScrollListener: VERBOSE Wed Aug 24 23:33:35 GMT+01:00 2016
+                                                                                                                                               @com.looseboxes.idisc.common.fragments.DefaultListFragment$ScrollListener
+                                                                                                                                               State: 0, pos: betweenTopAndBottom, scrolling up: false, down: true, top: false, top-item: false, bottom: false, bottom-item: false
+From mid scrolled down
+----------------------
+08-24 23:34:29.972 10980-10980/com.looseboxes.idisc.newsminutefree V/com.looseboxes.idisc.common.fragments.DefaultListFragment$ScrollListener: VERBOSE Wed Aug 24 23:34:29 GMT+01:00 2016
+                                                                                                                                               @com.looseboxes.idisc.common.fragments.DefaultListFragment$ScrollListener
+                                                                                                                                               State: 1, pos: betweenTopAndBottom, scrolling up: false, down: false, top: false, top-item: false, bottom: false, bottom-item: false
+08-24 23:34:30.392 10980-10980/com.looseboxes.idisc.newsminutefree V/com.looseboxes.idisc.common.fragments.DefaultListFragment$ScrollListener: VERBOSE Wed Aug 24 23:34:30 GMT+01:00 2016
+                                                                                                                                               @com.looseboxes.idisc.common.fragments.DefaultListFragment$ScrollListener
+                                                                                                                                               State: 0, pos: betweenTopAndBottom, scrolling up: false, down: true, top: false, top-item: false, bottom: false, bottom-item: false
+Long scroll to bottom
+---------------------
+08-24 23:34:29.972 10980-10980/com.looseboxes.idisc.newsminutefree V/com.looseboxes.idisc.common.fragments.DefaultListFragment$ScrollListener: VERBOSE Wed Aug 24 23:34:29 GMT+01:00 2016
+                                                                                                                                               @com.looseboxes.idisc.common.fragments.DefaultListFragment$ScrollListener
+                                                                                                                                               State: 1, pos: betweenTopAndBottom, scrolling up: false, down: false, top: false, top-item: false, bottom: false, bottom-item: false
+08-24 23:34:30.392 10980-10980/com.looseboxes.idisc.newsminutefree V/com.looseboxes.idisc.common.fragments.DefaultListFragment$ScrollListener: VERBOSE Wed Aug 24 23:34:30 GMT+01:00 2016
+                                                                                                                                               @com.looseboxes.idisc.common.fragments.DefaultListFragment$ScrollListener
+                                                                                                                                               State: 0, pos: betweenTopAndBottom, scrolling up: false, down: true, top: false, top-item: false, bottom: false, bottom-item: false
+08-24 23:34:49.117 10980-10980/com.looseboxes.idisc.newsminutefree V/com.looseboxes.idisc.common.fragments.DefaultListFragment$ScrollListener: VERBOSE Wed Aug 24 23:34:49 GMT+01:00 2016
+                                                                                                                                               @com.looseboxes.idisc.common.fragments.DefaultListFragment$ScrollListener
+                                                                                                                                               State: 1, pos: betweenTopAndBottom, scrolling up: false, down: false, top: false, top-item: false, bottom: false, bottom-item: false
+08-24 23:34:49.142 10980-10980/com.looseboxes.idisc.newsminutefree V/com.looseboxes.idisc.common.fragments.DefaultListFragment$ScrollListener: VERBOSE Wed Aug 24 23:34:49 GMT+01:00 2016
+                                                                                                                                               @com.looseboxes.idisc.common.fragments.DefaultListFragment$ScrollListener
+                                                                                                                                               State: 2, pos: betweenTopAndBottom, scrolling up: false, down: true, top: false, top-item: false, bottom: false, bottom-item: false
+08-24 23:34:58.627 10980-10980/com.looseboxes.idisc.newsminutefree V/com.looseboxes.idisc.common.fragments.DefaultListFragment$ScrollListener: VERBOSE Wed Aug 24 23:34:58 GMT+01:00 2016
+                                                                                                                                               @com.looseboxes.idisc.common.fragments.DefaultListFragment$ScrollListener
+                                                                                                                                               State: 0, pos: atBottom, scrolling up: false, down: true, top: false, top-item: false, bottom: true, bottom-item: true
+Exceeded bottom
+---------------
+08-24 23:35:19.712 10980-10980/com.looseboxes.idisc.newsminutefree V/com.looseboxes.idisc.common.fragments.DefaultListFragment$ScrollListener: VERBOSE Wed Aug 24 23:35:19 GMT+01:00 2016
+                                                                                                                                               @com.looseboxes.idisc.common.fragments.DefaultListFragment$ScrollListener
+                                                                                                                                               State: 1, pos: atBottom, scrolling up: false, down: false, top: false, top-item: false, bottom: true, bottom-item: true
+08-24 23:35:19.802 10980-10980/com.looseboxes.idisc.newsminutefree V/com.looseboxes.idisc.common.fragments.DefaultListFragment$ScrollListener: VERBOSE Wed Aug 24 23:35:19 GMT+01:00 2016
+                                                                                                                                               @com.looseboxes.idisc.common.fragments.DefaultListFragment$ScrollListener
+                                                                                                                                               State: 0, pos: atBottom, scrolling up: false, down: false, top: false, top-item: false, bottom: true, bottom-item: true
+From bottom scrolled up
+-----------------------
+08-24 23:35:44.407 10980-10980/com.looseboxes.idisc.newsminutefree V/com.looseboxes.idisc.common.fragments.DefaultListFragment$ScrollListener: VERBOSE Wed Aug 24 23:35:44 GMT+01:00 2016
+                                                                                                                                               @com.looseboxes.idisc.common.fragments.DefaultListFragment$ScrollListener
+                                                                                                                                               State: 1, pos: atBottom, scrolling up: false, down: false, top: false, top-item: false, bottom: true, bottom-item: true
+08-24 23:35:44.722 10980-10980/com.looseboxes.idisc.newsminutefree V/com.looseboxes.idisc.common.fragments.DefaultListFragment$ScrollListener: VERBOSE Wed Aug 24 23:35:44 GMT+01:00 2016
+                                                                                                                                               @com.looseboxes.idisc.common.fragments.DefaultListFragment$ScrollListener
+                                                                                                                                               State: 2, pos: betweenTopAndBottom, scrolling up: true, down: false, top: false, top-item: false, bottom: false, bottom-item: false
+08-24 23:35:44.912 10980-10980/com.looseboxes.idisc.newsminutefree V/com.looseboxes.idisc.common.fragments.DefaultListFragment$ScrollListener: VERBOSE Wed Aug 24 23:35:44 GMT+01:00 2016
+                                                                                                                                               @com.looseboxes.idisc.common.fragments.DefaultListFragment$ScrollListener
+                                                                                                                                               State: 0, pos: betweenTopAndBottom, scrolling up: false, down: false, top: false, top-item: false, bottom: false, bottom-item: false
+

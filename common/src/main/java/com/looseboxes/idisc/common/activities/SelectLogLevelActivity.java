@@ -11,16 +11,16 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.Spinner;
 import com.looseboxes.idisc.common.R;
-import com.looseboxes.idisc.common.asynctasks.AbstractFeedReadTask;
-import com.looseboxes.idisc.common.handlers.FeedDisplayHandler;
+import com.looseboxes.idisc.common.asynctasks.FeedDownloadTask;
+import com.looseboxes.idisc.common.handlers.FeedListDisplayHandler;
 import com.looseboxes.idisc.common.io.FileIO;
 import com.looseboxes.idisc.common.jsonview.AuthuserNames;
 import com.looseboxes.idisc.common.listeners.AbstractContentOptionsButtonListener;
-import com.looseboxes.idisc.common.notice.NotificationHandler;
-import com.looseboxes.idisc.common.notice.Popup;
+import com.looseboxes.idisc.common.notice.FeedNotificationHandler;
+import com.bc.android.core.notice.Popup;
 import com.looseboxes.idisc.common.service.DownloadService;
 import com.looseboxes.idisc.common.util.AliasesManager;
-import com.looseboxes.idisc.common.util.Logx;
+import com.bc.android.core.util.Logx;
 import java.util.Arrays;
 
 public class SelectLogLevelActivity extends Activity {
@@ -42,7 +42,7 @@ public class SelectLogLevelActivity extends Activity {
             try {
                 SelectLogLevelActivity.this.selectedLogPriority = Integer.parseInt(this.val$values[position].toString());
             } catch (Exception e) {
-                Logx.log(getClass(), e);
+                Logx.getInstance().log(getClass(), e);
             }
         }
 
@@ -62,7 +62,7 @@ public class SelectLogLevelActivity extends Activity {
             try {
                 SelectLogLevelActivity.this.selectedLogTag = this.val$values[position].toString();
             } catch (Exception e) {
-                Logx.log(getClass(), e);
+                Logx.getInstance().log(getClass(), e);
             }
         }
 
@@ -80,20 +80,20 @@ public class SelectLogLevelActivity extends Activity {
             public void onClick(View v) {
                 try {
                     if (SelectLogLevelActivity.this.selectedLogPriority != -1) {
-                        Logx.setLogPriority(SelectLogLevelActivity.this.selectedLogPriority);
-                        Popup.show(SelectLogLevelActivity.this, "Log priority updated to: " + Logx.getLogPriorityString(SelectLogLevelActivity.this.selectedLogPriority), 0);
+                        Logx.getInstance().setLogPriority(SelectLogLevelActivity.this.selectedLogPriority);
+                        Popup.getInstance().show(SelectLogLevelActivity.this, "Log priority updated to: " + Logx.getInstance().getLogPriorityString(SelectLogLevelActivity.this.selectedLogPriority), 0);
                     }
                     if (SelectLogLevelActivity.this.selectedLogTag == null) {
                         return;
                     }
                     if (SelectLogLevelActivity.this.selectedLogTag.equals(SelectLogLevelActivity.LOG_TAG_NONE)) {
-                        Logx.clearTagsToAccept();
+                        Logx.getInstance().clearTagsToAccept();
                         return;
                     }
-                    Logx.addTagToAccept(SelectLogLevelActivity.this.selectedLogTag);
-                    Popup.show(SelectLogLevelActivity.this, "Added log tag to accept: " + SelectLogLevelActivity.this.selectedLogTag, 1);
+                    Logx.getInstance().addTagToAccept(SelectLogLevelActivity.this.selectedLogTag);
+                    Popup.getInstance().show(SelectLogLevelActivity.this, "Added log tag to accept: " + SelectLogLevelActivity.this.selectedLogTag, 1);
                 } catch (Exception e) {
-                    Logx.log(getClass(), e);
+                    Logx.getInstance().log(getClass(), e);
                 }
             }
         });
@@ -106,7 +106,7 @@ public class SelectLogLevelActivity extends Activity {
     }
 
     private void initLogTagSpinner(Spinner spinner) {
-        Object[] values = new Object[]{LOG_TAG_NONE, AbstractFeedReadTask.class.getPackage().getName(), FeedDisplayHandler.class.getPackage().getName(), FileIO.class.getPackage().getName(), AuthuserNames.class.getPackage().getName(), AbstractContentOptionsButtonListener.class.getPackage().getName(), NotificationHandler.class.getPackage().getName(), DownloadService.class.getPackage().getName(), AliasesManager.class.getPackage().getName(), AboutUsActivity.class.getPackage().getName()};
+        Object[] values = new Object[]{LOG_TAG_NONE, FeedDownloadTask.class.getPackage().getName(), FeedListDisplayHandler.class.getPackage().getName(), FileIO.class.getPackage().getName(), AuthuserNames.class.getPackage().getName(), AbstractContentOptionsButtonListener.class.getPackage().getName(), FeedNotificationHandler.class.getPackage().getName(), DownloadService.class.getPackage().getName(), AliasesManager.class.getPackage().getName(), AboutUsActivity.class.getPackage().getName()};
         initSpinner(spinner, values, values);
         spinner.setOnItemSelectedListener(getLogTagSpinnerListener(values));
     }
@@ -115,7 +115,7 @@ public class SelectLogLevelActivity extends Activity {
         Integer[] values = new Integer[]{Log.VERBOSE, Log.DEBUG, Log.INFO, Log.WARN, Log.ERROR, Log.ASSERT};
         String[] entries = new String[values.length];
         for (int i = 0; i < values.length; i++) {
-            entries[i] = Logx.getLogPriorityString(values[i].intValue());
+            entries[i] = Logx.getInstance().getLogPriorityString(values[i].intValue());
         }
         initSpinner(spinner, entries, values);
         spinner.setOnItemSelectedListener(getLogLevelSpinnerListener(values));

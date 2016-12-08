@@ -4,17 +4,16 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
     <TextView
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center_horizontal"
         android:textSize="@dimen/title_text_size"
-        android:text="@string/msg_invitation_received"
+        android:gravity="left"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
         android:layout_marginBottom="@dimen/space_large"
+        android:text="@string/msg_invitation_received"
         android:drawableLeft="@drawable/ic_group_add_black_24dp"
         android:drawableStart="@drawable/ic_group_add_black_24dp"
         android:drawablePadding="@dimen/space_small"
-        android:singleLine="true"
-        style="@style/ColorTextViewAppTheme"/>
+        style="@style/TextViewAppTheme"/>
     <TextView
         android:id="@+id/deep_link_text"
         android:layout_width="wrap_content"
@@ -39,7 +38,7 @@
         android:id="@+id/deep_link_ok_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="end"
+        android:layout_gravity="center"
         android:text="@android:string/ok"
         style="@style/ButtonAppTheme"/>
 </LinearLayout>

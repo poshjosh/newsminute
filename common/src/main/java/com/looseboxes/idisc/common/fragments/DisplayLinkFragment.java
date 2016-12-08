@@ -3,6 +3,7 @@ package com.looseboxes.idisc.common.fragments;
 import com.looseboxes.idisc.common.R;
 
 public class DisplayLinkFragment extends BrowserFragment {
+
     public int getUrlInput() {
         return R.id.urlbar_urlinput;
     }
@@ -11,7 +12,7 @@ public class DisplayLinkFragment extends BrowserFragment {
         return R.id.urlbar_button1;
     }
 
-    public int getContentView() {
+    public int getContentViewId() {
         return R.layout.displaylink;
     }
 

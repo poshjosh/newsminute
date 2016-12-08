@@ -1,49 +1,75 @@
 package com.looseboxes.idisc.common.asynctasks;
 
 import android.content.Context;
+import android.util.Log;
+
+import com.bc.android.core.util.Logx;
 import com.looseboxes.idisc.common.App;
 import com.looseboxes.idisc.common.R;
 import com.looseboxes.idisc.common.User;
-import com.looseboxes.idisc.common.util.PropertiesManager.PropertyName;
-import java.util.HashMap;
-import java.util.Map;
+import com.looseboxes.idisc.common.io.FileIO;
+import com.looseboxes.idisc.common.util.NewsminuteUtil;
+import com.looseboxes.idisc.common.util.Pref;
 
-public abstract class FeedDownloadTask extends AbstractFeedReadTask {
-    private final Context context;
+import org.json.simple.JSONObject;
+
+import java.util.List;
+
+public abstract class FeedDownloadTask extends AbstractReadTask<List<JSONObject>> {
+
+    private static boolean loggedMemory;
 
     public FeedDownloadTask(Context context) {
         this(context, 0);
     }
 
     public FeedDownloadTask(Context context, long downloadFeedsAfter) {
-        init(context, downloadFeedsAfter, App.getPropertiesManager(context).getInt(PropertyName.feedDownloadLimit));
-        this.context = context;
+        this(context, downloadFeedsAfter, Pref.getFeedDownloadLimit(context));
+        setNoUI(!App.isVisible());
     }
 
     public FeedDownloadTask(Context context, long downloadFeedsAfter, int limit) {
-        init(context, downloadFeedsAfter, limit);
-        this.context = context;
-    }
 
-    private void init(Context context, long downloadFeedsAfter, int limit) {
-        Map<String, String> params = new HashMap(20, 0.75f);
+        super(context, context.getString(R.string.err_loadingfeeds));
+
+        this.addOutputParameters(User.getInstance().getOutputParameters(context));
+
         if (downloadFeedsAfter > 0) {
-            params.put("after", Long.toString(downloadFeedsAfter));
+            this.addOutputParameter("after", Long.toString(downloadFeedsAfter));
         }
-        params.put("limit", Integer.toString(limit));
-        int added = User.getInstance().addParameters(context, params);
-        setOutputParameters(params);
+        this.addOutputParameter("limit", Integer.toString(limit));
     }
 
-    public Context getContext() {
-        return this.context;
+    @Override
+    protected boolean isNetworkAvailable() {
+        return NewsminuteUtil.isPreferredNetworkConnectedOrConnecting(this.getContext());
     }
 
-    public String getErrorMessage() {
-        return getContext().getString(R.string.err_loadingfeeds);
+    @Override
+    protected String getNetworkUnavailableMessage() {
+        return NewsminuteUtil.getNetworkUnavailableMessage(this.getContext());
     }
 
-    public boolean isRemote() {
-        return true;
+    @Override
+    protected void before() {
+        super.before();
+        if(!loggedMemory) {
+            Logx.getInstance().log(Log.INFO, this.getClass(), "BEFORE DOWNLOADING FEEDS. Total memory: {0}, free memory: {1}",
+                    Runtime.getRuntime().totalMemory(), Runtime.getRuntime().freeMemory());
+        }
+    }
+
+    @Override
+    protected void after(String downloaded) {
+        super.after(downloaded);
+        if(!loggedMemory) {
+            loggedMemory = true;
+            Logx.getInstance().log(Log.INFO, this.getClass(), "AFTER DOWNLOADING FEEDS. Total memory: {0}, free memory: {1}",
+                    Runtime.getRuntime().totalMemory(), Runtime.getRuntime().freeMemory());
+        }
+    }
+
+    public String getOutputKey() {
+        return FileIO.getFeedskey();
     }
 }

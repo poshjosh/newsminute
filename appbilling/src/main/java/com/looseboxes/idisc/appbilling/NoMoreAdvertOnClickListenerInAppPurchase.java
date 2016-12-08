@@ -3,8 +3,9 @@ package com.looseboxes.idisc.appbilling;
 import android.app.Activity;
 import android.content.Intent;
 import android.view.View;
+
+import com.bc.android.core.util.Logx;
 import com.looseboxes.idisc.common.listeners.NoMoreAdvertOnClickListener;
-import com.looseboxes.idisc.common.util.Logx;
 
 public class NoMoreAdvertOnClickListenerInAppPurchase extends NoMoreAdvertOnClickListener {
     public NoMoreAdvertOnClickListenerInAppPurchase(Activity activity) {
@@ -15,7 +16,7 @@ public class NoMoreAdvertOnClickListenerInAppPurchase extends NoMoreAdvertOnClic
         try {
             getActivity().startActivity(new Intent(getActivity(), InAppPurchaseActivity.class));
         } catch (Exception e) {
-            Logx.log(getClass(), e);
+            Logx.getInstance().log(getClass(), e);
         }
     }
 }

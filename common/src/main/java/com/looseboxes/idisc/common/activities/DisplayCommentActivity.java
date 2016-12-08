@@ -2,7 +2,8 @@ package com.looseboxes.idisc.common.activities;
 
 import com.looseboxes.idisc.common.fragments.DisplayCommentFragment;
 
-public class DisplayCommentActivity extends AbstractDisplayFeedActivity<DisplayCommentFragment> {
+public class DisplayCommentActivity extends WebContentActivity<DisplayCommentFragment> {
+
     public static final String EXTRA_BOOL_CLEAR_NOTICES_ON_DESTROY;
     public static final String EXTRA_INT_SELECTED_NOTICE_POSITION;
 

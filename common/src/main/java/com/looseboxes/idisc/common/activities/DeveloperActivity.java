@@ -9,22 +9,22 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.TextView;
+
+import com.bc.android.core.notice.Popup;
+import com.bc.android.core.util.Logx;
+import com.bc.android.core.util.Logx.LogSettings;
 import com.looseboxes.idisc.common.App;
 import com.looseboxes.idisc.common.R;
 import com.looseboxes.idisc.common.asynctasks.FeedDownloadManager;
 import com.looseboxes.idisc.common.asynctasks.MultiRequest;
 import com.looseboxes.idisc.common.handlers.ButtonGroupHandler;
-import com.looseboxes.idisc.common.jsonview.Feed;
-import com.looseboxes.idisc.common.jsonview.FeedSearcher.FeedSearchResult;
-import com.looseboxes.idisc.common.notice.FeedNotificationHandler;
-import com.looseboxes.idisc.common.notice.Popup;
+import com.looseboxes.idisc.common.notice.CommentNotificationHandler;
+import com.looseboxes.idisc.common.preferencefeed.Preferencefeeds.PreferenceType;
+import com.looseboxes.idisc.common.preferencefeed.PreferencefeedsManager;
 import com.looseboxes.idisc.common.service.DownloadService;
 import com.looseboxes.idisc.common.util.AliasesManager;
-import com.looseboxes.idisc.common.util.Logx;
-import com.looseboxes.idisc.common.util.Logx.LogSettings;
-import com.looseboxes.idisc.common.util.PreferenceFeedsManager;
-import com.looseboxes.idisc.common.util.PreferenceFeedsManager.PreferenceType;
 import com.looseboxes.idisc.common.util.StaticResourceManager;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
@@ -43,12 +43,12 @@ public class DeveloperActivity extends Activity {
         }
 
         public void onClick(View v) {
-            LogSettings ls = Logx.getLogSettings();
+            LogSettings ls = Logx.getInstance().getLogSettings();
             int n = ls.getPopupRepeats();
             ls.setPopupRepeats(n + 1);
             String msg = "Popup repeats increased to: " + (n + 1);
             this.val$textView.setText(msg);
-            Popup.show(DeveloperActivity.this, msg, 0);
+            Popup.getInstance().show(DeveloperActivity.this, msg, 0);
         }
     }
 
@@ -60,64 +60,64 @@ public class DeveloperActivity extends Activity {
         }
 
         public void onClick(View v) {
-            LogSettings ls = Logx.getLogSettings();
+            LogSettings ls = Logx.getInstance().getLogSettings();
             int n = ls.getPopupRepeats();
             ls.setPopupRepeats(n - 1);
             String msg = "Popup repeats decreased to: " + (n - 1);
             this.val$textView.setText(msg);
-            Popup.show(DeveloperActivity.this, msg, 0);
+            Popup.getInstance().show(DeveloperActivity.this, msg, 0);
         }
     }
 
-    /* renamed from: com.looseboxes.idisc.common.activities.DeveloperActivity.2 */
-    class AnonymousClass2 implements OnClickListener {
-        final /* synthetic */ TextView val$textView;
+    class OnClickListenerImpl implements OnClickListener {
 
-        /* renamed from: com.looseboxes.idisc.common.activities.DeveloperActivity.2.1 */
-        class AnonymousClass1 extends FeedDownloadManager {
-            AnonymousClass1(Context x0) {
+        final TextView val$textView;
+
+        class FeedDownloadManagerImpl extends FeedDownloadManager {
+
+            FeedDownloadManagerImpl(Context x0) {
                 super(x0);
+                this.setNoUI(false);
             }
 
-            protected InputStream openRemoteStream(String urlString) throws IOException {
-                InputStream in = super.openRemoteStream(urlString);
-                Logx.debug(getClass(), "Input stream: " + in);
+            @Override
+            protected InputStream openStream(String urlString) throws IOException {
+                InputStream in = super.openStream(urlString);
+                Logx.getInstance().debug(getClass(), "Input stream: " + in);
                 return in;
             }
 
             public void onCancelled(String result) {
-                Logx.debug(getClass(), "Cancelled, result: " + result);
+                super.onCancelled(result);
+                Logx.getInstance().debug(getClass(), "Cancelled, result: " + result);
             }
 
-            public void onPostSuccess(List download) {
-                String msg = "Done downloading " + download.size() + " feeds";
-                Logx.debug(getClass(), msg);
-                AnonymousClass2.this.val$textView.setText(msg);
+            public void onPostSuccess(List newlyDownloadedFeeds) {
+                String msg = "Done downloading " + newlyDownloadedFeeds.size() + " feeds";
+                Logx.getInstance().debug(getClass(), msg);
+                OnClickListenerImpl.this.val$textView.setText(msg);
             }
 
-            protected void onPostExecute(String contents) {
+            protected void onPostExecute(String download) {
+                super.onPostExecute(download);
                 Class cls = getClass();
-                if (contents == null) {
-                    contents = "null";
-                } else if (contents.length() > 200) {
-                    contents = contents.substring(0, 200);
+                if (download == null) {
+                    download = "null";
+                } else if (download.length() > 200) {
+                    download = download.substring(0, 200);
                 }
-                Logx.debug(cls, contents);
-            }
-
-            public void displayMessage(Object msg, int length) {
-                Popup.show(DeveloperActivity.this, msg, length);
+                Logx.getInstance().debug(cls, download);
             }
         }
 
-        AnonymousClass2(TextView textView) {
+        OnClickListenerImpl(TextView textView) {
             this.val$textView = textView;
         }
 
         public void onClick(View v) {
-            FeedDownloadManager downloadMgr = new AnonymousClass1(DeveloperActivity.this);
+            FeedDownloadManager downloadMgr = new FeedDownloadManagerImpl(DeveloperActivity.this);
             downloadMgr.setNoUI(false);
-            Logx.debug(getClass(), "Downloading feeds");
+            Logx.getInstance().debug(getClass(), "Downloading feeds");
             downloadMgr.execute();
         }
     }
@@ -136,7 +136,9 @@ public class DeveloperActivity extends Activity {
         public static final String START_DOWNLOAD_SERVICE = "Start Download Service";
         public static final String VIEW_LOG = "View Log";
 
-        private DeveloperButtonGroupHandler() {
+        @Override
+        public Button createNew() {
+            return new Button(this.getActivity());
         }
 
         public void formatButton(Button btn, Resources res) {
@@ -162,10 +164,6 @@ public class DeveloperActivity extends Activity {
 
         public List<String> getButtonTexts() {
             return Arrays.asList(new String[]{FIRE_FEED_NOTICE, LOAD_ALIASES, LOAD_FEEDS, LOAD_PROPERTIES, EXECUTE_MULTI_REQUESTS, LOAD_USER_PREFERENCES, SELECT_LOG_LEVEL, LAUNCH_ACTIVITY, START_DOWNLOAD_SERVICE, VIEW_LOG, INCREASE_DEVELOPER_POPUP_REPEATS, DECREASE_DEVELOPER_POPUP_REPEATS});
-        }
-
-        public Class<Button> getButtonClass() {
-            return Button.class;
         }
     }
 
@@ -238,7 +236,7 @@ public class DeveloperActivity extends Activity {
     }
 
     private OnClickListener getDownloadOnclickListener(TextView textView) {
-        return new AnonymousClass2(textView);
+        return new OnClickListenerImpl(textView);
     }
 
     private OnClickListener getSelectLogLevelOnclickListener(TextView textView) {
@@ -267,26 +265,11 @@ public class DeveloperActivity extends Activity {
 
     private OnClickListener getShowFeedNoticeOnclickListener(TextView textView) {
         return new OnClickListener() {
-
-            /* renamed from: com.looseboxes.idisc.common.activities.DeveloperActivity.6.1 */
-            class AnonymousClass1 extends FeedNotificationHandler {
-                AnonymousClass1(Context x0) {
-                    super(x0);
-                }
-
-                protected FeedSearchResult getResultForDisplay(Feed feed, List download, int displayLen) {
-                    FeedSearchResult result = super.getResultForDisplay(feed, download, displayLen);
-                    if (result == null) {
-                        return getMostRecent(feed, download, displayLen);
-                    }
-                    return result;
-                }
-            }
-
             public void onClick(View v) {
-                FeedNotificationHandler notice = new AnonymousClass1(DeveloperActivity.this);
-                notice.showFeedNotice();
-                notice.showCommentNotice(FeedDownloadManager.getCommentNotifications(DeveloperActivity.this, false));
+                FeedDownloadManager feedDownloadManager = new FeedDownloadManager(DeveloperActivity.this);
+                feedDownloadManager.showFeedNotice(true, true);
+                CommentNotificationHandler cnotice = new CommentNotificationHandler(DeveloperActivity.this);
+                cnotice.showCommentNotice(FeedDownloadManager.getCommentNotifications(DeveloperActivity.this, false));
             }
         };
     }
@@ -321,13 +304,12 @@ public class DeveloperActivity extends Activity {
                 try {
                     PreferenceType[] prefValues = PreferenceType.values();
                     for (int i = 0; i < prefValues.length; i++) {
-                        PreferenceFeedsManager pfm = App.getPreferenceFeedsManager(DeveloperActivity.this, prefValues[i]);
-                        pfm.setNoUI(false);
-                        Popup.show(DeveloperActivity.this, "Downloading: " + prefValues[i], 0);
+                        PreferencefeedsManager pfm = new PreferencefeedsManager(DeveloperActivity.this, prefValues[i], false, null);
+                        Popup.getInstance().show(DeveloperActivity.this, "Downloading: " + prefValues[i], 0);
                         pfm.update(true);
                     }
                 } catch (Exception e) {
-                    Logx.log(getClass(), e);
+                    Logx.getInstance().log(getClass(), e);
                 }
             }
         };
@@ -346,12 +328,12 @@ public class DeveloperActivity extends Activity {
             StaticResourceManager[] mgrs = getStaticResourcesManagers(((Button) v).getText().toString());
             if (mgrs != null) {
                 for (StaticResourceManager mgr : mgrs) {
-                    Popup.show((Activity) this, "Downloading: " + mgr.getClass().getName(), 0);
+                    Popup.getInstance().show((Activity) this, "Downloading: " + mgr.getClass().getName(), 0);
                     mgr.update(true);
                 }
             }
         } catch (Exception e) {
-            Logx.log(getClass(), e);
+            Logx.getInstance().log(getClass(), e);
         }
     }
 

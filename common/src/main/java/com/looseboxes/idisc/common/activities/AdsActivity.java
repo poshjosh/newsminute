@@ -3,7 +3,7 @@ package com.looseboxes.idisc.common.activities;
 import android.os.Bundle;
 import com.looseboxes.idisc.common.DefaultApplication;
 import com.looseboxes.idisc.common.util.AdvertManager;
-import com.looseboxes.idisc.common.util.Logx;
+import com.bc.android.core.util.Logx;
 
 public abstract class AdsActivity extends AbstractSingleTopActivity {
     private AdvertManager _am;
@@ -11,10 +11,10 @@ public abstract class AdsActivity extends AbstractSingleTopActivity {
     protected void doCreate(Bundle savedInstanceState) {
         try {
             super.doCreate(savedInstanceState);
-            Logx.debug(getClass(), "Activity: {0}", getClass().getName());
+            Logx.getInstance().debug(getClass(), "Activity: {0}", getClass().getName());
             getAdvertManager(true).onCreate(savedInstanceState);
         } catch (Exception e) {
-            Logx.log(getClass(), e);
+            Logx.getInstance().log(getClass(), e);
         }
     }
 
@@ -25,7 +25,7 @@ public abstract class AdsActivity extends AbstractSingleTopActivity {
                 getAdvertManager(false).onResume();
             }
         } catch (Exception e) {
-            Logx.log(getClass(), e);
+            Logx.getInstance().log(getClass(), e);
         }
     }
 
@@ -36,7 +36,7 @@ public abstract class AdsActivity extends AbstractSingleTopActivity {
                 getAdvertManager(false).onPause();
             }
         } catch (Exception e) {
-            Logx.log(getClass(), e);
+            Logx.getInstance().log(getClass(), e);
         }
     }
 
@@ -48,7 +48,7 @@ public abstract class AdsActivity extends AbstractSingleTopActivity {
             }
             super.onDestroy();
         }catch(Exception e) {
-            Logx.log(this.getClass(), e);
+            Logx.getInstance().log(this.getClass(), e);
         }
     }
 

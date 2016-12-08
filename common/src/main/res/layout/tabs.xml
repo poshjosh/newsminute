@@ -10,27 +10,48 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal">
-        <include
+        <Button
             android:id="@+id/tabs_all"
-            layout="@layout/apptheme_tab_indicator_holo"/>
-        <include
-            android:id="@+id/tabs_headlines"
-            layout="@layout/apptheme_tab_indicator_holo"/>
-        <include
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/msg_all"
+            style="@style/TextTabAppTheme"/>
+        <Button
             android:id="@+id/tabs_categories"
-            layout="@layout/apptheme_tab_indicator_holo"/>
-        <include
-            android:id="@+id/tabs_sources"
-            layout="@layout/apptheme_tab_indicator_holo"/>
-        <include
-            android:id="@+id/tabs_bookmarks"
-            layout="@layout/apptheme_tab_indicator_holo"/>
-        <include
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/msg_categories"
+            style="@style/TextTabAppTheme"/>
+        <Button
             android:id="@+id/tabs_favorites"
-            layout="@layout/apptheme_tab_indicator_holo"/>
-        <include
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/msg_favorites"
+            style="@style/TextTabAppTheme"/>
+        <Button
+            android:id="@+id/tabs_headlines"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/msg_headlines"
+            style="@style/TextTabAppTheme"/>
+        <Button
+            android:id="@+id/tabs_sources"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/msg_sources"
+            style="@style/TextTabAppTheme"/>
+        <Button
+            android:id="@+id/tabs_bookmarks"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/msg_bookmarks"
+            style="@style/TextTabAppTheme"/>
+        <Button
             android:id="@+id/tabs_info"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/msg_info"
             android:visibility="gone"
-            layout="@layout/apptheme_tab_indicator_holo"/>
+            style="@style/TextTabAppTheme"/>
     </LinearLayout>
 </HorizontalScrollView>

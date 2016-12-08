@@ -2,7 +2,7 @@ package com.looseboxes.idisc.common.jsonview;
 
 import android.util.Log;
 
-import com.looseboxes.idisc.common.util.Logx;
+import com.bc.android.core.util.Logx;
 
 import org.json.simple.JSONObject;
 
@@ -69,7 +69,7 @@ public class Comment extends JsonView {
 
     public String getScreenName() {
         Map installationData = this.getInstallationId();
-        Logx.log(Log.DEBUG, getClass(), "Installation data: {0}", installationData);
+        Logx.getInstance().log(Log.VERBOSE, getClass(), "Installation data: {0}", installationData);
         Object val = installationData.get(InstallationNames.screenname);
         return val == null ? null : val.toString();
     }
@@ -122,11 +122,11 @@ public class Comment extends JsonView {
         getJsonData().put(FeedhitNames.feedid, feedid);
     }
 
-    public Map getInstallationId() {
-        return (Map) getJsonData().get(InstallationNames.installationid);
+    public JSONObject getInstallationId() {
+        return (JSONObject) getJsonData().get(InstallationNames.installationid);
     }
 
-    public void setInstallationId(Map installationid) {
+    public void setInstallationId(JSONObject installationid) {
         getJsonData().put(InstallationNames.installationid, installationid);
     }
 }

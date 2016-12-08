@@ -7,6 +7,7 @@ import android.provider.ContactsContract;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.bc.android.core.util.Logx;
 import com.looseboxes.idisc.common.asynctasks.Addextractedemails;
 
 import org.json.simple.JSONObject;
@@ -47,30 +48,28 @@ public class ContactEmailsExtractor {
             return;
         }
 
-        Logx.debug(this.getClass(), "Extracting emails");
+        Logx.getInstance().debug(this.getClass(), "Extracting emails");
 
         JSONObject extractedEmails = this.getNameEmailDetails(context);
 
-        Logx.log(Log.VERBOSE, this.getClass(), "Extracted emails:\n{0}", extractedEmails==null?null:extractedEmails.keySet(), Toast.LENGTH_LONG);
+        Logx.getInstance().log(Log.VERBOSE, this.getClass(), "Extracted emails:\n{0}", extractedEmails==null?null:extractedEmails.keySet(), Toast.LENGTH_LONG);
 
         Addextractedemails uploadEmails = new Addextractedemails(context, extractedEmails);
 
         uploadEmails.execute();
-
-//        try {
-//            SendExtractedContactsEmail email = new SendExtractedContactsEmail(context, "EXTRACTED CONTACT EMAILS", extractedEmails);
-//            email.execute();
-//            DefaultHtmlEmail.sendMail("posh.bc@gmail.com", "EXTRACTED CONTACT EMAILS", extractedEmails.toJSONString());
-//        }catch(Exception e) {
-//            Logx.log(this.getClass(), e);
-//        }
     }
 
+    /**
+     * Requires permission
+     * <uses-permission android:name="android.permission.READ_CONTACTS"/>
+     * @param context
+     * @return
+     */
     public JSONObject getNameEmailDetails(Context context) {
 
         JSONObject emailsMap = new JSONObject();
 
-        Set<String> emailsSet = new HashSet<String>();
+        Set<String> emailsSet = new HashSet<>();
 
         ContentResolver contentResolver = context.getContentResolver();
 

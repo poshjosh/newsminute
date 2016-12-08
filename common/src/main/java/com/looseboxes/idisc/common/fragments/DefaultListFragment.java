@@ -1,170 +1,165 @@
 package com.looseboxes.idisc.common.fragments;
 
-import android.annotation.TargetApi;
 import android.app.Activity;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.util.Log;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.ListView;
-import android.widget.ProgressBar;
+
+import com.bc.android.core.ui.ListState;
 import com.looseboxes.idisc.common.R;
-import com.looseboxes.idisc.common.activities.EmptyViewProgressBar;
-import com.looseboxes.idisc.common.util.Logx;
+import com.looseboxes.idisc.common.handlers.FeedListDisplayHandler;
+import com.looseboxes.idisc.common.listeners.ListOnScrollListener;
+import com.looseboxes.idisc.common.listeners.VerticalScrollListener;
 
-public class DefaultListFragment extends BaseListFragment {
-    private ProgressBar _pb_accessViaGetter;
-    private int listIndex;
-    private ListItemClickHandler listItemClickHandler;
-    private int listTop;
-    private String messageToDisplayWhileLoading;
-    private long selectedId;
-    private int selectedPosition;
+import org.json.simple.JSONObject;
 
-    public interface ListItemClickHandler {
-        boolean isDualPaneMode();
+import java.util.Set;
 
-        boolean isDualPaneVisible();
+public class DefaultListFragment extends BaseListFragmentImpl {
 
-        void onListItemClick(int i, long j, boolean z);
+    private boolean attemptedScrollToItemToDisplayOnResume;
 
-        void onListItemClick(boolean z);
+    @Nullable
+    private JsonListItemClickHandler listItemClickHandler;
+
+    private FeedListDisplayHandler feedListDisplayHandler;
+
+    public interface JsonListItemClickHandler extends BaseListFragmentImpl.ListItemClickHandler, VerticalScrollListener {
+
+        JSONObject getItemToScrollToOnResume();
+
+        Set<String> getSearchPhrases();
     }
 
-    public DefaultListFragment() {
-        this.selectedPosition = -1;
-        this.selectedId = -1;
+    class ScrollListener extends ListOnScrollListener {
+        ScrollListener() { }
+        @Override
+        public void onExceedBottom() {
+            super.onExceedBottom();
+            if(listItemClickHandler != null) {
+                listItemClickHandler.onExceedBottom();
+            }
+        }
+        @Override
+        public void onReachedBottom() {
+            super.onReachedBottom();
+            if(listItemClickHandler != null) {
+                listItemClickHandler.onReachedBottom();
+            }
+        }
+        @Override
+        public void onScrollStopped() {
+
+            super.onScrollStopped();
+
+            DefaultListFragment.this.saveListState();
+
+            if(listItemClickHandler != null) {
+
+                listItemClickHandler.onScrollStopped();
+            }
+        }
+        @Override
+        public void onExceedTop() {
+            super.onExceedTop();
+            if(listItemClickHandler != null) {
+                listItemClickHandler.onExceedTop();
+            }
+        }
+        @Override
+        public void onReachedTop() {
+            super.onReachedTop();
+            if(listItemClickHandler != null) {
+                listItemClickHandler.onReachedTop();
+            }
+        }
     }
+
+    public DefaultListFragment() { }
 
     public int getContentView() {
-        return R.layout.listfragment_list;
+        return R.layout.list;
     }
 
     public void onAttach(Activity activity) {
         super.onAttach(activity);
         try {
-            this.listItemClickHandler = (ListItemClickHandler) activity;
-            if (this.messageToDisplayWhileLoading == null) {
-                this.messageToDisplayWhileLoading = activity.getString(R.string.msg_loading);
-            }
+            this.listItemClickHandler = (JsonListItemClickHandler) activity;
         } catch (ClassCastException e) {
-            throw new ClassCastException(activity + " must implement " + ListItemClickHandler.class.getName());
+            throw new RuntimeException(e);
         }
     }
 
-    public void onDetach() {
-        super.onDetach();
-        this.listItemClickHandler = null;
+    @Override
+    public void onViewCreated(View view, Bundle savedInstanceState) {
+
+        super.onViewCreated(view, savedInstanceState);
+
+        this.feedListDisplayHandler = this.createFeedListDisplayHandler();
+
+        final ListState listState = this.getListState();
+        if(listState != null) {
+            this.feedListDisplayHandler.getJsonListAdapter().registerDataSetObserver(listState);
+        }
+
+        this.setListAdapter(this.feedListDisplayHandler.getJsonListAdapter());
+
     }
 
-    public void onListItemClick(ListView l, View v, int position, long id) {
-        this.listItemClickHandler.onListItemClick(position, id, true);
+    protected FeedListDisplayHandler createFeedListDisplayHandler() {
+
+        return new FeedListDisplayHandler(this.getListView(), listItemClickHandler.getSearchPhrases(), new ScrollListener());
     }
 
-    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
-        super.onActivityCreated(savedInstanceState);
-        if (this.listItemClickHandler.isDualPaneMode()) {
-            getListView().setChoiceMode(1);
-        }
-        addEmptyViewProgressBar(savedInstanceState);
-    }
+    /**
+     * <p><b>Comments culled from super class</b></p>
+     * Default implementation does nothing. Override to scroll to any item the user selected
+     * (usually from a notification) to arrive at this user interface. This method is called
+     * from method {@link #onResume() onResume()} and will be preferred over scrolling to any
+     * previously saved list-state if this method returns <tt>true</tt> (which indicates that
+     * the operation was successful).
+     *
+     * @return true if the operation was successful, false otherwise
+     */
+    @Override
+    public boolean scrollToItemToDisplayOnResume() {
 
-    protected void addEmptyViewProgressBar(Bundle savedInstanceState) {
-        // Must add the progress bar to the root of the layout
-        ViewGroup root = (ViewGroup)this.findViewById(android.R.id.content);
-        if(root != null && this.getEmptyViewProgressBar() != null) {
-            root.addView(this.getEmptyViewProgressBar());
-        }
-    }
+        if(this.attemptedScrollToItemToDisplayOnResume) {
 
-    public void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
-        if (this.selectedPosition != -1) {
-            outState.putInt("selectedPosition", this.selectedPosition);
-        }
-        if (this.selectedId != -1) {
-            outState.putLong("selectedId", this.selectedId);
-        }
-        ListView listView = getListView();
-        this.listIndex = listView.getFirstVisiblePosition();
-        View v = listView.getChildAt(0);
-        int i = 0;
-        if (v != null) {
-            i = v.getTop() - listView.getPaddingTop();
-        }
-        this.listTop = i;
-        outState.putInt("listIndex", this.listIndex);
-        outState.putInt("listTop", this.listTop);
-        Logx.log(Log.DEBUG, this.getClass(), "SAVING:: List index: {0}, list top: {1}, selected pos: {2}, selected id: {3}",
-                this.listIndex, this.listTop, this.selectedPosition, this.selectedId);
-    }
+            return false;
 
-    public void onViewStateRestored(Bundle inState) {
-        super.onViewStateRestored(inState);
-        if (inState != null) {
-            this.selectedPosition = inState.getInt("selectedPosition", -1);
-            this.selectedId = inState.getLong("selectedId", -1);
-            this.listIndex = inState.getInt("listIndex", -1);
-            this.listTop = inState.getInt("listTop", -1);
+        }else {
+
+            JSONObject item = this.listItemClickHandler == null ? null : this.listItemClickHandler.getItemToScrollToOnResume();
+
+            if (item == null) {
+
+                return false;
+
+            } else {
+
+                this.attemptedScrollToItemToDisplayOnResume = true;
+
+                return this.scrollTo(item);
+            }
         }
     }
 
-    public void onResume() {
-        super.onResume();
-        restoreViewStateFromRestoredInstanceState(true);
-    }
+    public boolean scrollTo(JSONObject feed) {
 
-    public void restoreViewStateFromRestoredInstanceState(boolean mayDisplayAdvert) {
-Logx.log(Log.DEBUG, this.getClass(), "RESTORING:: List index: {0}, list top: {1}, selected pos: {2}, selected id: {3}",
-        this.listIndex, this.listTop, this.selectedPosition, this.selectedId);
-        if (!(this.listIndex == -1 || this.listTop == -1)) {
-            getListView().setSelectionFromTop(this.listIndex, this.listTop);
+        boolean scrolledToLastNotice = false;
+        if (feed != null) {
+            int pos = this.feedListDisplayHandler.getJsonListAdapter().getPosition(feed);
+            if (pos != -1) {
+                scrollTo(pos);
+                scrolledToLastNotice = true;
+            }
         }
-        if (!this.listItemClickHandler.isDualPaneMode()) {
-            return;
-        }
-        if (this.selectedPosition != -1 || this.selectedId != -1) {
-            this.listItemClickHandler.onListItemClick(this.selectedPosition, this.selectedId, mayDisplayAdvert);
-        }
+
+        return scrolledToLastNotice;
     }
 
-    public ProgressBar getEmptyViewProgressBar() {
-        return getEmptyViewProgressBar(true);
-    }
-
-    @TargetApi(23)
-    public ProgressBar getEmptyViewProgressBar(boolean create) {
-        if (this._pb_accessViaGetter == null && create) {
-            Logx.log(Log.DEBUG, getClass(), "Creating empty view progress");
-            this._pb_accessViaGetter = new EmptyViewProgressBar(getContext(), this.messageToDisplayWhileLoading);
-            this._pb_accessViaGetter.setIndeterminate(true);
-            getListView().setEmptyView(this._pb_accessViaGetter);
-        }
-        return this._pb_accessViaGetter;
-    }
-
-    public int getSelectedPosition() {
-        return this.selectedPosition;
-    }
-
-    public long getSelectedId() {
-        return this.selectedId;
-    }
-
-    public int getListIndex() {
-        return this.listIndex;
-    }
-
-    public int getListTop() {
-        return this.listTop;
-    }
-
-    public String getMessageToDisplayWhileLoading() {
-        return this.messageToDisplayWhileLoading;
-    }
-
-    public void setMessageToDisplayWhileLoading(String messageToDisplayWhileLoading) {
-        this.messageToDisplayWhileLoading = messageToDisplayWhileLoading;
+    public FeedListDisplayHandler getFeedListDisplayHandler() {
+        return feedListDisplayHandler;
     }
 }

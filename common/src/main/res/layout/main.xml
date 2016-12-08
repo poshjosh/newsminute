@@ -4,8 +4,13 @@
     android:id="@+id/main_root_linearlayout"
     android:background="@color/color_light"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content">
-    <!--include android:id="@+id/main_toolbar" layout="@layout/my_toolbar" /-->
-    <include android:id="@+id/main_tabs" layout="@layout/tabs" />
-    <include android:id="@+id/main_fragment_singlepane" layout="@layout/fragment_singlepane" />
+    android:layout_height="match_parent">
+    <!--include android:id="@+id/main_toolbar" layout="@layout/my_toolbar"/-->
+    <include android:id="@+id/main_tabs" layout="@layout/tabs"/>
+    <ProgressBar
+        android:id="@+id/main_progressbar_indeterminate"
+        android:layout_width="@dimen/space_xxxlarge"
+        android:layout_height="@dimen/space_xxxlarge"
+        style="@style/ProgressBarIndeterminateAppTheme"/>
+    <include android:id="@+id/main_fragment_singlepane" layout="@layout/fragment_singlepane"/>
 </LinearLayout>

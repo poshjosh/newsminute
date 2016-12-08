@@ -10,9 +10,11 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
-import android.view.View;
 import android.widget.SearchView;
 import android.widget.SearchView.OnQueryTextListener;
+
+import com.bc.android.core.notice.Popup;
+import com.bc.android.core.util.Logx;
 import com.looseboxes.idisc.common.App;
 import com.looseboxes.idisc.common.R;
 import com.looseboxes.idisc.common.User;
@@ -22,9 +24,7 @@ import com.looseboxes.idisc.common.activities.ForgotPasswordActivity;
 import com.looseboxes.idisc.common.activities.LoginActivity;
 import com.looseboxes.idisc.common.activities.SettingsActivity;
 import com.looseboxes.idisc.common.activities.SignupActivity;
-import com.looseboxes.idisc.common.notice.Popup;
-import com.looseboxes.idisc.common.util.Logx;
-import com.looseboxes.idisc.common.util.Util;
+import com.looseboxes.idisc.common.util.NewsminuteUtil;
 
 public abstract class AbstractMenuHandler implements MenuHandler {
     private Activity activity;
@@ -33,25 +33,7 @@ public abstract class AbstractMenuHandler implements MenuHandler {
     private SearchView searchView;
     private android.support.v7.widget.SearchView searchViewAppCompat;
 
-    public abstract int getAboutActionViewId();
-
-    public abstract int getActivateActionViewId();
-
-    public abstract int getForgotpasswordActionViewId();
-
-    public abstract int getInviteActionViewId();
-
-    public abstract int getLoginActionViewId();
-
     public abstract int getMenuResourceId();
-
-    public abstract int getSearchActionViewId();
-
-    public abstract int getSettingsActionViewId();
-
-    public abstract int getShareActionViewId();
-
-    public abstract int getSignupActionViewId();
 
     public AbstractMenuHandler() {
         this.appCompat = true;
@@ -59,7 +41,7 @@ public abstract class AbstractMenuHandler implements MenuHandler {
 
     public void onCreateOptionsMenu(Menu menu, Bundle bundle) {
         init(menu, false);
-        int searchActionViewId = getSearchActionViewId();
+        int searchActionViewId = R.id.main_actions_search;
         if (searchActionViewId != -1 && App.isAcceptableVersion(this.activity, 11)) {
             MenuItem menuItem = menu.findItem(searchActionViewId);
             if (isAppCompat()) {
@@ -101,10 +83,10 @@ public abstract class AbstractMenuHandler implements MenuHandler {
     }
 
     public boolean isMenuItemToEnable(int id) {
-        if (id == getSignupActionViewId() || id == getForgotpasswordActionViewId()) {
+        if (id == R.id.main_actions_signup || id == R.id.main_actions_forgotpassword) {
             return !User.getInstance().isLoggedIn(this.activity);
         } else {
-            if (id == getActivateActionViewId() || id == getInviteActionViewId()) {
+            if (id == R.id.main_actions_activate || id == R.id.main_actions_invite) {
                 return false;
             }
             return true;
@@ -133,7 +115,7 @@ public abstract class AbstractMenuHandler implements MenuHandler {
 
     private void initMenus(Menu menu) {
         int size = menu.size();
-        Logx.debug(getClass(), "Menu size: {0}", Integer.valueOf(size));
+        Logx.getInstance().debug(getClass(), "Menu size: {0}", Integer.valueOf(size));
         for (int i = 0; i < size; i++) {
             MenuItem menuItem = menu.getItem(i);
             boolean enabled = isMenuItemToEnable(menuItem.getItemId());
@@ -143,14 +125,14 @@ public abstract class AbstractMenuHandler implements MenuHandler {
     }
 
     private void initShareText(Menu menu, Bundle bundle) {
-        int shareActionViewId = getSearchActionViewId();
+        final int shareActionViewId = R.id.main_actions_share;
         if (shareActionViewId != -1 && menu.findItem(shareActionViewId) != null) {
             this.mShareText = bundle == null ? null : bundle.getString(BUNDLE_STRING_SHARE_TEXT);
         }
     }
 
     private void initLoginMenuItem(Menu menu) {
-        int loginActionViewId = getLoginActionViewId();
+        int loginActionViewId = R.id.main_actions_login;
         if (loginActionViewId != -1) {
             String userId;
             User user = User.getInstance();
@@ -168,44 +150,46 @@ public abstract class AbstractMenuHandler implements MenuHandler {
 
     public void onOptionsItemSelected(MenuItem item, Bundle bundle) {
         int itemId = item.getItemId();
-        if (itemId == getSearchActionViewId()) {
-            Logx.log(Log.VERBOSE, getClass(), "Search clicked");
+        if (itemId == R.id.main_actions_search) {
+            Logx.getInstance().log(Log.VERBOSE, getClass(), "Search clicked");
             this.activity.onSearchRequested();
-        } else if (itemId == getAboutActionViewId()) {
+        } else if (itemId == R.id.main_actions_about) {
             this.activity.startActivity(new Intent(this.activity, AboutUsActivity.class));
-        } else if (itemId == getShareActionViewId()) {
+        } else if (itemId == R.id.main_actions_share) {
             if (this.mShareText == null && (this.activity instanceof AbstractSingleTopActivity)) {
                 this.mShareText = ((AbstractSingleTopActivity) this.activity).getShareText();
             }
             if (this.mShareText != null && !this.mShareText.isEmpty()) {
-                this.activity.startActivity(Intent.createChooser(Util.createShareIntent(this.activity, this.mShareText, "android.intent.extra.TEXT"), "Share via"));
+                this.activity.startActivity(Intent.createChooser(NewsminuteUtil.createShareIntent(this.activity, this.mShareText, "android.intent.extra.TEXT"), "Share via"));
             }
-        } else if (itemId == getLoginActionViewId()) {
+//        }else if (itemId == R.id.main_actions_submitnews) {
+//            this.activity.startActivity(new Intent(this.activity, SumbitnewsActivity.class));
+        } else if (itemId == R.id.main_actions_login) {
             if (User.getInstance().isLoggedIn(this.activity)) {
-                Popup.show((View) null, (Object) "...Loging out", 0);
+                Popup.getInstance().show(this.activity, R.string.msg_loggingout, 0);
                 User.getInstance().logout(this.activity);
                 return;
             }
             this.activity.startActivity(new Intent(this.activity, LoginActivity.class));
-        } else if (itemId == getSettingsActionViewId()) {
+        } else if (itemId == R.id.main_actions_settings) {
             this.activity.startActivity(new Intent(this.activity, SettingsActivity.class));
-        } else if (itemId == getSignupActionViewId()) {
+//        } else if (itemId == R.id.main_actions_userprofile) {
+//            this.activity.startActivity(new Intent(this.activity, UserprofileActivity.class));
+        } else if (itemId == R.id.main_actions_signup) {
             if (User.getInstance().isLoggedIn(this.activity)) {
-                Popup.show(this.activity, R.string.msg_already_loggedin, 0);
+                Popup.getInstance().show(this.activity, R.string.msg_already_loggedin, 0);
             } else {
                 this.activity.startActivity(new Intent(this.activity, SignupActivity.class));
             }
-        } else if (itemId != getForgotpasswordActionViewId()) {
+        } else if (itemId == R.id.main_actions_forgotpassword) {
+            this.activity.startActivity(new Intent(this.activity, ForgotPasswordActivity.class));
+        } else {
             CharSequence itemTitle = item == null ? null : item.getTitle();
             StringBuilder append = new StringBuilder().append("Unexpected MenuItem: ");
             if (itemTitle == null) {
                 itemTitle = Integer.toString(itemId);
             }
             throw new IllegalArgumentException(append.append(itemTitle).toString());
-        } else if (User.getInstance().isLoggedIn(this.activity)) {
-            Popup.show(this.activity, R.string.msg_already_loggedin, 0);
-        } else {
-            this.activity.startActivity(new Intent(this.activity, ForgotPasswordActivity.class));
         }
     }
 

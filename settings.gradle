@@ -1,1 +1,2 @@
-include ':common', ':googleservicesextras', ':appbilling', ':newsminutefree', ':newsminuteplus'
+include ':core', ':common', ':googleservicesextras', ':appbilling', ':newsminutefree', ':newsminuteplus'
+project(':core').projectDir = new File('C:\\Users\\Josh\\AndroidStudioProjects\\AndroidCore\\core')

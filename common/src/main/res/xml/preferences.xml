@@ -15,6 +15,11 @@
         android:entryValues="@array/pref_syncinterval_values"
         android:defaultValue="@string/pref_syncinterval_defaultvalue"/>
     <CheckBoxPreference
+        android:key="@string/pref_wifionly_id"
+        android:title="@string/pref_wifionly_title"
+        android:summary="@string/pref_wifionly_summary"
+        android:defaultValue="false"/>
+    <CheckBoxPreference
        android:key="@string/pref_disablevibration_id"
        android:title="@string/pref_disablevibration_title"
        android:summary="@string/pref_disablevibration_summary"

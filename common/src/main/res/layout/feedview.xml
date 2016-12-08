@@ -17,22 +17,44 @@
         android:layout_height="0dp"
         android:fillViewport="true"
         android:layout_weight="0.5">
-        <WebView
-            android:id="@+id/feedview_display"
+        <LinearLayout
+            android:id="@+id/feedview_display_viewgroup"
+            android:orientation="vertical"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="@dimen/space_xxsmall"
-            android:text="@string/msg_nofeed"
-            style="@style/WebViewAppTheme"/>
+            android:layout_height="match_parent">
+            <WebView
+                android:id="@+id/feedview_display"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="@dimen/space_xxsmall"
+                android:text="@string/msg_nofeed"
+                style="@style/WebViewAppTheme"/>
+            <TextView
+                android:id="@+id/feedview_titles_header"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/msg_more"
+                android:gravity="center"
+                android:padding="@dimen/space_xxsmall"
+                android:background="@color/color_2"/>
+            <WebView
+                android:id="@+id/feedview_titles_display"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="@dimen/space_xxsmall"
+                android:text="@string/msg_nofeed"
+                style="@style/WebViewAppTheme"/>
+        </LinearLayout>
     </ScrollView>
     <ScrollView
-        android:id="@+id/feedview_comments_scrollview"
+        android:id="@+id/feedview_extras_scrollview"
         android:scrollbars="vertical"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:fillViewport="true">
 
         <LinearLayout
+            android:id="@+id/feedview_extras_viewgroup"
             android:orientation="vertical"
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
@@ -40,17 +62,22 @@
             <LinearLayout
                 android:orientation="horizontal"
                 android:layout_width="match_parent"
+                android:background="@color/color_2"
                 android:layout_height="@dimen/space_xxxlarge"
                 android:layout_marginBottom="@dimen/space_xxsmall">
+
                 <ProgressBar
-                    android:id="@+id/downloadcommentsProgressBar"
-                    android:layout_width="wrap_content"
-                    android:layout_height="@dimen/space_xxxlarge" />
+                    android:id="@+id/feedview_progressbar_indeterminate"
+                    android:layout_width="@dimen/space_xxxlarge"
+                    android:layout_height="@dimen/space_xxxlarge"
+                    style="@style/ProgressBarIndeterminateAppTheme"/>
+
                 <TextView
                     android:id="@+id/downloadcommentsProgressText"
                     android:textColor="@color/level_2"
                     android:padding="@dimen/space_small"
                     android:layout_width="wrap_content"
+                    android:background="@color/color_2"
                     android:layout_height="@dimen/space_xxxlarge"
                     android:text="@string/msg_loadingcomments"
                     style="@style/TextViewAppTheme" />
