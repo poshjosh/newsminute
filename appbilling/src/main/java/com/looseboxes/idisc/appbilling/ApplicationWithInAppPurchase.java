@@ -8,30 +8,31 @@ import com.looseboxes.idisc.common.activities.DisplayAdvertActivity;
 import com.looseboxes.idisc.common.activities.HeadlinesActivity;
 import com.looseboxes.idisc.common.activities.MainActivity;
 import com.looseboxes.idisc.common.activities.SourcesActivity;
+import com.looseboxes.idisc.common.fragments.DisplayAdvertFragment;
 import com.looseboxes.idisc.common.handlers.MenuHandler;
-import com.looseboxes.idisc.common.util.Util;
+import com.looseboxes.idisc.common.listeners.NoMoreAdvertOnClickListener;
+import com.looseboxes.idisc.common.util.NewsminuteUtil;
 import com.looseboxes.idisc.googleservicesextras.ApplicationWithGoogleServices;
 
 public class ApplicationWithInAppPurchase extends ApplicationWithGoogleServices {
 
-    /* renamed from: com.looseboxes.idisc.appbilling.ApplicationWithInAppPurchase.1 */
-    class AnonymousClass1 extends BillingManager {
-        AnonymousClass1(Context x0, String x1) {
+    class BillingManagerNoUI extends BillingManager {
+        BillingManagerNoUI(Context x0, String x1) {
             super(x0, x1);
         }
-
-        protected void showWarning(String message) {
-        }
+        @Override
+        protected void showWarning(String message) { }
     }
 
-    public void onCreate() {
-        super.onCreate();
+    @Override
+    public void doOnCreate() {
+        super.doOnCreate();
         setUpBilling();
     }
 
     public void setUpBilling() {
-        if (Util.isNetworkConnectedOrConnecting(this)) {
-            new AnonymousClass1(this, getAppKey()).startSetup();
+        if (NewsminuteUtil.isNetworkConnectedOrConnecting(this)) {
+            new BillingManagerNoUI(this, getAppKey()).startSetup();
         }
     }
 
@@ -42,16 +43,14 @@ public class ApplicationWithInAppPurchase extends ApplicationWithGoogleServices 
         return super.createMenuHandler(context);
     }
 
-    public OnClickListener createOnClickListener(View view) {
-        Context context = view.getContext();
-        if (!(context instanceof DisplayAdvertActivity)) {
-            return super.createOnClickListener(view);
+    public OnClickListener initNoMoreAdvertsOnClickListener(DisplayAdvertFragment displayAdvertFragment) {
+        final View nomoreadverts = displayAdvertFragment.findViewById(com.looseboxes.idisc.common.R.id.advertview_nomoreadverts_button);
+        if (nomoreadverts == null) {
+            return null;
+        }else {
+            OnClickListener listener = new NoMoreAdvertOnClickListenerInAppPurchase(displayAdvertFragment.getActivity());
+            nomoreadverts.setOnClickListener(listener);
+            return listener;
         }
-        if (view.getId() != R.id.advertview_nomoreadverts_button) {
-            return super.createOnClickListener(view);
-        }
-        OnClickListener listener = new NoMoreAdvertOnClickListenerInAppPurchase((DisplayAdvertActivity) context);
-        view.setOnClickListener(listener);
-        return listener;
     }
 }

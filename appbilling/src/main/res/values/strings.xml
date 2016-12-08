@@ -4,4 +4,6 @@
     <string name="msg_activatingsubscription_s">Activating %1$s</string>
     <string name="err_alreadysubscribed_s">You are already subscribed to %1$s</string>
     <string name="err_subscription">Subscription error</string>
+    <string name="err_purchasing_s">Error purchasing: %1$s</string>
+    <string name="authentication_failed">Authentication failed</string>
 </resources>

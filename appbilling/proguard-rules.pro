@@ -20,3 +20,4 @@
 # http://proguard.sourceforge.net/manual/usage.html
 
 -keep class com.android.vending.billing.**
+
