@@ -8,13 +8,14 @@
         android:layout_width="fill_parent"
         android:layout_height="wrap_content">
 
-        <include layout="@layout/welcomeprocess_navigation"/>
+        <include layout="@layout/navigation"/>
 
         <TextView
             android:id="@+id/signup_title"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
+            android:gravity="center_horizontal"
             android:text="@string/msg_signup"
             style="@style/TextViewAppTheme"/>
         <TextView

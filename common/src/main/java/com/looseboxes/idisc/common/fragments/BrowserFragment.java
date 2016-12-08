@@ -9,9 +9,10 @@ import android.widget.EditText;
 import android.widget.ProgressBar;
 import com.looseboxes.idisc.common.R;
 import com.looseboxes.idisc.common.ui.DefaultWebViewClient;
-import com.looseboxes.idisc.common.util.Logx;
+import com.bc.android.core.util.Logx;
 
 public abstract class BrowserFragment extends WebContentFragment implements OnClickListener {
+
     private Button urlButton;
     private EditText urlInput;
 
@@ -44,7 +45,7 @@ public abstract class BrowserFragment extends WebContentFragment implements OnCl
     }
 
     public DefaultWebViewClient getWebViewClient() {
-        return new DefaultWebViewClient((ProgressBar) findViewById(R.id.urlbar_progressbar));
+        return new DefaultWebViewClient((ProgressBar) findViewById(R.id.urlbar_progressbar_linear), this);
     }
 
     public void onResume() {
@@ -59,6 +60,6 @@ public abstract class BrowserFragment extends WebContentFragment implements OnCl
             getContentOptionsButtonListener().browseToSource(v);
             return;
         }
-        Logx.log(5, getClass(), "{0} of {1} encountered unexpected view: {2}", OnClickListener.class.getName(), getClass().getName(), v);
+        Logx.getInstance().log(5, getClass(), "{0} of {1} encountered unexpected view: {2}", OnClickListener.class.getName(), getClass().getName(), v);
     }
 }

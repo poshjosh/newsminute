@@ -1,20 +1,18 @@
 package com.looseboxes.idisc.common.fragments;
 
 import android.app.Activity;
-import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.webkit.WebView;
-import android.widget.Button;
 import android.widget.TextView;
 
+import com.bc.android.core.util.Logx;
 import com.looseboxes.idisc.common.App;
 import com.looseboxes.idisc.common.DefaultApplication;
 import com.looseboxes.idisc.common.R;
 import com.looseboxes.idisc.common.util.AdvertDisplayFinishedListener;
-import com.looseboxes.idisc.common.util.Logx;
 import com.looseboxes.idisc.common.util.PropertiesManager.PropertyName;
 import com.looseboxes.idisc.common.util.RepeatingTask;
 
@@ -22,7 +20,9 @@ public class DisplayAdvertFragment extends WebContentFragment implements OnClick
     private AdvertDisplayFinishedListener advertDisplayFinishedListener;
 
     private class AdvertCountdownTask extends RepeatingTask {
+
         private TextView _cdv;
+
         int period;
 
         private AdvertCountdownTask(int interval) {
@@ -57,14 +57,13 @@ public class DisplayAdvertFragment extends WebContentFragment implements OnClick
         protected void onExpired() {
             try {
                 updateCountdown();
-                TextView label = (TextView) DisplayAdvertFragment.this.findViewById(R.id.advertview_label);
-                if (label != null) {
-                    label.setOnClickListener(DisplayAdvertFragment.this);
-                    label.setTextColor(Color.BLUE);
-                    label.setText(R.string.msg_continue);
+                final TextView textView = (TextView) DisplayAdvertFragment.this.findViewById(R.id.advertview_label);
+                if (textView != null) {
+                    textView.setEnabled(true);
+                    textView.setText(R.string.msg_continue);
                 }
             } catch (Exception e) {
-                Logx.log(getClass(), e);
+                Logx.getInstance().log(getClass(), e);
             }
         }
 
@@ -80,7 +79,7 @@ public class DisplayAdvertFragment extends WebContentFragment implements OnClick
         }
     }
 
-    public int getContentView() {
+    public int getContentViewId() {
         return R.layout.advertview;
     }
 
@@ -107,17 +106,32 @@ public class DisplayAdvertFragment extends WebContentFragment implements OnClick
     }
 
     public void onViewCreated(View view, Bundle savedInstanceState) {
+
         super.onViewCreated(view, savedInstanceState);
-        Button nomoreadverts = (Button) findViewById(R.id.advertview_nomoreadverts_button);
-        nomoreadverts.setOnClickListener(((DefaultApplication) getActivity().getApplication()).createOnClickListener(nomoreadverts));
+
+        final View nomoreadverts = findViewById(R.id.advertview_nomoreadverts_button);
+
+        OnClickListener listener = ((DefaultApplication) getActivity().getApplication()).initNoMoreAdvertsOnClickListener(this);
+
+        nomoreadverts.setOnClickListener(listener);
+
+        final View continueTextView = DisplayAdvertFragment.this.findViewById(R.id.advertview_label);
+
+        continueTextView.setOnClickListener(DisplayAdvertFragment.this);
     }
 
-    protected boolean loadData(WebView webView) {
-        ((TextView) findViewById(R.id.advertview_label)).setText(R.string.msg_pleasewait);
+    public boolean loadData(WebView webView) {
+
+        TextView textView = ((TextView) findViewById(R.id.advertview_label));
+
+        textView.setText(R.string.msg_pleasewait);
+        textView.setEnabled(false);
+
         boolean loading = super.loadData(webView);
-// Using View#getHandler() didn't work
-//        new AdvertCountdownTask(webView.getHandler(), 1000).start(); // 1 second interval
+
+//        new AdvertCountdownTask(webView.getHandler(), 1000).start(); // didn't work
         new AdvertCountdownTask(new Handler(), 1000).start();
+
         return loading;
     }
 

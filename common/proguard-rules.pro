@@ -20,19 +20,3 @@
 # http://proguard.sourceforge.net/manual/usage.html
 # http://omgitsmgp.com/2013/09/09/a-conservative-guide-to-proguard-for-android/
 # -libraryjars <java.home>/lib/rt.jar
-
-# THESE ARE THE CUSTOM RULES
--keepclassmembers class <com.looseboxes.idisc.common.ui.HtmlExtractingJavascriptInterface> {
-    public *;
-}
-
--dontwarn java.awt.**
--dontwarn com.squareup.okhttp.**
-
--dontwarn sun.net.www.protocol.http.**
--dontwarn com.sun.net.ssl.internal.ssl.Provider
--dontwarn java.nio.file.**
--dontwarn javax.security.sasl.**
--dontwarn javax.security.auth.**
--dontwarn java.beans.Beans
-

@@ -2,8 +2,8 @@ package com.looseboxes.idisc.appbilling;
 
 import android.content.Context;
 
+import com.bc.android.core.util.Logx;
 import com.looseboxes.idisc.common.App;
-import com.looseboxes.idisc.common.util.Logx;
 import com.looseboxes.idisc.common.util.PropertiesManager;
 import com.looseboxes.idisc.common.util.PropertiesManager.PropertyName;
 
@@ -35,22 +35,22 @@ public class SkuData {
         String buttonText;
         if (buttonResourceId == R.id.inapppurchase_button_12months) {
             buttonText = context.getString(R.string.msg_12months_subscription_s, new Object[]{Double.valueOf(pm.getDouble(PropertyName.price12MonthsNaira))});
-            return Logx.isDebugMode() ? buttonText + "\nOR android.test.purchased" : buttonText;
+            return Logx.getInstance().isDebugMode() ? buttonText + "\nOR android.test.purchased" : buttonText;
         } else if (buttonResourceId == R.id.inapppurchase_button_6months) {
             buttonText = context.getString(R.string.msg_6months_subscription_s, new Object[]{Double.valueOf(pm.getDouble(PropertyName.price6MonthsNaira))});
-            if (Logx.isDebugMode()) {
+            if (Logx.getInstance().isDebugMode()) {
                 return buttonText + "\nOR android.test.canceled";
             }
             return buttonText;
         } else if (buttonResourceId == R.id.inapppurchase_button_3months) {
             buttonText = context.getString(R.string.msg_3months_subscription_s, new Object[]{Double.valueOf(pm.getDouble(PropertyName.price3MonthsNaira))});
-            if (Logx.isDebugMode()) {
+            if (Logx.getInstance().isDebugMode()) {
                 return buttonText + "\nOR android.test.refunded";
             }
             return buttonText;
         } else if (buttonResourceId == R.id.inapppurchase_button_1month) {
             buttonText = context.getString(R.string.msg_1month_subscription_s, new Object[]{Double.valueOf(pm.getDouble(PropertyName.price1MonthNaira))});
-            if (Logx.isDebugMode()) {
+            if (Logx.getInstance().isDebugMode()) {
                 return buttonText + "\nOR android.test.item_unavailable";
             }
             return buttonText;
@@ -60,7 +60,7 @@ public class SkuData {
     }
 
     public static String[] getSkus(boolean inappv3enabled) {
-        if (Logx.isDebugMode()) {
+        if (Logx.getInstance().isDebugMode()) {
             return new String[]{"android.test.item_unavailable", "android.test.refunded", "android.test.canceled", "android.test.purchased"};
         } else if (inappv3enabled) {
             return new String[]{SKU_1MONTH_SUBSCRIPTION, SKU_3MONTHS_SUBSCRIPTION, SKU_6MONTHS_SUBSCRIPTION, SKU_12MONTHS_SUBSCRIPTION};
@@ -71,23 +71,23 @@ public class SkuData {
 
     public static String getSkuForButtonId(int id, boolean inappv3enabled) {
         if (id == R.id.inapppurchase_button_12months) {
-            if (Logx.isDebugMode()) {
+            if (Logx.getInstance().isDebugMode()) {
                 return "android.test.purchased";
             }
             return inappv3enabled ? SKU_12MONTHS_SUBSCRIPTION : SKU_12MONTHS_PURCHASE;
         } else if (id == R.id.inapppurchase_button_6months) {
-            if (Logx.isDebugMode()) {
+            if (Logx.getInstance().isDebugMode()) {
                 return "android.test.canceled";
             }
             return inappv3enabled ? SKU_6MONTHS_SUBSCRIPTION : SKU_6MONTHS_PURCHASE;
         } else if (id == R.id.inapppurchase_button_3months) {
-            if (Logx.isDebugMode()) {
+            if (Logx.getInstance().isDebugMode()) {
                 return "android.test.refunded";
             }
             return inappv3enabled ? SKU_3MONTHS_SUBSCRIPTION : SKU_3MONTHS_PURCHASE;
         } else if (id != R.id.inapppurchase_button_1month) {
             throw new IllegalArgumentException();
-        } else if (Logx.isDebugMode()) {
+        } else if (Logx.getInstance().isDebugMode()) {
             return "android.test.item_unavailable";
         } else {
             return inappv3enabled ? SKU_1MONTH_SUBSCRIPTION : SKU_1MONTH_PURCHASE;

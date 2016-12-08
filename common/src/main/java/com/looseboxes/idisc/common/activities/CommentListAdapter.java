@@ -9,10 +9,11 @@ import com.looseboxes.idisc.common.App;
 import com.looseboxes.idisc.common.R;
 import com.looseboxes.idisc.common.jsonview.Comment;
 import com.looseboxes.idisc.common.jsonview.InstallationNames;
-import com.looseboxes.idisc.common.util.Logx;
+import com.bc.android.core.util.Logx;
 import org.json.simple.JSONObject;
 
-public class CommentListAdapter extends AbstractArrayAdapter {
+public class CommentListAdapter extends JsonObjectListAdapter {
+
     private final Comment output;
 
     public CommentListAdapter(Context context) {
@@ -38,19 +39,19 @@ public class CommentListAdapter extends AbstractArrayAdapter {
                 textView.setTypeface(Typeface.DEFAULT, 3);
             }
         } catch (Exception e) {
-            Logx.log(getClass(), e);
+            Logx.getInstance().log(getClass(), e);
         }
         return rowView;
     }
 
     protected String getHeading(JSONObject jsonData) {
         this.output.setJsonData(jsonData);
-        return this.output.getText(getContext().getString(R.string.err), getLen_short());
+        return this.output.getText(getContext().getString(R.string.err), getHeadingLength());
     }
 
     protected String getInfo(JSONObject jsonData) {
         this.output.setJsonData(jsonData);
-        return this.output.getOptions(getContext().getString(R.string.err), getLen_xshort());
+        return this.output.getOptions(getContext().getString(R.string.err), getInfoLength());
     }
 
     protected String getAuthor(JSONObject jsonData) {

@@ -1,54 +1,81 @@
 package com.looseboxes.idisc.common.util;
 
 import android.content.Context;
-import com.looseboxes.idisc.common.io.IOWrapper;
+
+import com.bc.android.core.io.IOWrapper;
+import com.bc.android.core.util.Util;
+import com.looseboxes.idisc.common.asynctasks.DownloadToLocalCache;
+
+import java.lang.ref.WeakReference;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 public abstract class StaticResourceManager<T> {
 
-    private final DownloadInterval downloadInterval;
+    private Lock lock;
+
+    private DownloadInterval downloadInterval;
+
+    private String outputkey;
+
+    private boolean noUI;
 
     protected abstract IOWrapper<T> createIOWrapper(Context context);
 
-    protected abstract void update(IOWrapper<T> iOWrapper);
-
-    public StaticResourceManager(Context context, long updateIntervalMillis, String lastDownloadTimePreferenceName) {
-        if (context == null) {
-            throw new NullPointerException();
-        }
+    public StaticResourceManager(Context context, long updateIntervalMillis, boolean noUI,
+                                 String lastDownloadTimePreferenceName, String outputkey) {
+        Util.requireNonNull(context);
         this.downloadInterval = new DownloadInterval(context, lastDownloadTimePreferenceName, updateIntervalMillis);
+        this.outputkey = outputkey;
+        this.noUI = noUI;
+        this.lock = new ReentrantLock();
     }
 
-    private IOWrapper<T> _iom;
-    public IOWrapper<T> getIOManager() {
-        if(_iom == null) {
-            _iom = this.createIOWrapper(this.getContext());
-        }
-        return _iom;
-    }
-
-    protected Object getTargetLock() {
-        return this.getIOManager();
+    public void destroy() {
+        this.downloadInterval.destroy();
+        this.downloadInterval = null;
+        this.outputkey = null;
+        this.lock = null;
     }
 
     public void update(boolean ignoreSchedule) {
         if (ignoreSchedule || this.downloadInterval.isNextDownloadDue()) {
             setLastDownloadTime(System.currentTimeMillis());
-            update(this.getIOManager());
+            IOWrapper ioWrapper = this.getIOManager();
+            DownloadToLocalCache downloader = new DownloadToLocalCache(this.getContext(), this.outputkey, ioWrapper);
+            downloader.setNoUI(this.noUI);
+            downloader.execute();
         }
     }
 
     public void setTarget(T target) {
-        synchronized (getTargetLock()) {
+        try{
+            lock.lock();
             this.getIOManager().setTarget(target);
+        }finally{
+            lock.unlock();
         }
     }
 
     public T getTarget() {
         T target;
-        synchronized (getTargetLock()) {
+        try {
+            lock.lock();
             target = this.getIOManager().getTarget();
+        }finally{
+            lock.unlock();
         }
         return target;
+    }
+
+    private WeakReference<IOWrapper<T>> _$ioref;
+    public IOWrapper<T> getIOManager() {
+        IOWrapper<T> tgt;
+        if(_$ioref == null || (tgt = _$ioref.get()) == null) {
+            tgt = this.createIOWrapper(this.downloadInterval.getContext());
+            _$ioref = new WeakReference<>(tgt);
+        }
+        return tgt;
     }
 
     public void setLastDownloadTime(long lastDownloadTime) {
@@ -65,5 +92,13 @@ public abstract class StaticResourceManager<T> {
 
     public long getUpdateIntervalMillis() {
         return this.downloadInterval.getUpdateIntervalMillis();
+    }
+
+    public boolean isNoUI() {
+        return noUI;
+    }
+
+    public void setNoUI(boolean noUI) {
+        this.noUI = noUI;
     }
 }

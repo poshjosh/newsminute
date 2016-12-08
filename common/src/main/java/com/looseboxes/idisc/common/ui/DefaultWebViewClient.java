@@ -1,35 +1,37 @@
 package com.looseboxes.idisc.common.ui;
 
 import android.content.Intent;
-import android.graphics.Bitmap;
-import android.os.Build;
-import android.util.Log;
-import android.webkit.JavascriptInterface;
 import android.webkit.WebView;
-import android.webkit.WebViewClient;
 import android.widget.ProgressBar;
 
+import com.bc.android.core.ui.WebViewClientImpl;
 import com.looseboxes.idisc.common.App;
 import com.looseboxes.idisc.common.activities.LinkHandlingActivity;
-import com.looseboxes.idisc.common.activities.WebContentActivity;
-import com.looseboxes.idisc.common.util.Logx;
+import com.bc.android.core.util.Logx;
 
-public class DefaultWebViewClient extends WebViewClient implements HtmlExtractingJavascriptInterface {
+public class DefaultWebViewClient extends WebViewClientImpl {
 
-    private String extractedHtmlContent;
+    private String url;
 
-    private ProgressBar progressBar;
+    private final OnHtmlExtractedListener onHtmlExtractedListener;
 
-    public DefaultWebViewClient(ProgressBar progressBar) {
-        this.progressBar = progressBar;
+    public DefaultWebViewClient(ProgressBar progressBar, OnHtmlExtractedListener onHtmlExtractedListener) {
+        super(progressBar);
+        this.onHtmlExtractedListener = onHtmlExtractedListener;
+
     }
 
-    public void onProgressChanged(WebView view, String url) {
-        setProgress(view.getProgress());
+    @Override
+    public void loadHTML(String extractedHtml) {
+        super.loadHTML(extractedHtml);
+        this.onHtmlExtractedListener.onHtmlExtracted(this, url, extractedHtml);
     }
 
+    @Override
     public boolean shouldOverrideUrlLoading(WebView view, String url) {
-        if (!url.toLowerCase().startsWith("app:")) {
+        this.url = url;
+        Logx.getInstance().debug(this.getClass(), "URL: {0}", url);
+        if (!url.toLowerCase().startsWith(App.getUrlScheme()+":")) {
             return false;
         }
         Intent intent = new Intent(view.getContext(), LinkHandlingActivity.class);
@@ -38,94 +40,7 @@ public class DefaultWebViewClient extends WebViewClient implements HtmlExtractin
         return true;
     }
 
-    public void onPageStarted(WebView view, String url, Bitmap favicon) {
-        onProgressChanged(view, url);
-        super.onPageStarted(view, url, favicon);
-        onProgressChanged(view, url);
-    }
-
-    public void onLoadResource(WebView view, String url) {
-        onProgressChanged(view, url);
-        super.onLoadResource(view, url);
-        onProgressChanged(view, url);
-    }
-
-    public void onPageCommitVisible(WebView view, String url) {
-        onProgressChanged(view, url);
-        super.onPageCommitVisible(view, url);
-        onProgressChanged(view, url);
-    }
-
-    public void onPageFinished(WebView view, String url) {
-        try {
-            onProgressChanged(view, url);
-            super.onPageFinished(view, url);
-            onProgressChanged(view, url);
-            if (this.progressBar != null) {
-                setProgress(this.progressBar.getMax());
-            }
-        } catch (Throwable th) {
-            if (this.progressBar != null) {
-                setProgress(this.progressBar.getMax());
-            }
-        }finally{
-            this.loadHtml(view);
-        }
-    }
-
-    private void setProgress(int value) {
-        if (this.progressBar != null) {
-            this.progressBar.setProgress(value);
-        }
-    }
-
-    private void loadHtml(WebView webView) {
-        try {
-            String prefix;
-            if (App.isAcceptableVersion(webView.getContext(), Build.VERSION_CODES.JELLY_BEAN)) {
-                prefix = "javascript:";
-            } else {
-                prefix = "javascript:window.";
-            }
-            webView.loadUrl(prefix + this.getName() + ".loadHTML('<html>'+document.getElementsByTagName('html')[0].innerHTML+'</html>');");
-        }catch(Throwable t) {
-            Logx.log(this.getClass(), t);
-        }
-    }
-
-    // BEGIN methods of interface HtmlExtractingJavascriptInterface
-    //
-    @JavascriptInterface
-    @SuppressWarnings("unused")
-    @Override
-    public void loadHTML(String html) {
-        extractedHtmlContent = html;
-        Logx.log(Log.DEBUG, this.getClass(), "Loaded HTML. {0} chars", html == null ? null : html.length());
-
-    }
-
-    @Override
-    public String getName() {
-        return "HTMLOut";
-    }
-
-    @Override
-    public void clearExtractedHtmlContent() {
-        extractedHtmlContent = null;
-    }
-
-    @Override
-    public String getExtractedHtmlContent() {
-        return extractedHtmlContent;
-    }
-    //
-    // END methods of interface HtmlExtractingJavascriptInterface
-
-    public ProgressBar getProgressBar() {
-        return this.progressBar;
-    }
-
-    public void setProgressBar(ProgressBar progressBar) {
-        this.progressBar = progressBar;
+    public final OnHtmlExtractedListener getOnHtmlExtractedListener() {
+        return onHtmlExtractedListener;
     }
 }

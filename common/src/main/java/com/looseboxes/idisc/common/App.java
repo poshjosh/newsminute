@@ -1,64 +1,87 @@
 package com.looseboxes.idisc.common;
 
-import android.app.Application;
-import android.content.ActivityNotFoundException;
 import android.content.Context;
-import android.content.Intent;
-import android.net.Uri;
-import android.os.Build.VERSION;
 import android.util.Log;
-import android.view.View;
+import android.widget.Toast;
+
+import com.bc.android.core.AppCore;
+import com.bc.android.core.DeviceIdManager;
+import com.bc.android.core.notice.Popup;
+import com.bc.android.core.util.Logx;
+import com.bc.android.core.util.Util;
+import com.looseboxes.idisc.common.asynctasks.LogInstallationError;
 import com.looseboxes.idisc.common.io.FileIO;
+import com.looseboxes.idisc.common.jsonview.DateParser;
 import com.looseboxes.idisc.common.jsonview.InstallationNames;
-import com.looseboxes.idisc.common.jsonview.JsonView;
-import com.looseboxes.idisc.common.notice.Popup;
 import com.looseboxes.idisc.common.util.AliasesManager;
 import com.looseboxes.idisc.common.util.AliasesManager.AliasType;
-import com.looseboxes.idisc.common.util.DeviceID;
-import com.looseboxes.idisc.common.util.Logx;
 import com.looseboxes.idisc.common.util.Pref;
-import com.looseboxes.idisc.common.util.PreferenceFeedsManager;
-import com.looseboxes.idisc.common.util.PreferenceFeedsManager.PreferenceType;
 import com.looseboxes.idisc.common.util.PropertiesManager;
+
+import org.json.simple.JSONObject;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.Date;
 import java.util.EnumMap;
-import java.util.GregorianCalendar;
+import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.TimeZone;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
-import org.json.simple.JSONObject;
 
-public final class App {
+public final class App extends AppCore {
 
     public static final boolean SERVICE_IN_EXACT_REPEATING = false;
     private static long FIRST_INSTALLATION_TIME;
     private static String ID;
-    private static int versionCode;
     private static PropertiesManager _ap_accessViaGetter;
     private static Map<AliasType, AliasesManager> _kam_accessViaGetter;
-    private static TimeZone _tz;
     private static boolean appVisible;
     private static Context mContext;
-    private static boolean useExternalFile;
-    static {
-        useExternalFile = false;
+    private static boolean useExternalFile = false;
+
+    public static int getNoticeIconResourceId(Context context) {
+        return isAcceptableVersion(context, 21) ? R.drawable.notification_icon : R.mipmap.ic_launcher;
     }
 
-    public static TimeZone getUserSelectedTimeZone() {
-        if (_tz == null) {
-            _tz = GregorianCalendar.getInstance().getTimeZone();
-        }
-        return _tz;
+    public static String getUrlScheme() {
+        return "newsminute";
     }
 
+    public static int getMemoryLimitedInt(Context context, PropertiesManager.PropertyName propertyName, int minValue) {
+
+        final int value = App.getPropertiesManager(context).getInt(propertyName);
+
+        final double memoryFactor = getMemoryFactor();
+
+        final double memoryclassFactor = getMemoryclassFactor(context, 128);
+
+        final double factor = memoryclassFactor * memoryFactor;
+
+        int output = (int)(value * factor);
+
+        output = output < minValue ? minValue : output;
+
+        Logx.getInstance().log(Log.DEBUG, App.class,
+                "Memory. Value: {0}, factor: {1}, minimum: {2}, output: {3}",
+                value, factor, minValue, output);
+
+        return output;
+    }
+
+    /**
+     * @deprecated
+     * @param context
+     */
     @Deprecated
     public static void setContext(Context context) {
         mContext = context;
     }
 
+    /**
+     * @deprecated
+     * @return
+     */
     @Deprecated
     public static Context getContext() {
         return mContext;
@@ -68,47 +91,12 @@ public final class App {
         return context.getString(R.string.app_label);
     }
 
-    public static void startMarketActivity(Application context) {
-        startPlayStoreActivity((Context) context, context.getPackageName());
-    }
-
-    public static void startMarketActivity(Context context, String appPackageName) {
-        startPlayStoreActivity(context, appPackageName);
-    }
-
-    public static void startPlayStoreActivity(Application context) {
-        startPlayStoreActivity((Context) context, context.getPackageName());
-    }
-
-    public static void startPlayStoreActivity(Context context, String appPackageName) {
-        if (!startPlayStoreActivity(context, Uri.parse("market://details?id=" + appPackageName))) {
-            startPlayStoreActivity(context, Uri.parse("http://play.google.com/store/apps/details?id=" + appPackageName));
-        }
-    }
-
-    public static boolean startPlayStoreActivity(Context context, Uri uri) {
-        try {
-            context.startActivity(getPlayStoreIntent(context, uri));
-            return true;
-        } catch (ActivityNotFoundException e) {
-            return false;
-        }
-    }
-
-    public static Intent getPlayStoreIntent(Context context, Uri uri) {
-        Intent goToMarket = new Intent("android.intent.action.VIEW", uri);
-        if (uri.getScheme().startsWith("market")) {
-            goToMarket.addFlags(1208483840);
-        }
-        return goToMarket;
-    }
-
     public static void updateInstallationDetails(Context context, JSONObject download) throws IOException {
         String sval;
         File file;
-        Logx.debug(App.class, "Updating installation details");
+        Logx.getInstance().debug(App.class, "Updating installation details");
         context = context.getApplicationContext();
-        updateScreenName(context, download);
+        FileIO fileIO = new FileIO();
         Object oval = download.get(InstallationNames.installationkey);
         if (oval != null) {
             sval = oval.toString().trim();
@@ -119,14 +107,15 @@ public final class App {
                 } else {
                     file = FileIO.getFile(context, FileIO.getInstallationIdFilename());
                 }
-                FileIO.writeToFile(file, ID, false);
+                Logx.getInstance().debug(App.class, "Writing to file {0} = {1}", InstallationNames.installationkey, ID);
+                fileIO.writeToFile(file, ID, false);
             }
         }
         oval = download.get(InstallationNames.firstinstallationdate);
         if (oval != null) {
             sval = oval.toString().trim();
             if (!sval.isEmpty()) {
-                Date date = JsonView.parse(sval);
+                Date date = new DateParser().parse(sval);
                 if (date != null) {
                     FIRST_INSTALLATION_TIME = date.getTime();
                     if (useExternalFile) {
@@ -134,42 +123,29 @@ public final class App {
                     } else {
                         file = FileIO.getFile(context, FileIO.getFirstInstallationTimeFilename());
                     }
-                    FileIO.writeToFile(file, Long.toString(FIRST_INSTALLATION_TIME), false);
+                    Logx.getInstance().debug(App.class, "Writing to file {0} = {1}",
+                            InstallationNames.firstinstallationdate, FIRST_INSTALLATION_TIME);
+                    fileIO.writeToFile(file, Long.toString(FIRST_INSTALLATION_TIME), false);
                 }
             }
         }
     }
 
-    private static void updateScreenName(Context context, JSONObject download) {
-        Logx.debug(App.class, "Updating installation details");
-        context = context.getApplicationContext();
-        try {
-            Object screenname = download.get(InstallationNames.screenname);
-            Logx.debug(App.class, "Screenname: {0}", screenname);
-            if (screenname != null) {
-                String remote = screenname.toString();
-                if (!remote.isEmpty()) {
-                    String local = User.getInstance().getScreenName(context);
-                    if (!remote.equals(local)) {
-                        if (local != null) {
-                            Logx.log(5, App.class, "Local screenname: {0} not equal to remote: {1}. Using remote", local, remote);
-                        }
-                        User.getInstance().setScreenName(context, remote);
-                    }
-                }
-            }
-        } catch (Exception e) {
-            Logx.log(App.class, e);
-        }
+    public static Map<String, String> getOutputParameters(Context context) {
+        Map<String, String> params = new LinkedHashMap<>();
+        addParameters(context, params);
+        return params;
     }
 
     public static int addParameters(Context context, Map<String, String> params) {
-        User user = User.getInstance();
-        int added = ((user.addLoginCredentials(context, params)) + user.addSubscriptionCredentials(context, params)) + addInstallationParameters(context, params);
+        final User user = User.getInstance();
+        int added = user.addDetails(context, params) + user.addLoginCredentials(context, params) +
+                user.addSubscriptionCredentials(context, params) + addInstallationParameters(context, params);
         params.put("versionCode", String.valueOf(getVersionCode(context)));
-        added++;
+        ++added;
         params.put("format", "text/json");
-        return added + 1;
+        params.put("tidy", Logx.getInstance().isDebugMode() ? "true" : "false");
+        return added + 2;
     }
 
     public static int addInstallationParameters(Context context, Map<String, String> params) {
@@ -181,20 +157,15 @@ public final class App {
                 params.put(InstallationNames.firstinstallationdate, Long.toString(getFirstInstallationTime(context)));
                 params.put(InstallationNames.lastinstallationdate, Long.toString(getLastInstallationTime(context)));
                 added = 3;
-                Object feeduserid = User.getInstance().getFeeduserid(context);
-                if (feeduserid != null) {
-                    params.put(InstallationNames.feeduserid, feeduserid.toString());
-                    added = 3 + 1;
-                }
-                String screenname = User.getInstance().getScreenName(context);
+                String screenname = User.getInstance().getScreenname(context, null);
                 if (screenname != null) {
                     params.put(InstallationNames.screenname, screenname);
-                    added++;
+                    ++added;
                 }
-                Logx.log(Log.VERBOSE, App.class, "Added installation parameters:\n{0}", params.keySet(), Integer.valueOf(1));
+                Logx.getInstance().log(Log.VERBOSE, App.class, "Added installation parameters: {0}", params.keySet());
             }
         } catch (IOException e) {
-            Logx.log(App.class, e);
+            Logx.getInstance().log(App.class, e);
         }
         return added;
     }
@@ -204,7 +175,7 @@ public final class App {
     }
 
     public static void handleInstallationError(Context context, Exception e, String displayMessage) {
-        RemoteLog.logInstallationError(context);
+        new LogInstallationError(context).execute();
     }
 
     public static boolean isVisible() {
@@ -212,48 +183,26 @@ public final class App {
     }
 
     public static void setVisible(boolean appVisible) {
-        appVisible = appVisible;
+        App.appVisible = appVisible;
     }
 
-    public static synchronized boolean isAcceptableVersion(Context context, int versionCode) {
-        boolean accepted;
+    public static synchronized void install(Context context, String countryCode, String screenname, String gender) throws IOException {
+
         synchronized (App.class) {
-            accepted = false;
-            try {
-                accepted = VERSION.SDK_INT >= versionCode;
-            } catch (Exception e) {
-                Logx.log(App.class, e);
-                try {
-                    accepted = getVersionCode(context) >= versionCode;
-                } catch (Exception e1) {
-                    Logx.log(App.class, e1);
-                }
-            }
-        }
-        return accepted;
-    }
 
-    public static int getVersionCode(Context context) {
-        context = context.getApplicationContext();
-        if (versionCode == 0 && context != null) {
-            try {
-                versionCode = context.getPackageManager().getPackageInfo(context.getPackageName(), 0).versionCode;
-            } catch (Exception e) {
-                versionCode = -1;
-                Logx.log(App.class, e);
-            }
-        }
-        return versionCode;
-    }
+            Util.requireNonNullOrEmpty(screenname, InstallationNames.screenname + " may not be null or an empty string");
 
-    public static synchronized void install(Context context, String screenName) throws IOException {
-        synchronized (App.class) {
-            getId(context, UUID.randomUUID());
-            User.getInstance().setScreenName(context, screenName);
-            long currTime = System.currentTimeMillis();
+            ID = getId(context, UUID.randomUUID());
+
+            final long currTime = System.currentTimeMillis();
+
             getFirstInstallationTime(context, currTime);
+
             Pref.setLong(context, FileIO.getLastInstallationTimeFilename(), currTime);
-            Popup.show((View) null, R.string.msg_installation_successful, 0);
+
+            User.getInstance().getProfilePreferences().update(context, countryCode, screenname, gender);
+
+            Popup.getInstance().show(context, R.string.msg_installation_successful, Toast.LENGTH_SHORT);
         }
     }
 
@@ -294,10 +243,6 @@ public final class App {
         return output;
     }
 
-    public static PreferenceFeedsManager getPreferenceFeedsManager(Context context, PreferenceType type) {
-        return new PreferenceFeedsManager(context, type);
-    }
-
     public static boolean isInstalled(Context context) throws IOException {
         boolean installed;
         if (getId(context) == null || getFirstInstallationTime(context) <= 0) {
@@ -305,19 +250,20 @@ public final class App {
         } else {
             installed = true;
         }
-        Logx.log(Log.VERBOSE, App.class, "is installed: {0}", Boolean.valueOf(installed));
+        Logx.getInstance().log(Log.VERBOSE, App.class, "is installed: {0}", Boolean.valueOf(installed));
         return installed;
     }
 
     public static synchronized String getId(Context context) throws IOException {
         String str;
         synchronized (App.class) {
-            if (Logx.isDebugMode()) {
-                str = "abdb33ee-a09e-4d7d-b861-311ee7061325";
-            } else {
+//            if (Logx.getInstance().isDebugMode()) {
+//                str = "abdb33ee-a09e-4d7d-b861-311ee7061325";
+//            } else {
                 context = context.getApplicationContext();
-                str = getId(context, DeviceID.getID(context));
-            }
+                final String defaultId = DeviceIdManager.getID(context, FileIO.getInstallationIdFilename());
+                str = getId(context, defaultId);
+//            }
         }
         return str;
     }
@@ -344,13 +290,18 @@ public final class App {
                 if (defaultValue != null) {
                     str = defaultValue.toString();
                 }
-                ID = loadDoubleSavedFile(context, installationIdFilename, str);
+
+                ID = new FileIO().loadDoubleSavedFile(
+                        context,
+                        FileIO.getExternalPublicDirName(),
+                        installationIdFilename,
+                        str);
             } else {
                 installationIdFilename = FileIO.getInstallationIdFilename();
                 if (defaultValue != null) {
                     str = defaultValue.toString();
                 }
-                ID = loadSavedFile(context, installationIdFilename, str);
+                ID = new FileIO().loadSavedFile(context, installationIdFilename, str);
             }
         }
         return ID;
@@ -367,13 +318,17 @@ public final class App {
                 if (defaultValue >= 0) {
                     str = Long.toString(defaultValue);
                 }
-                sval = loadDoubleSavedFile(context, firstInstallationTimeFilename, str);
+                sval = new FileIO().loadDoubleSavedFile(
+                        context,
+                        FileIO.getExternalPublicDirName(),
+                        firstInstallationTimeFilename,
+                        str);
             } else {
                 firstInstallationTimeFilename = FileIO.getFirstInstallationTimeFilename();
                 if (defaultValue >= 0) {
                     str = Long.toString(defaultValue);
                 }
-                sval = loadSavedFile(context, firstInstallationTimeFilename, str);
+                sval = new FileIO().loadSavedFile(context, firstInstallationTimeFilename, str);
             }
             if (sval != null) {
                 FIRST_INSTALLATION_TIME = Long.parseLong(sval);
@@ -386,15 +341,15 @@ public final class App {
         File idFile = FileIO.getFile(context.getApplicationContext(), fname);
         try {
             if (idFile.exists()) {
-                return FileIO.readFile(idFile);
+                return new FileIO().readFile(idFile);
             }
             if (defaultValue == null) {
                 return null;
             }
-            FileIO.writeToFile(idFile, defaultValue, false);
+            new FileIO().writeToFile(idFile, defaultValue, false);
             return null;
         } catch (Exception e) {
-            Logx.log(App.class, e);
+            Logx.getInstance().log(App.class, e);
             throw new RuntimeException(e);
         }
     }
@@ -404,47 +359,44 @@ public final class App {
         File publicFile = FileIO.getExternalPublicFile(context, fname);
         File privateFile = FileIO.getFile(context, fname);
         String output;
+        FileIO fileIO = new FileIO();
         if (privateFile.exists()) {
-            output = FileIO.readFile(privateFile);
+            output = fileIO.readFile(privateFile);
             if (!FileIO.isExternalStorageReadable()) {
                 return output;
             }
             if (publicFile.exists()) {
-                String publicValue = FileIO.readFile(publicFile);
+                String publicValue = fileIO.readFile(publicFile);
                 if (output.equals(publicValue) || !FileIO.isExternalStorageWritable()) {
                     return output;
                 }
-                FileIO.writeToFile(privateFile, publicValue, false);
+                fileIO.writeToFile(privateFile, publicValue, false);
                 return publicValue;
             } else if (!FileIO.isExternalStorageWritable()) {
                 return output;
             } else {
-                FileIO.writeToFile(publicFile, output, false);
+                fileIO.writeToFile(publicFile, output, false);
                 return output;
             }
         } else if (FileIO.isExternalStorageReadable()) {
             if (publicFile.exists()) {
-                output = FileIO.readFile(publicFile);
-                FileIO.writeToFile(privateFile, output, false);
+                output = fileIO.readFile(publicFile);
+                fileIO.writeToFile(privateFile, output, false);
                 return output;
             } else if (defaultValue == null) {
                 return null;
             } else {
-                FileIO.writeToFile(privateFile, defaultValue, false);
-                if (FileIO.isExternalStorageWritable()) {
-                    FileIO.writeToFile(publicFile, defaultValue, false);
+                fileIO.writeToFile(privateFile, defaultValue, false);
+                if (fileIO.isExternalStorageWritable()) {
+                    fileIO.writeToFile(publicFile, defaultValue, false);
                 }
                 return defaultValue;
             }
         } else if (defaultValue == null) {
             return null;
         } else {
-            FileIO.writeToFile(privateFile, defaultValue, false);
+            fileIO.writeToFile(privateFile, defaultValue, false);
             return null;
         }
-    }
-
-    public static boolean isUseExternalFile() {
-        return useExternalFile;
     }
 }

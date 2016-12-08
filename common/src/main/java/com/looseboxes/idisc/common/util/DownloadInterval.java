@@ -3,14 +3,20 @@ package com.looseboxes.idisc.common.util;
 import android.content.Context;
 
 public class DownloadInterval {
-    private final Context context;
-    private final String preferenceKey;
-    private final long updateIntervalMillis;
+
+    private Context context;
+    private String preferenceKey;
+    private long updateIntervalMillis;
 
     public DownloadInterval(Context context, String preferenceKey, long updateIntervalMillis) {
         this.context = context;
         this.preferenceKey = preferenceKey;
         this.updateIntervalMillis = updateIntervalMillis;
+    }
+
+    public void destroy() {
+        this.context = null;
+        this.preferenceKey = null;
     }
 
     public boolean isNextDownloadDue() {

@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:id="@+id/commentgroupview_root_linearlayout"
+    android:background="@color/color_light"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+    <TextView
+        android:id="@+id/commentgroupview_title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/msg_comments"
+        style="@style/ColorTextViewAppTheme" />
+    <WebView
+        android:id="@+id/commentgroupview_display"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/msg_nofeed"
+        style="@style/WebViewAppTheme" />
+    <ListView
+        android:id="@+id/commentgroupview_comments"
+        android:scrollbars="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:scrollHorizontally="false"/>
+</LinearLayout>

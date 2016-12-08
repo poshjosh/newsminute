@@ -1,7 +1,6 @@
 package com.looseboxes.idisc.common.activities;
 
 import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
@@ -11,138 +10,148 @@ import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import com.bc.android.core.util.Util;
 import com.looseboxes.idisc.common.DefaultApplication;
 import com.looseboxes.idisc.common.R;
 import com.looseboxes.idisc.common.User;
-import com.looseboxes.idisc.common.asynctasks.Signup;
+import com.looseboxes.idisc.common.jsonview.AuthuserNames;
 import com.looseboxes.idisc.common.jsonview.FeeduserNames;
-import com.looseboxes.idisc.common.notice.Popup;
-import com.looseboxes.idisc.common.util.CheckIfValueExists;
-import com.looseboxes.idisc.common.util.Logx;
-import java.util.Collections;
-import java.util.Map;
+import com.bc.android.core.notice.Popup;
+import com.bc.android.core.util.Logx;
+import com.looseboxes.idisc.common.listeners.CheckIfExistsOnFocusChange;
 
 public class SignupActivity extends AbstractSingleTopActivity implements OnClickListener {
-    private CheckIfValueExists confirm;
+
+    public static final String EXTRA_STRING_CALLING_ACTIVITY_CLASS_NAME = SignupActivity.class.getName()+".callingActivityClassname.extra.string";
+
     private EditText emailView;
     private EditText passwordView;
-    private TextView progressText;
     private EditText usernameView;
 
-    /* renamed from: com.looseboxes.idisc.common.activities.SignupActivity.1 */
-    class AnonymousClass1 extends CheckIfValueExists {
-        AnonymousClass1(Context x0) {
-            super(x0);
-        }
-
-        protected void proceed(String table, Map<String, String> map) {
-            boolean success = SignupActivity.this.signup();
-        }
-    }
-
-    /* renamed from: com.looseboxes.idisc.common.activities.SignupActivity.2 */
-    class AnonymousClass2 extends Signup {
-        AnonymousClass2(String x0, String x1, char[] x2, boolean x3) {
-            super(x0, x1, x2, x3);
-        }
-
-        public void onSuccess(Object download) {
-            String msg;
-            if (Boolean.TRUE.equals(download)) {
-                String app_label = SignupActivity.this.getString(R.string.app_label);
-                msg = SignupActivity.this.getString(R.string.msg_signupsuccess, new Object[]{app_label});
-            } else {
-                msg = SignupActivity.this.getString(R.string.err_signup);
-            }
-            Popup.alert(SignupActivity.this, msg);
-        }
-
-        public Context getContext() {
-            return SignupActivity.this;
-        }
-    }
-
-    public int getContentView() {
+    public int getContentViewId() {
         return R.layout.signup;
     }
 
     protected void doCreate(Bundle savedInstanceState) {
         try {
-            super.doCreate(savedInstanceState);
-            doCreate();
-        } catch (Exception e) {
-            Logx.debug(getClass(), e);
-        }
-    }
 
-    private void doCreate() {
-        this.emailView = (EditText) findViewById(R.id.signup_email);
-        this.usernameView = (EditText) findViewById(R.id.signup_username);
-        String screenname = User.getInstance().getScreenName(this);
-        if (screenname != null) {
-            this.usernameView.setText(screenname);
+            super.doCreate(savedInstanceState);
+
+            this.emailView = (EditText) findViewById(R.id.signup_email);
+            this.usernameView = (EditText) findViewById(R.id.signup_username);
+            String screenname = User.getInstance().getScreenname(this, null);
+            if (screenname != null) {
+                this.usernameView.setText(screenname);
+            }
+            this.passwordView = (EditText) findViewById(R.id.signup_password);
+            ((Button) findViewById(R.id.signup_okbutton)).setOnClickListener(this);
+            ((Button) findViewById(R.id.signup_skipbutton)).setOnClickListener(this);
+            ((Button) findViewById(R.id.navigation_nextbutton)).setOnClickListener(this);
+            ((Button) findViewById(R.id.navigation_backbutton)).setOnClickListener(this);
+
+            TextView progressText = (TextView) findViewById(R.id.signup_title);
+
+            this.emailView.setOnFocusChangeListener(
+                    new CheckIfExistsOnFocusChange("feeduser", FeeduserNames.emailAddress, progressText)
+            );
+            this.usernameView.setOnFocusChangeListener(
+                    new CheckIfExistsOnFocusChange("feeduser", AuthuserNames.username, progressText)
+            );
+
+        } catch (Exception e) {
+            Logx.getInstance().debug(getClass(), e);
         }
-        this.passwordView = (EditText) findViewById(R.id.signup_password);
-        ((Button) findViewById(R.id.signup_okbutton)).setOnClickListener(this);
-        ((Button) findViewById(R.id.signup_skipbutton)).setOnClickListener(this);
-        ((Button) findViewById(R.id.welcomeprocess_nextbutton)).setOnClickListener(this);
-        ((Button) findViewById(R.id.welcomeprocess_backbutton)).setOnClickListener(this);
     }
 
     public void onClick(View v) {
+
         try {
-            Logx.log(Log.VERBOSE, getClass(), "onClick");
-            int id = v.getId();
-            if (id == R.id.signup_okbutton || id == R.id.welcomeprocess_nextbutton) {
+
+            Logx.getInstance().log(Log.VERBOSE, getClass(), "onClick");
+
+            final int id = v.getId();
+
+            if (id == R.id.signup_okbutton || id == R.id.navigation_nextbutton) {
+
                 Editable email = this.emailView.getText();
                 Editable username = this.usernameView.getText();
                 Editable password = this.passwordView.getText();
+
                 if (email == null) {
-                    Popup.show((Activity) this, getString(R.string.msg_enter_email), 0);
-                    return;
+
+                    Popup.getInstance().show(this, getString(R.string.msg_enter_email), Toast.LENGTH_SHORT);
+
                 } else if (password == null) {
-                    Popup.show((Activity) this, getString(R.string.msg_enter_password), 0);
-                    ((DefaultApplication) getApplication()).onWelcomeProcessFinished(this);
-                    startActivity(new Intent(this, MainActivity.class));
-                    return;
+
+                    Popup.getInstance().show(this, getString(R.string.msg_enter_password), Toast.LENGTH_SHORT);
+
                 } else {
-                    if (this.confirm == null) {
-                        this.confirm = new AnonymousClass1(this);
-                        if (this.progressText == null) {
-                            this.progressText = (TextView) findViewById(R.id.signup_title);
-                        }
-                        this.confirm.setProgressText(this.progressText);
-                    }
-                    this.confirm.execute("feeduser", Collections.singletonMap(FeeduserNames.emailaddress, email.toString()));
+
+                    this.signup();
                 }
-            } else if (id != R.id.signup_skipbutton && id == R.id.welcomeprocess_backbutton) {
+
+                if(id == R.id.navigation_nextbutton) {
+
+                    startActivity(new Intent(this, MainActivity.class));
+                }
+            }else
+            if(id == R.id.signup_skipbutton || id == R.id.navigation_backbutton) {
+
+                startActivity(new Intent(this, MainActivity.class));
             }
-            ((DefaultApplication) getApplication()).onWelcomeProcessFinished(this);
-            startActivity(new Intent(this, MainActivity.class));
         } catch (Exception e) {
-            Popup.show((Activity) this, (Object) "Failed to sign up", 1);
-            Logx.log(getClass(), e);
+
+            Popup.getInstance().show(this, R.string.err_signup, Toast.LENGTH_LONG);
+
+            Logx.getInstance().log(getClass(), e);
+
         } finally {
-            ((DefaultApplication) getApplication()).onWelcomeProcessFinished(this);
-            startActivity(new Intent(this, MainActivity.class));
+
+            if(this.isCallingActivityClass(WelcomeOptionsActivity.class)) {
+
+                ((DefaultApplication) getApplication()).onWelcomeProcessFinished(this);
+            }
         }
     }
 
+    public boolean isCallingActivityClass(Class<? extends Activity> aClass) {
+
+        final String callingActivityClassname = this.getIntent().getStringExtra(EXTRA_STRING_CALLING_ACTIVITY_CLASS_NAME);
+
+        Logx.getInstance().debug(this.getClass(), "Calling activity class name: {0}", callingActivityClassname);
+
+        return aClass.getName().equals(callingActivityClassname);
+    }
+
+
     private boolean signup() {
-        Editable email = this.emailView.getText();
-        Editable username = this.usernameView.getText();
-        Editable password = this.passwordView.getText();
-        if (email == null || password == null) {
+
+        if(!Util.isNetworkConnectedOrConnecting(this)) {
+            Popup.getInstance().show(this, R.string.err_internetunavailable, Toast.LENGTH_SHORT);
             return false;
         }
-        String str;
-        String obj = email.toString();
-        if (username == null) {
-            str = null;
-        } else {
-            str = username.toString();
+
+        Editable emailEditable = this.emailView.getText();
+        Editable usernameEditable = this.usernameView.getText();
+        Editable passwordEditable = this.passwordView.getText();
+
+        if (emailEditable == null || passwordEditable == null) {
+            return false;
         }
-        new AnonymousClass2(obj, str, password.toString().toCharArray(), true).execute();
+
+        String username;
+        if (usernameEditable == null) {
+            username = null;
+        } else {
+            username = usernameEditable.toString();
+        }
+
+        Popup.getInstance().show(this, R.string.msg_signingup, Toast.LENGTH_SHORT);
+
+        User.getInstance().signup(this, emailEditable.toString(), username, passwordEditable.toString());
+
         return true;
     }
 }

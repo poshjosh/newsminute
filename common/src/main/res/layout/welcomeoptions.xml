@@ -5,7 +5,7 @@
     android:layout_height="fill_parent"
     android:background="@color/black">
 
-    <include layout="@layout/welcomeprocess_navigation"/>
+    <include layout="@layout/navigation"/>
 
     <ImageView
             android:id="@+id/welomeoptions_banner"

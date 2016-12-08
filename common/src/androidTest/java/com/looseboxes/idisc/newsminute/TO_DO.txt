@@ -1,24 +1,35 @@
 BEFORE PUBLISHING
 =================
 Test production version on mobile and tablet
-Set Logx.productionMode to 'true';
+Set DefaultApplication.productionMode to 'true';
+Remove dualpane mode for mobile
 Change version code and name
 
 TO DO
 -----
+Notifications should not show feed not of user's country
+Cateogry #newsminute-hotnews should be given priority
+Downloading of feeds should also come with #newsminute-hotnews_feedids
+request=feeds,request=newsminute-adverts,request=newsminute-notnews
+
+get lat / long per selected country codes
+Checkifvalueexists
+Signup
+Comment notification
+Show option for user to select sources ??? based on location
+Notification being repeated... setNotified feedid not working ???
+When a user logs in, even if failed save credentials and always auto login
+
+when search button clicked Keyboard not being hidden on time
+Study commentreplynotice table to ensure notice being sent not too few, not too much
+ResponseParser display {key, value} instead of value
+Popup not showing in InAppPurAc 74 > billing Manager 136 > 222
+
+Prompt the user to 'add words to be notified of', 'select categories' etc
 Notify people if their friends joined, after adding
-After search if no results automatically start search on server
-Add feedlist under webview in feedview
 Add Email extraction tests to DeveloperActivity
-All activities outside common (e.g AppInviteActivity) should extends AbstractSingleTopActivity
-Log uninstalls
-Log.VERBOSE not being logged
 when content options button clicked there should be indication
 replace all 'null == null' and 'null != null'
-When WebContentFragment loads from url, the content loaded from the url should be used
-to update getContentToDisplay
-
-Send and Clear buttons shouldn't be so far down in Feed Display
     /* JADX WARNING: inconsistent code. */
     /* Code decompiled incorrectly, please refer to instructions dump. */
 
@@ -28,4 +39,3 @@ replace all BuildConfig.FLAVOR with ""
 replace all "" with Util.EMPTY_STRING;
 
 Add properties from PropertiesManagr to server json
-

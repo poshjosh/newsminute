@@ -11,8 +11,9 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.Spinner;
 import com.looseboxes.idisc.common.R;
-import com.looseboxes.idisc.common.notice.Popup;
-import com.looseboxes.idisc.common.util.Logx;
+import com.bc.android.core.notice.Popup;
+import com.bc.android.core.util.Logx;
+
 import java.util.Arrays;
 import java.util.List;
 
@@ -21,11 +22,10 @@ public class LaunchActivityActivity extends Activity {
     private Class<? extends Activity> selectedActivityClass;
     private Button skipButton;
 
-    /* renamed from: com.looseboxes.idisc.common.activities.LaunchActivityActivity.3 */
-    class AnonymousClass3 implements OnItemSelectedListener {
-        final /* synthetic */ Object[] val$values;
+    class ActivityListSpinnerListener implements OnItemSelectedListener {
+        final Object[] val$values;
 
-        AnonymousClass3(Object[] objArr) {
+        ActivityListSpinnerListener(Object[] objArr) {
             this.val$values = objArr;
         }
 
@@ -33,7 +33,7 @@ public class LaunchActivityActivity extends Activity {
             try {
                 LaunchActivityActivity.this.selectedActivityClass = (Class) this.val$values[position];
             } catch (Exception e) {
-                Logx.log(getClass(), e);
+                Logx.getInstance().log(getClass(), e);
             }
         }
 
@@ -53,9 +53,11 @@ public class LaunchActivityActivity extends Activity {
                         LaunchActivityActivity.this.startActivity(new Intent(LaunchActivityActivity.this, LaunchActivityActivity.this.selectedActivityClass));
                         return;
                     }
-                    Popup.alert(LaunchActivityActivity.this, "You did not select any activity to launch");
+                    Popup.getInstance().alert(LaunchActivityActivity.this,
+                            "You did not select any activity to launch", null,
+                            LaunchActivityActivity.this.getString(R.string.msg_ok));
                 } catch (Exception e) {
-                    Logx.log(getClass(), e);
+                    Logx.getInstance().log(getClass(), e);
                 }
             }
         });
@@ -69,18 +71,19 @@ public class LaunchActivityActivity extends Activity {
 
     private void initLogTagSpinner(Spinner spinner) {
 
-        Object[] values = new Object[]{DisplayLinkActivity.class, InfoActivity.class, WelcomeActivity.class, WelcomeOptionsActivity.class, LoginActivity.class, SignupActivity.class, ForgotPasswordActivity.class};
+
+        Object[] values = new Object[]{SumbitnewsActivity.class, UserprofileActivity.class, DisplayCommentActivity.class, DisplayCommentsActivity.class, DisplayLinkActivity.class, InfoActivity.class, WelcomeActivity.class, WelcomeOptionsActivity.class, LoginActivity.class, SignupActivity.class, ForgotPasswordActivity.class};
 
         String[] entries = new String[values.length];
 
         int i = 0;
         for(Object value:values) {
-            entries[i++] = value.toString();
+            entries[i++] = ((Class)value).getSimpleName();
         }
 
         initSpinner(spinner, entries);
 
-        spinner.setOnItemSelectedListener(getLogTagSpinnerListener(values));
+        spinner.setOnItemSelectedListener(new ActivityListSpinnerListener(values));
     }
 
     private void initSpinner(Spinner spinner, String[] entries) {
@@ -94,9 +97,5 @@ public class LaunchActivityActivity extends Activity {
         dataAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 
         spinner.setAdapter(dataAdapter);
-    }
-
-    private OnItemSelectedListener getLogTagSpinnerListener(Object[] values) {
-        return new AnonymousClass3(values);
     }
 }

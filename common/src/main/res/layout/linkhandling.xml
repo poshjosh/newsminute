@@ -4,14 +4,11 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     style="@style/ViewGroupAppTheme">
+
     <ProgressBar
-        android:id="@+id/linkhandling_progressbar"
+        android:id="@+id/linkhandling_progressbar_indeterminate"
         android:layout_width="@dimen/space_xxxlarge"
-        android:layout_height="@dimen/space_xxxlarge"/>
-    <TextView
-        android:id="@+id/linkhandling_textview"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/msg_loading"
-        style="@style/TextViewAppTheme"/>
+        android:layout_height="@dimen/space_xxxlarge"
+        style="@style/ProgressBarIndeterminateAppTheme"/>
+
 </LinearLayout>

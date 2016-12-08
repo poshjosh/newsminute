@@ -1,8 +1,8 @@
 package com.looseboxes.idisc.common.jsonview;
 
 public interface FeeduserNames {
-    public static final String appuserid = "appuserid";
-    public static final String emailaddress = "emailAddress";
-    public static final String feeduserid = "installationid";
+    public static final String feeduserid = "feeduserid";
+    public static final String genderid = GenderNames.genderid;
+    public static final String emailAddress = "emailAddress";
     public static final String password = "password";
 }

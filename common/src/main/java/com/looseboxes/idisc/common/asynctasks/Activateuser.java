@@ -1,56 +1,38 @@
 package com.looseboxes.idisc.common.asynctasks;
 
 import android.content.Context;
+
+import com.bc.android.core.util.Util;
 import com.looseboxes.idisc.common.App;
 import com.looseboxes.idisc.common.R;
 import com.looseboxes.idisc.common.User;
 import com.looseboxes.idisc.common.jsonview.InstallationNames;
-import com.looseboxes.idisc.common.notice.Popup;
-import com.looseboxes.idisc.common.util.Logx;
+import com.bc.android.core.notice.Popup;
+import com.bc.android.core.util.Logx;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 
-public class Activateuser extends DefaultReadTask<Boolean> {
-    private final Context context;
+public class Activateuser extends AbstractReadBoolean {
 
     public Activateuser(Context context, String code) throws IOException {
-        if (code == null) {
-            throw new NullPointerException();
-        }
-        String id = App.getId(context);
-        if (id == null) {
-            throw new UnsupportedOperationException();
-        }
-        Map<String, String> params = new HashMap(4, 1);
-        params.put("code", code);
-        params.put(InstallationNames.installationkey, id);
-        setOutputParameters(params);
-        this.context = context;
-    }
 
-    public Context getContext() {
-        return this.context;
-    }
+        super(context, context.getString(R.string.err_activation));
 
-    public boolean isRemote() {
-        return true;
-    }
+        Util.requireNonNull(code);
 
-    public String getErrorMessage() {
-        return getContext().getString(R.string.err_activation);
+        String id = Util.requireNonNull(App.getId(context));
+
+        this.addOutputParameter("code", code);
+        this.addOutputParameter(InstallationNames.installationkey, id);
     }
 
     public void onSuccess(Boolean success) {
         if (success.booleanValue()) {
-            Popup.alert(this.context, "An email has been sent to " + User.getInstance().getEmailAddress(getContext()) + ". Please check your email for instructions");
+            final Context context = this.getContext();
+            String msg = context.getString(R.string.msg_emailsentto_s_checkemail, User.getInstance().getEmailAddress(context));
+            Popup.getInstance().alert(this.getContext(), msg, null, context.getString(R.string.msg_ok));
             return;
         }
-        Logx.debug(getClass(), "Request NOT SUCCESSFUL", success);
-    }
-
-    public String getLocalFilename() {
-        throw new UnsupportedOperationException("Not supported.");
+        Logx.getInstance().debug(getClass(), "Request NOT SUCCESSFUL", success);
     }
 
     public String getOutputKey() {

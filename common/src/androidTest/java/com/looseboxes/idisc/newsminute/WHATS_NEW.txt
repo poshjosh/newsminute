@@ -1,6 +1,70 @@
+PENDING Version
+===============
+
+Version 36 (2.9.07)
+===============
+* Minor bug fixes
+* Wifi only mode
+- Image above summary in webview
+- If user views newsminute advert, it is no longer displayed
+- Changed: All,Headlines,Categories,Sources,Bookmarks,Favorites
+     To: All,Categories,Favorites,Headlines,Sources,Bookmarks
+
+Version 29 (2.9)
+===============
+* Minor bug fixes
+Display date/time in user timezone
+
+Version 28 (2.8)
+===============
+* Minor bug fixes
+
+Version 27 (2.7)
+===============
+* Minor bug fixes
+
+Version 26 (2.6)
+===============
+* Minor bug fixes
+
+Version 25 (2.5)
+================
+* Serve news based on user's country
+* Minor bug fixes
+Once logged-in, user remains logged-in till explicit logout
+Log app launch
+
+Version 24 (2.4)
+================
+* Bug fixes
+
+Version 23 (2.3)
+================
+* Improved stability
+* Improved sorting by preferred news categories/sources
+* Minor bug fixes
+
+Version 21 (2.1)
+================
+Improved stability
+
+Version 17 (1.7.0)
+==================
+* Login no longer required to bookmark or like (favorite) a news item
+* Fixed buggy bookmarks and favorites action
+* Minor bug fixes
+
+Version 16 (1.6.0)
+==================
+* Improved speed
+* Minor bug fixes
+
+- Added related news below news details
+
 Version 15 (1.5.0)
 ==================
 * Minor bug fixes
+* Less frequent and more fine tuned notifications
 
 -Background drawable of ActionBar set manually (for compatibility with version Android 4.2.2)
 -Email extraction

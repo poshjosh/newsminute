@@ -5,49 +5,28 @@ import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
 
+import com.bc.android.core.util.Util;
 import com.looseboxes.idisc.common.App;
-import com.looseboxes.idisc.common.util.Logx;
-import com.looseboxes.idisc.common.util.Pref;
-import com.looseboxes.idisc.common.util.Util;
+import com.bc.android.core.util.Logx;
+import com.looseboxes.idisc.common.asynctasks.FeedDownloadManager;
+import com.looseboxes.idisc.common.util.NewsminuteUtil;
 
 public class NetworkChangeReceiver extends BroadcastReceiver {
+
     public void onReceive(Context context, Intent intent) {
+
         if (!App.isVisible()) {
             App.setContext(context);
         }
-        Logx.log(Log.VERBOSE, getClass(), "Network Changed");
-        if (getFailedNetworkAttempts(context) > 0) {
+
+        Logx.getInstance().log(Log.VERBOSE, getClass(), "Network Changed. Network connected/connecting: {0}", NewsminuteUtil.isPreferredNetworkConnectedOrConnecting(context));
+
+        if (FeedDownloadManager.isNextDownloadDue(context) && NewsminuteUtil.isPreferredNetworkConnectedOrConnecting(context)) {
             attemptNetworkTask(context);
-        }
-        if (Util.isNetworkConnectedOrConnecting(context)) {
-            setFailedNetworkAttempts(context, 0);
-        } else {
-            setFailedNetworkAttempts(context, getFailedNetworkAttempts(context) + 1);
         }
     }
 
     protected void attemptNetworkTask(Context context) {
-        ServiceScheduler.scheduleNetworkService(context);
-    }
-
-    public static void setFailedNetworkAttempts(Context context, int n) {
-        try {
-            Pref.setLong(context.getApplicationContext(), getFailedNetworkAttemptsPreferenceKey(), (long) n);
-        } catch (Exception e) {
-            Logx.log(DownloadService.class, e);
-        }
-    }
-
-    public static int getFailedNetworkAttempts(Context context) {
-        try {
-            return (int) Pref.getLong(context.getApplicationContext(), getFailedNetworkAttemptsPreferenceKey(), 0);
-        } catch (Exception e) {
-            Logx.log(DownloadService.class, e);
-            return 0;
-        }
-    }
-
-    private static String getFailedNetworkAttemptsPreferenceKey() {
-        return DownloadService.class.getName() + ".FailedNetworkAttempts.preferencekey";
+        new ServiceSchedulerImpl().scheduleNetworkService(context);
     }
 }

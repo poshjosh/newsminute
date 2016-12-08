@@ -18,10 +18,16 @@
 # READ THESE
 # https://stuff.mit.edu/afs/sipb/project/android/sdk/android-sdk-linux/tools/proguard/docs/index.html#manual/introduction.html
 # http://proguard.sourceforge.net/manual/usage.html
+
 -keep class com.android.vending.billing.**
 
+# THESE ARE THE CUSTOM RULES
+#
+-keepclasseswithmembers class <com.bc.android.core.ui.HtmlExtractingJavascriptInterface> {
+    public *;
+}
+
 -dontwarn java.awt.**
--dontwarn com.squareup.okhttp.**
 
 -dontwarn sun.net.www.protocol.http.**
 -dontwarn com.sun.net.ssl.internal.ssl.Provider
@@ -29,3 +35,42 @@
 -dontwarn javax.security.sasl.**
 -dontwarn javax.security.auth.**
 -dontwarn java.beans.Beans
+
+-keep class android.support.v7.** { *; }
+-keep class android.support.v4.** { *; }
+-dontwarn android.support.v4.**
+-dontwarn android.support.v7.**
+
+-keep class org.apache.http.** { *; }
+-dontwarn org.apache.http.**
+
+-keep class android.net.http.** { *; }
+-dontwarn android.net.http.**
+
+# Allow obfuscation of android.support.v7.internal.view.menu.**
+# to avoid problem on Samsung 4.2.2 devices with appcompat v21
+# see https://code.google.com/p/android/issues/detail?id=78377
+-keep class !android.support.v7.internal.view.menu.*MenuBuilder*, android.support.v7.** { *; }
+-keep interface android.support.v7.** { *; }
+
+-dontwarn com.squareup.okhttp.**
+-keep class com.squareup.okhttp.** { *; }
+-keep interface com.squareup.okhttp.** { *; }
+
+-dontwarn com.google.vending.licensing.ILicensingService
+-dontwarn com.android.vending.licensing.ILicensingService
+
+-dontwarn com.google.android.gms.internal.**
+-keep class com.google.android.gms.internal.** { *; }
+-keep interface com.google.android.gms.internal.** { *; }
+
+-dontwarn com.google.android.gms.maps.internal.**
+-keep class com.google.android.gms.maps.internal.** { *; }
+-keep interface com.google.android.gms.maps.internal.** { *; }
+
+-dontwarn org.apache.harmony.awt.datatransfer.DTK
+
+-dontwarn com.bc.net.CloudFlareConnectionHandler
+-keep class com.bc.net.CloudFlareConnectionHandler
+-dontwarn com.bc.net.CloudFlareResponseParameters
+-keep class com.bc.net.CloudFlareResponseParameters

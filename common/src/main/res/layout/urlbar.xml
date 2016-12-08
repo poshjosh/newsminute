@@ -21,11 +21,10 @@
             android:layout_height="wrap_content"
             android:text="@string/msg_go"/>
     </LinearLayout>
+
     <ProgressBar
-        android:id="@+id/urlbar_progressbar"
+        android:id="@+id/urlbar_progressbar_linear"
         android:layout_width="match_parent"
-        android:layout_height="@dimen/space_medium"
-        android:max="100"
-        android:indeterminate="false"
-        style="@style/ProgressBarAppTheme" />
+        android:layout_height="@dimen/space_xlarge"
+        style="@style/ProgressBarLinearAppTheme"/>
 </LinearLayout>

@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/color_2">
+
+    <TextView
+        android:id="@+id/newfeed_titlebar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/msg_submit"
+        style="@style/ColorTextViewAppTheme" />
+    <EditText
+        android:id="@+id/newfeed_title"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/space_xxxlargeb"
+        android:background="@color/color_light"
+        android:layout_marginBottom="@dimen/space_medium"
+        android:hint="@string/msg_title"
+        android:inputType="textCapWords"/>
+    <Spinner
+        android:id="@+id/newfeed_categories"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/space_xxxlarge"
+        android:layout_marginBottom="@dimen/space_medium"/>
+    <EditText
+        android:id="@+id/newfeed_content"
+        android:scrollbars="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/space_xxxxlarge"
+        android:background="@color/color_light"
+        android:layout_marginBottom="@dimen/space_medium"
+        android:hint="@string/msg_content"
+        android:lines="2"
+        android:maxLines="10"
+        android:inputType="textMultiLine"/>
+    <TextView
+        android:id="@+id/newfeed_header"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/msg_optionals"
+        android:textSize="@dimen/subtitle_text_size_large"
+        android:gravity="center_horizontal"
+        android:layout_marginBottom="@dimen/space_medium"/>
+
+    <EditText
+        android:id="@+id/newfeed_tags"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/space_xxxlargeb"
+        android:background="@color/color_light"
+        android:layout_marginBottom="@dimen/space_medium"
+        android:hint="@string/msg_tags"/>
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <TextView
+            android:id="@+id/newfeed_imagetitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/msg_image"
+            android:textSize="@dimen/subtitle_text_size_large"
+            android:layout_gravity="center"
+            android:layout_marginRight="@dimen/space_small"
+            android:layout_marginEnd="@dimen/space_small"
+            />
+        <ImageButton
+            android:id="@+id/newfeed_selectimagebutton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/ic_photo_black_24dp"
+            android:padding="@dimen/space_medium"
+            android:background="@color/color_6"
+            android:layout_marginRight="@dimen/space_small"
+            android:layout_marginEnd="@dimen/space_small"
+            />
+        <ImageButton
+            android:id="@+id/newfeed_snapimagebutton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/ic_photo_camera_black_24dp"
+            android:padding="@dimen/space_medium"
+            android:background="@color/color_6"
+            android:layout_marginRight="@dimen/space_small"
+            android:layout_marginEnd="@dimen/space_small"
+            />
+        <TextView
+            android:id="@+id/newfeed_selectedimagecount"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="@dimen/space_medium"
+            android:layout_marginStart="@dimen/space_medium"
+            android:text="0"
+            android:textSize="@dimen/title_text_size"
+            android:gravity="center_horizontal"
+            android:layout_gravity="center"
+            android:background="@color/color_2"/>
+        <ImageButton
+            android:id="@+id/newfeed_selectedimageattachementicon"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/ic_attachment_black_24dp"
+            android:gravity="center_horizontal"
+            android:layout_gravity="center"
+            android:background="@color/color_2"/>
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/newfeed_okbutton"
+        android:layout_gravity="center_horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/msg_ok"/>
+
+</LinearLayout>
+
+
+

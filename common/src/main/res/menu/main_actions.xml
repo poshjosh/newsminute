@@ -33,6 +33,12 @@ button did not open search box
           app:showAsAction="ifRoom"
           android:orderInCategory="200"
     />
+    <!--item android:id="@+id/main_actions_userprofile"
+        android:icon="@drawable/ic_perm_identity_black_24dp"
+        android:title="@string/msg_userprofile"
+        app:showAsAction="ifRoom"
+        android:orderInCategory="200"
+        /-->
     <item android:id="@+id/main_actions_share"
           android:icon="@drawable/ic_share_black_24dp"
           android:title="@string/msg_share"
@@ -45,6 +51,12 @@ button did not open search box
         app:showAsAction="ifRoom"
         android:orderInCategory="400"
         />
+    <!--item android:id="@+id/main_actions_submitnews"
+        android:icon="@drawable/ic_file_upload_black_24dp"
+        android:title="@string/msg_newfeed_title"
+        app:showAsAction="ifRoom"
+        android:orderInCategory="500"
+        /-->
     <item android:id="@+id/main_actions_login"
         android:icon="@drawable/ic_account_circle_black_24dp"
         android:title="@string/msg_login"

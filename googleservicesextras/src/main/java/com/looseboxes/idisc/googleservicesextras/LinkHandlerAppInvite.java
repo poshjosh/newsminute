@@ -4,9 +4,10 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
+
+import com.bc.android.core.util.Logx;
 import com.google.android.gms.appinvite.AppInviteReferral;
 import com.looseboxes.idisc.common.handlers.DefaultLinkHandler;
-import com.looseboxes.idisc.common.util.Logx;
 
 public class LinkHandlerAppInvite extends DefaultLinkHandler {
     public LinkHandlerAppInvite(Context context) {
@@ -29,7 +30,7 @@ public class LinkHandlerAppInvite extends DefaultLinkHandler {
                 handled = super.handleLink(uri);
             }
         } catch (Exception e) {
-            Logx.log(getClass(), e);
+            Logx.getInstance().log(getClass(), e);
         }
         return handled;
     }
@@ -41,7 +42,7 @@ public class LinkHandlerAppInvite extends DefaultLinkHandler {
             deepLinkIntent.putExtra(DeepLinkActivity.EXTRA_STRING_DEEPLINK, AppInviteReferral.getDeepLink(intent));
             activity.startActivity(deepLinkIntent);
         } catch (Exception e) {
-            Logx.log(getClass(), e);
+            Logx.getInstance().log(getClass(), e);
         }
     }
 }
