@@ -6,7 +6,8 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.TextView;
-import com.looseboxes.idisc.common.util.Logx;
+
+import com.bc.android.core.util.Logx;
 
 public class DeepLinkActivity extends AppCompatActivity implements OnClickListener {
     public static final String EXTRA_STRING_DEEPLINK;
@@ -31,7 +32,7 @@ public class DeepLinkActivity extends AppCompatActivity implements OnClickListen
 
     private void processReferralIntent(String invitationId, String deepLink) {
         try {
-            Logx.debug(getClass(), "Found: Referral: InvitationID: {0}, DeepLink: {1}", invitationId, deepLink);
+            Logx.getInstance().debug(getClass(), "Found: Referral: InvitationID: {0}, DeepLink: {1}", invitationId, deepLink);
             if (deepLink != null) {
                 if (invitationId != null) {
                     ((TextView) findViewById(R.id.invitation_id_text)).setText(getString(R.string.fmt_invitation_id, new Object[]{invitationId}));
@@ -40,7 +41,7 @@ public class DeepLinkActivity extends AppCompatActivity implements OnClickListen
                 ((TextView) findViewById(R.id.invitation_id_text)).setText(getString(R.string.fmt_invitation_id, new Object[]{invitationId}));
             }
         } catch (Exception e) {
-            Logx.log(getClass(), e);
+            Logx.getInstance().log(getClass(), e);
         }
     }
 
